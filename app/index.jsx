@@ -47,8 +47,12 @@ const initialScreen = () => {
           gap: verticalScale(15),
           marginTop: verticalScale(10)
         }}>
-          <TouchableOpacity style={[styles.btn, { backgroundColor: "#14B8A6" }]}><ThemeTextPrimary style={{ fontSize: scale(18), color: "#fff", fontFamily: 'AirbnbCereal_W_Bd' }}>Admin</ThemeTextPrimary></TouchableOpacity>
-          <TouchableOpacity style={[styles.btn, { backgroundColor: "#e0e0e0" }]}><ThemeTextPrimary style={{ fontSize: scale(18), color: "#000", fontFamily: 'AirbnbCereal_W_Bd' }}>Barber</ThemeTextPrimary></TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => router.push("/(adminauth)/signin")}
+            style={[styles.btn, { backgroundColor: "#14B8A6" }]}><ThemeTextPrimary style={{ fontSize: scale(18), color: "#fff", fontFamily: 'AirbnbCereal_W_Bd' }}>Admin</ThemeTextPrimary></TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => router.push("/(barberauth)/signin")}
+            style={[styles.btn, { backgroundColor: "#e0e0e0" }]}><ThemeTextPrimary style={{ fontSize: scale(18), color: "#000", fontFamily: 'AirbnbCereal_W_Bd' }}>Barber</ThemeTextPrimary></TouchableOpacity>
         </View>
       </View>
 
@@ -69,10 +73,11 @@ const styles = StyleSheet.create({
   },
 
   btn: {
-    height: verticalScale(60),
+    // height: verticalScale(60),
+    paddingVertical: verticalScale(12),
     width: "100%",
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: scale(10)
+    borderRadius: scale(8)
   }
 })

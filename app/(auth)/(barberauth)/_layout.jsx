@@ -1,17 +1,14 @@
 import { Stack } from 'expo-router'
 import { StyleSheet } from 'react-native'
 
-// **THIS IS WHERE YOU ADD THE AUTH CHECK**
-
-const AppLayout = () => {
+const BarberAuthLayout = () => {
     return (
         <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(admintabs)" />
-            <Stack.Screen name="(barbertabs)" />
+            <Stack.Screen name="signin" />
         </Stack>
     )
 }
 
-export default AppLayout
+export default BarberAuthLayout
 
 const styles = StyleSheet.create({})

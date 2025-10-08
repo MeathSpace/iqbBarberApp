@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router'
 import { StyleSheet, Text } from 'react-native'
 
-const TabLayout = () => {
+const BarberTabLayout = () => {
     return (
         <Tabs
             screenOptions={{
@@ -19,6 +19,6 @@ const TabLayout = () => {
     )
 }
 
-export default TabLayout
+export default BarberTabLayout
 
 const styles = StyleSheet.create({})
