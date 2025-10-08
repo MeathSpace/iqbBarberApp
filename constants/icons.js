@@ -1,4 +1,4 @@
-import { Entypo, Feather, Ionicons } from "@expo/vector-icons";
+import { Entypo, Feather, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { moderateScale } from "react-native-size-matters";
 
 export const EyeIcon = ({ size = moderateScale(24), color = 'black', style }) => (
@@ -36,4 +36,8 @@ export const SalonIcon = ({ size = moderateScale(24), color = 'black', style }) 
 
 export const ProfileIcon = ({ size = moderateScale(24), color = 'black', style }) => (
     <Feather name="user" size={size} color={color} style={style} />
+);
+
+export const NotificationIcon = ({ size = moderateScale(24), color = 'black', style }) => (
+    <MaterialIcons name="notifications-none" size={size} color={color} style={style} />
 );

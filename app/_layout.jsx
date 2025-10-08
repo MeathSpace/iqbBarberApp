@@ -36,6 +36,7 @@ const RootLayout = () => {
     colors: {
       ...DefaultTheme.colors,
       background: '#F9FAFB',
+      background2: "#ffffff",
       textColor1: "#000000",
       textColor2: "#808080",
       borderColor1: "#e5e7eb",
@@ -49,10 +50,11 @@ const RootLayout = () => {
     colors: {
       ...DarkTheme.colors,
       background: '#111827',
+      background2: "#0d131f",
       textColor1: "#ffffff",
       textColor2: "#F4F4F5B2",
       borderColor1: "#374151",
-      inputColor: "#000000"
+      inputColor: "#0d131f"
 
     },
   };
