@@ -1,18 +1,65 @@
 import { Tabs } from 'expo-router'
-import { StyleSheet, Text } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { CalendarIcon, HomeIcon, ProfileIcon, QueueIcon, SalonIcon } from '../../../constants/icons'
+import { scale, verticalScale } from 'react-native-size-matters'
 
 const BarberTabLayout = () => {
+    const insets = useSafeAreaInsets()
+
     return (
         <Tabs
             screenOptions={{
                 headerShown: false,
-            }}>
+                tabBarStyle: {
+                    paddingBottom: insets.bottom + verticalScale(8), // dynamically adjust for system nav
+                    paddingTop: verticalScale(8),
+                    height: verticalScale(65) + insets.bottom, 
+                },
+                tabBarLabelStyle: {
+                    fontSize: scale(9),
+                    fontFamily: 'AirbnbCereal_W_Md',
+                    marginBottom: verticalScale(5),
+                },
+                tabBarActiveTintColor: '#14b8a6',
+            }}
+        >
             <Tabs.Screen
-                name="home"
+                name="(home)"
                 options={{
                     title: 'Home',
-                    // Set as the initial tab if no other is specified
-                    tabBarIcon: () => <Text>🏠</Text>
+                    tabBarIcon: ({ color }) => <HomeIcon color={color} />,
+                }}
+            />
+
+            <Tabs.Screen
+                name="(queue)"
+                options={{
+                    title: 'Queue',
+                    tabBarIcon: ({ color }) => <QueueIcon color={color} />,
+                }}
+            />
+
+            <Tabs.Screen
+                name="(salon)"
+                options={{
+                    title: 'Salon',
+                    tabBarIcon: ({ color }) => <SalonIcon color={color} />,
+                }}
+            />
+
+            <Tabs.Screen
+                name="(appointment)"
+                options={{
+                    title: 'Appointment',
+                    tabBarIcon: ({ color }) => <CalendarIcon color={color} />,
+                }}
+            />
+
+            <Tabs.Screen
+                name="(profile)"
+                options={{
+                    title: 'Profile',
+                    tabBarIcon: ({ color }) => <ProfileIcon color={color} />,
                 }}
             />
         </Tabs>
@@ -21,4 +68,3 @@ const BarberTabLayout = () => {
 
 export default BarberTabLayout
 
-const styles = StyleSheet.create({})

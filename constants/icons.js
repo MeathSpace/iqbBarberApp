@@ -18,6 +18,22 @@ export const CheckIcon = ({ size = moderateScale(24), color = 'black', style }) 
 );
 
 export const CalendarIcon = ({ size = moderateScale(24), color = 'black', style }) => (
-    <Feather name="calendar" size={size} color={color} style={style} />
+    <Ionicons name="calendar-outline" size={size} color={color} style={style}  />
 );
 
+
+export const HomeIcon = ({ size = moderateScale(24), color = 'black', style }) => (
+    <Ionicons name="home-outline" size={size} color={color} style={style} />
+);
+
+export const QueueIcon = ({ size = moderateScale(24), color = 'black', style }) => (
+    <Ionicons name="grid-outline" size={size} color={color} style={style} />
+);
+
+export const SalonIcon = ({ size = moderateScale(24), color = 'black', style }) => (
+    <Ionicons name="storefront-outline" size={size} color={color} style={style} />
+);
+
+export const ProfileIcon = ({ size = moderateScale(24), color = 'black', style }) => (
+    <Feather name="user" size={size} color={color} style={style} />
+);

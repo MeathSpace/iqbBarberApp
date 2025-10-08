@@ -19,6 +19,8 @@ const SignIn = () => {
   const handleSignIn = () => {
     console.log("Email:", email)
     console.log("Password:", password)
+
+    router.push("/(barbertabs)/(home)")
   }
 
   const { colors } = useTheme()
