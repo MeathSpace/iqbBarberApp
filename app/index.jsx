@@ -52,7 +52,7 @@ const initialScreen = () => {
             style={[styles.btn, { backgroundColor: "#14B8A6" }]}><ThemeTextPrimary style={{ fontSize: scale(18), color: "#fff", fontFamily: 'AirbnbCereal_W_Bd' }}>Admin</ThemeTextPrimary></TouchableOpacity>
           <TouchableOpacity
             onPress={() => router.push("/(barberauth)/signin")}
-            style={[styles.btn, { backgroundColor: "#e0e0e0" }]}><ThemeTextPrimary style={{ fontSize: scale(18), color: "#000", fontFamily: 'AirbnbCereal_W_Bd' }}>Barber</ThemeTextPrimary></TouchableOpacity>
+            style={[styles.btn, { backgroundColor: "#14B8A6" }]}><ThemeTextPrimary style={{ fontSize: scale(18), color: "#fff", fontFamily: 'AirbnbCereal_W_Bd' }}>Barber</ThemeTextPrimary></TouchableOpacity>
         </View>
       </View>
 

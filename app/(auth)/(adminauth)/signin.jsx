@@ -55,6 +55,7 @@ const SignIn = () => {
                             placeholder="Enter your email"
                             value={email}
                             onChangeText={setEmail}
+                            placeholderTextColor={colors.textColor2}
                             style={[styles.inputField, {
                                 backgroundColor: colors.inputColor,
                                 borderColor: colors.borderColor1,
@@ -75,6 +76,7 @@ const SignIn = () => {
                                 placeholder="Enter your password"
                                 value={password}
                                 onChangeText={setPassword}
+                                placeholderTextColor={colors.textColor2}
                                 secureTextEntry={!showPassword}
                                 style={[styles.inputField, {
                                     flex: 1,
@@ -118,7 +120,8 @@ const SignIn = () => {
                     <TouchableOpacity
                         onPress={handleSignIn}
                         style={[styles.googleSignInButton, {
-                            borderColor: colors.borderColor1
+                            backgroundColor: colors.inputColor,
+                            borderColor: colors.borderColor1,
                         }]}
                     >
                         <ThemeTextPrimary style={{ textAlign: "center" }}>

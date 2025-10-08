@@ -8,7 +8,7 @@ import ThemeTextPrimary from '../../../components/ThemeTextPrimary'
 import ThemeTextSecondary from '../../../components/ThemeTextSecondary'
 import { EyeIcon, EyeOffIcon } from '../../../constants/icons'
 
-const SignIn = () => {
+const SignUp = () => {
 
   const router = useRouter()
 
@@ -16,9 +16,10 @@ const SignIn = () => {
   const [password, setPassword] = useState('123456')
   const [showPassword, setShowPassword] = useState(false)
 
-  const handleSignIn = () => {
+  const handleSignUp = () => {
     console.log("Email:", email)
     console.log("Password:", password)
+    router.push("/signupotp")
   }
 
   const { colors } = useTheme()
@@ -41,10 +42,10 @@ const SignIn = () => {
             <ThemeTextPrimary style={{
               fontSize: scale(28),
               fontFamily: 'AirbnbCereal_W_Bd',
-            }}>Barber Login</ThemeTextPrimary>
+            }}>Create an Account</ThemeTextPrimary>
             <ThemeTextSecondary style={{
               marginTop: verticalScale(5),
-            }}>Welcome back! Please enter your details.</ThemeTextSecondary>
+            }}>Let's get you started with iQBook.</ThemeTextSecondary>
           </View>
 
           {/* Email Input */}
@@ -99,11 +100,11 @@ const SignIn = () => {
 
           {/* Dummy Sign In Button */}
           <TouchableOpacity
-            onPress={handleSignIn}
+            onPress={handleSignUp}
             style={styles.signInButton}
           >
             <ThemeTextPrimary style={{ color: "white", textAlign: "center" }}>
-              Sign In
+              Sign Up
             </ThemeTextPrimary>
           </TouchableOpacity>
 
@@ -118,19 +119,19 @@ const SignIn = () => {
           </View>
 
           <TouchableOpacity
-            onPress={handleSignIn}
+            onPress={handleSignUp}
             style={[styles.googleSignInButton, {
               backgroundColor: colors.inputColor,
               borderColor: colors.borderColor1,
             }]}
           >
             <ThemeTextPrimary style={{ textAlign: "center" }}>
-              Google Sign In
+              Google Sign Up
             </ThemeTextPrimary>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => router.push("/signup")}>
-            <ThemeTextSecondary style={{ textAlign: "center", fontSize: scale(16) }}>Don't have an account ?<ThemeTextPrimary style={{ color: '#14b8a6' }}> Sign up</ThemeTextPrimary></ThemeTextSecondary>
+          <TouchableOpacity onPress={() => router.push("/signin")}>
+            <ThemeTextSecondary style={{ textAlign: "center", fontSize: scale(16) }}>Don't have an account ?<ThemeTextPrimary style={{ color: '#14b8a6' }}> Sign in</ThemeTextPrimary></ThemeTextSecondary>
           </TouchableOpacity>
         </View>
       </ThemeSafeAreaView>
@@ -138,7 +139,7 @@ const SignIn = () => {
   )
 }
 
-export default SignIn
+export default SignUp
 
 const styles = StyleSheet.create({
   inputField: {
