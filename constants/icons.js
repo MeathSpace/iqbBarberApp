@@ -1,4 +1,4 @@
-import { Entypo, Feather, Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { AntDesign, Entypo, Feather, FontAwesome5, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { moderateScale } from "react-native-size-matters";
 
 export const EyeIcon = ({ size = moderateScale(24), color = 'black', style }) => (
@@ -18,7 +18,7 @@ export const CheckIcon = ({ size = moderateScale(24), color = 'black', style }) 
 );
 
 export const CalendarIcon = ({ size = moderateScale(24), color = 'black', style }) => (
-    <Ionicons name="calendar-outline" size={size} color={color} style={style}  />
+    <Ionicons name="calendar-outline" size={size} color={color} style={style} />
 );
 
 
@@ -40,4 +40,12 @@ export const ProfileIcon = ({ size = moderateScale(24), color = 'black', style }
 
 export const NotificationIcon = ({ size = moderateScale(24), color = 'black', style }) => (
     <MaterialIcons name="notifications-none" size={size} color={color} style={style} />
+);
+
+export const WifiIcon = ({ size = moderateScale(24), color = 'black', style }) => (
+    <AntDesign name="wifi" size={size} color={color} style={style} />
+);
+
+export const LocationIcon = ({ size = moderateScale(24), color = 'black', style }) => (
+    <FontAwesome5 name="map-marker-alt" size={size} color={color} style={style} />
 );

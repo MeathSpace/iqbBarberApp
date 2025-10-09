@@ -35,12 +35,13 @@ const RootLayout = () => {
     ...DefaultTheme,
     colors: {
       ...DefaultTheme.colors,
-      background: '#F9FAFB',
+      background: '#f8fafc',
       background2: "#ffffff",
       textColor1: "#000000",
       textColor2: "#808080",
       borderColor1: "#e5e7eb",
-      inputColor: "#ffffff"
+      inputColor: "#ffffff",
+      progressBgColor: "#e2e8f0"
     },
   };
 
@@ -54,8 +55,8 @@ const RootLayout = () => {
       textColor1: "#ffffff",
       textColor2: "#F4F4F5B2",
       borderColor1: "#374151",
-      inputColor: "#0d131f"
-
+      inputColor: "#0d131f",
+      progressBgColor: "#475569"
     },
   };
 
