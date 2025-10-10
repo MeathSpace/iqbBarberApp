@@ -465,8 +465,6 @@ const styles = StyleSheet.create({
     dateIcon: {
         position: "absolute",
         right: scale(5),
-        top: verticalScale(18),
-        transform: [{ translateY: -(moderateScale(24) / moderateScale(2)) }]
     },
     accountButton: {
         backgroundColor: "#14b8a6",

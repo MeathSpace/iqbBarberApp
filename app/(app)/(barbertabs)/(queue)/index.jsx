@@ -115,7 +115,7 @@ const index = () => {
                       : 'transparent'
                 }]}><ThemeTextPrimary
                   style={{
-                    color: selectedTab === item.name && "#14b8a6",
+                    color: selectedTab === item.name ? "#14b8a6" : colors.textColor1,
                     fontFamily: "AirbnbCereal_W_Bd"
                   }}
                 >{item.name}</ThemeTextPrimary></TouchableOpacity>
