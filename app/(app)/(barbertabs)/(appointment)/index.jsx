@@ -371,7 +371,10 @@ const AppointmentCard = ({ item, expandedCardId, setExpandedCardId, colors }) =>
       <TouchableOpacity
         style={styles.header}
         activeOpacity={0.8}
-        onPress={() => setExpandedCardId(item.id)}
+        // onPress={() => setExpandedCardId(item.id)}
+        onPress={() =>
+          setExpandedCardId(prev => (prev === item.id ? null : item.id))
+        }
       >
         <Image source={{ uri: item.image }} style={styles.avatar} />
         <View style={{ flex: 1 }}>
@@ -405,7 +408,7 @@ const AppointmentCard = ({ item, expandedCardId, setExpandedCardId, colors }) =>
           <ThemeTextPrimary style={[styles.actionText, { color: "#ef4444" }]}>Cancel</ThemeTextPrimary>
         </TouchableOpacity>
       </Animated.View>
-    </View>
+    </View >
   );
 };
 

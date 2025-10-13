@@ -9,7 +9,7 @@ import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
 import ThemeSafeAreaView from '../../../../components/ThemeSafeAreaView';
 import ThemeTextPrimary from '../../../../components/ThemeTextPrimary';
 import ThemeTextSecondary from '../../../../components/ThemeTextSecondary';
-import { ArrowLeftIcon, CalendarIcon, CameraIcon, CheckIcon, DownIcon } from '../../../../constants/icons';
+import { CalendarIcon, CameraIcon, CheckIcon, DownIcon, LeftIcon } from '../../../../constants/icons';
 
 const manageProfile = () => {
 
@@ -109,7 +109,7 @@ const manageProfile = () => {
                         onPress={() => {
                             router.back()
                         }}>
-                        <ArrowLeftIcon color={colors.textColor1} />
+                        <LeftIcon color={colors.textColor1} size={scale(18)}/>
                     </TouchableOpacity>
                     <ThemeTextPrimary style={{
                         flex: 1,

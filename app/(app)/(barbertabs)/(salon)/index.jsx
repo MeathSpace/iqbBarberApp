@@ -1,15 +1,17 @@
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { useTheme } from '@react-navigation/native';
 import { Image } from 'expo-image';
-import { useRef, useState } from 'react';
+import { useRouter } from 'expo-router';
+import React, { useRef, useState } from 'react';
 import { FlatList, Linking, Platform, StyleSheet, TouchableOpacity, useColorScheme, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
-import { scale, verticalScale } from 'react-native-size-matters';
+import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
 import ThemeSafeAreaView from '../../../../components/ThemeSafeAreaView';
 import ThemeTextPrimary from '../../../../components/ThemeTextPrimary';
 import ThemeTextSecondary from '../../../../components/ThemeTextSecondary';
-import { ContactIcon, EmailIcon, FacebookIcon, InstagramIcon, MapIcon, TiktokIcon, WebIcon, WhatsappIcon, XIcon } from '../../../../constants/icons';
+import { ContactIcon, EmailIcon, FacebookIcon, InstagramIcon, MapIcon, RightIcon, TiktokIcon, WebIcon, WhatsappIcon, XIcon } from '../../../../constants/icons';
+import { formatMinutesToHrMin } from '../../../../utils/formatedServiceDate';
 
 const index = () => {
 
@@ -91,6 +93,74 @@ const index = () => {
       "stylers": [{ "color": "#ffffff" }]
     }
   ];
+
+  const dummyData = [
+    {
+      serviceCategoryName: "Haircut",
+      services: [
+        {
+          serviceId: "1",
+          serviceName: "Classic Haircut",
+          serviceDesc: "A clean and stylish haircut for all hair types.",
+          serviceIcon: { url: "https://cdn-icons-png.flaticon.com/512/123/123455.png" },
+          servicePrice: 250,
+          serviceEWT: 30, // minutes
+        },
+        {
+          serviceId: "2",
+          serviceName: "Beard Trim",
+          serviceDesc: "Shape and style your beard perfectly.",
+          serviceIcon: { url: "https://cdn-icons-png.flaticon.com/512/3230/3230983.png" },
+          servicePrice: 150,
+          serviceEWT: 20,
+        },
+      ],
+    },
+    {
+      serviceCategoryName: "Facial & Grooming",
+      services: [
+        {
+          serviceId: "3",
+          serviceName: "Deep Cleansing Facial",
+          serviceDesc: "Removes impurities and rejuvenates your skin.",
+          serviceIcon: { url: "https://cdn-icons-png.flaticon.com/512/2636/2636460.png" },
+          servicePrice: 400,
+          serviceEWT: 45,
+        },
+        {
+          serviceId: "4",
+          serviceName: "Face Massage",
+          serviceDesc: "Relaxing facial massage with essential oils.",
+          serviceIcon: { url: "https://cdn-icons-png.flaticon.com/512/3050/3050525.png" },
+          servicePrice: 300,
+          serviceEWT: 25,
+        },
+      ],
+    },
+    {
+      serviceCategoryName: "Spa & Relaxation",
+      services: [
+        {
+          serviceId: "5",
+          serviceName: "Head Massage",
+          serviceDesc: "Relieves stress and promotes hair growth.",
+          serviceIcon: { url: "https://cdn-icons-png.flaticon.com/512/4329/4329052.png" },
+          servicePrice: 200,
+          serviceEWT: 15,
+        },
+        {
+          serviceId: "6",
+          serviceName: "Full Body Massage",
+          serviceDesc: "Relax your muscles and rejuvenate your body.",
+          serviceIcon: { url: "https://cdn-icons-png.flaticon.com/512/3556/3556279.png" },
+          servicePrice: 800,
+          serviceEWT: 60,
+        },
+      ],
+    },
+  ];
+
+  const router = useRouter()
 
   return (
     <ThemeSafeAreaView
@@ -244,7 +314,7 @@ const index = () => {
                   <>
                     <View
                       style={{
-                        backgroundColor: colors.background2,
+                        backgroundColor: colors.background,
                         borderWidth: scale(1),
                         borderColor: colors.borderColor1,
                         borderRadius: scale(12),
@@ -267,7 +337,7 @@ const index = () => {
 
                     <View
                       style={{
-                        backgroundColor: colors.background2,
+                        backgroundColor: colors.background,
                         borderRadius: scale(12),
                         borderWidth: scale(1),
                         borderColor: colors.borderColor1,
@@ -302,26 +372,25 @@ const index = () => {
                           gap: scale(10),
                         }}
                       >
-                        {"91" &&
-                          "1234567890" && (
-                            <TouchableOpacity
-                              style={{
-                                width: scale(30),
-                                height: scale(30),
-                                backgroundColor: colors.background2,
-                                justifyContent: "center",
-                                alignItems: "center",
-                                borderRadius: scale(4),
-                              }}
-                              onPress={() => {
-                                Linking.openURL(
-                                  `tel:${91}${1234567890}`
-                                );
-                              }}
-                            >
-                              <ContactIcon size={scale(18)} color={"#4285F4"} />
-                            </TouchableOpacity>
-                          )}
+                        {true && (
+                          <TouchableOpacity
+                            style={{
+                              width: scale(30),
+                              height: scale(30),
+                              backgroundColor: colors.background2,
+                              justifyContent: "center",
+                              alignItems: "center",
+                              borderRadius: scale(4),
+                            }}
+                            onPress={() => {
+                              Linking.openURL(
+                                `tel:${91}${1234567890}`
+                              );
+                            }}
+                          >
+                            <ContactIcon size={scale(18)} color={"#4285F4"} />
+                          </TouchableOpacity>
+                        )}
 
                         {true && (
                           <TouchableOpacity
@@ -394,7 +463,7 @@ const index = () => {
 
                       <View
                         style={{
-                          backgroundColor: colors.background2,
+                          backgroundColor: colors.background,
                           borderBottomLeftRadius: scale(12),
                           borderBottomRightRadius: scale(12),
                           borderWidth: scale(1),
@@ -448,7 +517,7 @@ const index = () => {
                       true ? (
                         <View
                           style={{
-                            backgroundColor: colors.background2,
+                            backgroundColor: colors.background,
                             borderColor: colors.borderColor1,
                             borderWidth: scale(1),
                             borderRadius: scale(12),
@@ -585,6 +654,110 @@ const index = () => {
                   </>
                 )
               }
+
+              {
+                selectedTab === "Services" && (
+
+                  dummyData.map((item, index) => (
+                    <React.Fragment key={item?.serviceCategoryName || index}>
+                      <ThemeTextPrimary style={styles.serviceName}>
+                        {item?.serviceCategoryName}
+                      </ThemeTextPrimary>
+                      {item?.services?.map((ser) => (
+                        <View
+                          key={ser.serviceId}
+                          style={[
+                            styles.card,
+                            {
+                              backgroundColor: colors.background,
+                              borderColor: colors.borderColor1,
+                              borderWidth: scale(1),
+                            },
+                          ]}
+                        >
+                          <Image source={{ uri: "https://naomisheadmasters.com/wp-content/uploads/2022/08/salon-4-mens-Best-Salon-near-Pinjore.png" }} style={styles.icon} />
+                          <View style={styles.cardContent}>
+                            <ThemeTextPrimary style={styles.serviceName}>{ser.serviceName}</ThemeTextPrimary>
+                            <ThemeTextSecondary style={[styles.serviceDesc]}>
+                              {ser.serviceDesc}
+                            </ThemeTextSecondary>
+                            <View
+                              style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: scale(10),
+                                marginTop: verticalScale(5),
+                              }}
+                            >
+                              <ThemeTextPrimary style={styles.servicePrice}>
+                                $ {ser.servicePrice}
+                              </ThemeTextPrimary>
+                              <ThemeTextPrimary style={[styles.serviceEWT, { color: colors.secondaryText }]}>
+                                ~ {formatMinutesToHrMin(ser.serviceEWT)}
+                              </ThemeTextPrimary>
+                            </View>
+                          </View>
+                        </View>
+                      ))}
+                    </React.Fragment>
+                  ))
+
+                )
+              }
+
+              {
+                selectedTab === "Appointment" && (
+                  <>
+                    <TouchableOpacity
+                      onPress={() => router.push("/appointmentAvailability")}
+                      style={[styles.appointmentCard, {
+                        backgroundColor: colors.background,
+                        borderWidth: scale(1),
+                        borderColor: colors.borderColor1,
+                        borderRadius: scale(12),
+                        padding: scale(10),
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "space-between"
+                      }]}>
+                      <View style={{ flex: 1, gap: verticalScale(5) }}>
+                        <ThemeTextPrimary style={{
+                          fontFamily: "AirbnbCereal_W_Bd"
+                        }}>Set Your Availability</ThemeTextPrimary>
+                        <ThemeTextSecondary style={{ width: "96%" }}>
+                          Choose your recurring weekly appointment days
+                        </ThemeTextSecondary>
+                      </View>
+
+                      <RightIcon color={colors.textColor1} size={moderateScale(16)} />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={[styles.appointmentCard, {
+                      backgroundColor: colors.background,
+                      borderWidth: scale(1),
+                      borderColor: colors.borderColor1,
+                      borderRadius: scale(12),
+                      padding: scale(10),
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "space-between"
+                    }]}>
+                      <View style={{ flex: 1, gap: verticalScale(5) }}>
+                        <ThemeTextPrimary style={{
+                          fontFamily: "AirbnbCereal_W_Bd"
+                        }}>Manage Your Off Days</ThemeTextPrimary>
+                        <ThemeTextSecondary style={{ width: "96%" }}>
+                          Select specific dates from a calender to block off
+                        </ThemeTextSecondary>
+                      </View>
+
+                      <RightIcon color={colors.textColor1} size={moderateScale(16)} />
+                    </TouchableOpacity>
+
+                  </>
+                )
+              }
+
             </BottomSheetScrollView>
           </>
         </BottomSheet>
@@ -631,5 +804,40 @@ const styles = StyleSheet.create({
     height: verticalScale(128),
     borderTopLeftRadius: scale(12),
     borderTopRightRadius: scale(12)
+  },
+
+  card: {
+    flexDirection: 'row',
+    padding: scale(12),
+    marginBottom: verticalScale(8),
+    borderRadius: scale(12),
+  },
+  icon: {
+    width: scale(60),
+    height: scale(60),
+    borderRadius: scale(8),
+    marginRight: scale(12),
+    borderWidth: scale(1),
+    borderColor: '#efefef', // gray-200
+  },
+  cardContent: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+
+  serviceName: {
+    fontSize: scale(16),
+    fontFamily: "AirbnbCereal_W_Bd"
+  },
+  serviceDesc: {
+    fontSize: scale(14),
+  },
+  servicePrice: {
+    fontSize: scale(14),
+    fontFamily: "AirbnbCereal_W_Bd",
+    color: "#14b8a6"
+  },
+  serviceEWT: {
+    fontSize: scale(12),
   },
 })

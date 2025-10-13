@@ -18,8 +18,14 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyDPbqoO4cJhjiqEStQdoDduzyIfUJZTGrk"
+        }
+      },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.sagnikn00.iqbBarberApp"
     },
     "web": {
       "output": "static",
@@ -43,6 +49,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "owner": "sagnikn00",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "0fd2cec0-9c6a-48c4-862a-50d8f1dd83a5"
+      }
     }
   }
 }

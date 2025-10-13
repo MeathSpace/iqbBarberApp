@@ -54,8 +54,8 @@ export const RightIcon = ({ size = moderateScale(24), color = 'black', style }) 
     <AntDesign name="right" size={size} color={color} style={style} />
 );
 
-export const ArrowLeftIcon = ({ size = moderateScale(24), color = 'black', style }) => (
-    <AntDesign name="arrow-left" size={size} color={color} style={style} />
+export const LeftIcon = ({ size = moderateScale(24), color = 'black', style }) => (
+    <AntDesign name="left" size={size} color={color} style={style} />
 );
 
 export const CameraIcon = ({ size = moderateScale(24), color = 'black', style }) => (
