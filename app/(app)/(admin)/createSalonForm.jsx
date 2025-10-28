@@ -305,6 +305,7 @@ import ThemeTextSecondary from '../../../components/ThemeTextSecondary'
 import { LeftIcon } from '../../../constants/icons'
 
 const CreateSalonForm = () => {
+
   const router = useRouter()
   const { colors } = useTheme()
   const colorScheme = useColorScheme()
@@ -326,10 +327,17 @@ const CreateSalonForm = () => {
   return (
     <ThemeSafeAreaView edges={['top']}>
       {/* Header */}
-      <View style={[styles.header, { borderBottomColor: colors.borderColor1 }]}>
-        <LeftIcon size={scale(16)} />
+      <TouchableOpacity
+        onPress={() => {
+          router.back()
+        }}
+        style={[styles.header, { borderBottomColor: colors.borderColor1 }]}>
+        <LeftIcon
+          size={scale(16)}
+          color={colors.textColor1}
+        />
         <ThemeTextPrimary style={styles.headerTitle}>Create Your Salon</ThemeTextPrimary>
-      </View>
+      </TouchableOpacity>
 
       {/* Stepper */}
       <View style={styles.stepperContainer}>
