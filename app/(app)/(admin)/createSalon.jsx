@@ -1,11 +1,11 @@
 import { useTheme } from '@react-navigation/native'
+import { useRouter } from 'expo-router'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters'
-import { SalonIcon } from '../../../constants/icons'
-import { useRouter } from 'expo-router'
 import ThemeSafeAreaView from '../../../components/ThemeSafeAreaView'
 import ThemeTextPrimary from '../../../components/ThemeTextPrimary'
 import ThemeTextSecondary from '../../../components/ThemeTextSecondary'
+import { SalonIcon } from '../../../constants/icons'
 
 const createSalon = () => {
 
@@ -13,7 +13,7 @@ const createSalon = () => {
   const router = useRouter()
 
   const createSalonHandler = () => {
-      router.push("/createSalonForm")
+    router.push("/createSalonForm")
   }
 
   return (
@@ -25,10 +25,15 @@ const createSalon = () => {
     >
       <View
         style={{
-          width: "80%",
+          width: "85%",
           justifyContent: "center",
           alignItems: "center",
-          gap: verticalScale(10)
+          gap: verticalScale(10),
+          backgroundColor: colors.background2,
+          padding: scale(20),
+          borderRadius: scale(10),
+          borderWidth: scale(1),
+          borderColor: colors.borderColor1
         }}
       >
         <View style={{
@@ -38,11 +43,11 @@ const createSalon = () => {
           justifyContent: "center",
           alignItems: "center",
           borderRadius: scale(50),
-          backgroundColor: colors.background2,
+          backgroundColor: colors.background,
           borderWidth: scale(1),
           borderColor: colors.borderColor1
         }}>
-          <SalonIcon size={moderateScale(48)} />
+          <SalonIcon size={moderateScale(48)} color={colors.textColor1}/>
         </View>
 
         <View
