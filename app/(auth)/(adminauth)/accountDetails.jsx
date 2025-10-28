@@ -83,7 +83,7 @@ const accountDetails = () => {
     const [value, setValue] = useState('');
 
     const handleAccountDetail = () => {
-
+        router.push("/(admin)/createSalon")
     }
 
     return (

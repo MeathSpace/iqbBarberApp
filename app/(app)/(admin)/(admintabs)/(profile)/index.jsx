@@ -48,6 +48,10 @@ const index = () => {
 
   const router = useRouter()
 
+  const logoutPressed = () => {
+    router.replace("/(adminauth)/signin")
+  }
+
   return (
     <ThemeSafeAreaView
       style={{
@@ -111,7 +115,7 @@ const index = () => {
         <TouchableOpacity
           activeOpacity={0.8}
           style={[styles.logoutButton, { backgroundColor: '#fee2e2' }]}
-        // onPress={logoutPressed}
+          onPress={logoutPressed}
         >
           <Feather name="log-out" size={moderateScale(16)} color={'#dc2626'} />
           <ThemeTextPrimary style={[styles.logoutText, { color: '#dc2626' }]}>Log Out</ThemeTextPrimary>

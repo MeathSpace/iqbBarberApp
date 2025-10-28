@@ -15,7 +15,7 @@ const signupotp = () => {
     const { colors } = useTheme()
 
     const handleSignOtp = () => {
-
+        router.push("/accountDetails")
     }
 
     return (
