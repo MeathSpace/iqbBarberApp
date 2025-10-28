@@ -110,3 +110,8 @@ export const WhatsappIcon = ({ size = moderateScale(24), color = 'black', style 
 export const EmailIcon = ({ size = moderateScale(24), color = 'black', style }) => (
     <MaterialCommunityIcons name="email" size={size} color={color} style={style} />
 );
+
+export const ScissorIcon = ({ size = moderateScale(24), color = 'black', style }) => (
+    <Entypo name="scissors" size={size} color={color} style={style} />
+);
+

@@ -1,18 +1,49 @@
-import { useTheme } from '@react-navigation/native'
-import { Image } from 'expo-image'
-import { LinearGradient } from 'expo-linear-gradient'
-import { useState } from 'react'
-import { ScrollView, StyleSheet, Switch, TouchableOpacity, View } from 'react-native'
-import { moderateScale, scale, verticalScale } from 'react-native-size-matters'
-import ThemeSafeAreaView from '../../../../components/ThemeSafeAreaView'
-import ThemeTextPrimary from '../../../../components/ThemeTextPrimary'
-import ThemeTextSecondary from '../../../../components/ThemeTextSecondary'
-import { CalendarIcon, NotificationIcon, QueueIcon, WifiIcon } from '../../../../constants/icons'
+import { useTheme } from '@react-navigation/native';
+import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useState } from 'react';
+import { ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
+import ThemeSafeAreaView from '../../../../components/ThemeSafeAreaView';
+import ThemeTextPrimary from '../../../../components/ThemeTextPrimary';
+import ThemeTextSecondary from '../../../../components/ThemeTextSecondary';
+import { CalendarIcon, NotificationIcon, ProfileIcon, QueueIcon, ScissorIcon } from '../../../../constants/icons';
 
 const index = () => {
 
   const { colors } = useTheme();
   const [isOnline, setIsOnline] = useState(true);
+
+  const statusData = [
+    {
+      id: 1,
+      label: "In Queue",
+      value: 53,
+      iconBg: "#f3e8ff", // purple-100
+      icon: <QueueIcon size={scale(20)} color="#9333ea" />,
+    },
+    {
+      id: 2,
+      label: "Appointment",
+      value: 1,
+      iconBg: "#dbeafe", // blue-100
+      icon: <CalendarIcon size={scale(20)} color="#2563eb" />,
+    },
+    {
+      id: 3,
+      label: "On Duty",
+      value: 5,
+      iconBg: "#ffedd5", // orange-100
+      icon: <ProfileIcon size={scale(20)} color="#ea580c" />,
+    },
+    {
+      id: 4,
+      label: "Customer",
+      value: 12,
+      iconBg: "#dcfce7", // green-100
+      icon: <ProfileIcon size={scale(20)} color="#16a34a" />,
+    },
+  ];
 
   const reports = [
     {
@@ -86,10 +117,10 @@ const index = () => {
       >
         {/* Section 1 */}
         <View style={styles.upcommingAppointmentSection}>
-          <ThemeTextPrimary style={[styles.sectionTitle, {
+          {/* <ThemeTextPrimary style={[styles.sectionTitle, {
             fontSize: scale(18),
             fontFamily: "AirbnbCereal_W_Bd"
-          }]}>Upcoming Appointments</ThemeTextPrimary>
+          }]}>Upcoming Appointments</ThemeTextPrimary> */}
 
           <LinearGradient
             colors={['#14b8a6', '#0d9488']}
@@ -97,122 +128,78 @@ const index = () => {
             end={{ x: 1, y: 1 }}
             style={styles.card}
           >
-            <View style={styles.topRow}>
-              {/* DATE BOX */}
-              <View style={styles.dateBox}>
-                <ThemeTextPrimary style={styles.dateDay}>17</ThemeTextPrimary>
-                <ThemeTextPrimary style={styles.dateMonth}>July</ThemeTextPrimary>
-                <ThemeTextSecondary style={styles.dateTime}>12:30</ThemeTextSecondary>
+            <View style={[styles.topRow, {
+              borderBottomColor: "#efefef"
+            }]}>
+
+              {/* ICON BOX */}
+              <View style={styles.iconBox}>
+                <ScissorIcon
+                  size={moderateScale(26)}
+                  color='#fff'
+                />
               </View>
 
-              {/* CLIENT INFO */}
+              {/* SALON INFO */}
               <View style={{ flex: 1 }}>
-                <ThemeTextPrimary style={styles.clientName}>Michael Swath</ThemeTextPrimary>
-                <ThemeTextSecondary style={styles.clientDetails}>3 Services | $79.00</ThemeTextSecondary>
-                <ThemeTextSecondary style={styles.clientDetails}>Approx. 25 mins</ThemeTextSecondary>
+                <ThemeTextPrimary style={styles.clientName}>Modern Stylist Salon</ThemeTextPrimary>
+                <ThemeTextSecondary style={styles.clientDetails}>Your destination for modern hair care.</ThemeTextSecondary>
               </View>
             </View>
 
             {/* ACTION BUTTONS */}
             <View style={styles.buttonRow}>
-              <TouchableOpacity style={[styles.cancelBtn, {
-                borderColor: "#e5e7eb",
-                borderWidth: scale(0.5)
-              }]}>
-                <ThemeTextPrimary style={styles.cancelText}>Cancel</ThemeTextPrimary>
-              </TouchableOpacity>
+              <View>
+                <ThemeTextSecondary style={{ color: "#efefef" }}>Salon Status</ThemeTextSecondary>
+                <ThemeTextPrimary style={{ color: "#fff", fontFamily: "AirbnbCereal_W_Bd" }}>Open</ThemeTextPrimary>
+              </View>
 
-              <TouchableOpacity style={styles.serveBtn}>
-                <ThemeTextPrimary style={styles.serveText}>Serve</ThemeTextPrimary>
-              </TouchableOpacity>
+              <Switch
+                value={isOnline}
+                onValueChange={setIsOnline}
+                thumbColor={isOnline ? "#fff" : "#fff"}
+                trackColor={{
+                  false: "#ef4444", // Tailwind red-500
+                  true: "#14b8a6"   // Tailwind teal-500
+                }}
+              />
+
             </View>
           </LinearGradient>
 
         </View>
 
         {/* Section 2 */}
-
         <View style={styles.liveStatusSection}>
           <ThemeTextPrimary style={[styles.sectionTitle, {
             fontSize: scale(18),
             fontFamily: "AirbnbCereal_W_Bd"
           }]}>Live Status</ThemeTextPrimary>
 
-
-          <View
-            style={[
-              styles.liveQueueCard,
-              { backgroundColor: colors.background, borderColor: colors.borderColor1 },
-            ]}
-          >
-            {/* Top Section */}
-            <View style={styles.liveQueueTopRow}>
-              <View style={styles.liveQueueLeft}>
+          <View style={styles.statusGrid}>
+            {statusData.map((item) => (
+              <View key={item.id} style={[styles.statusCard, {
+                backgroundColor: colors.background, borderColor: colors.borderColor1
+              }]}>
                 <View
                   style={[
-                    styles.liveQueueIconContainer,
-                    { backgroundColor: isOnline ? "#99f6e4" : "#fecaca", },
+                    styles.statusIconContainer,
+                    { backgroundColor: item.iconBg },
                   ]}
                 >
-                  <WifiIcon size={scale(18)} color={isOnline ? "#0d9488" : "#dc2626"} />
+                  {item.icon}
                 </View>
 
                 <View>
-                  <ThemeTextPrimary style={styles.liveQueueActiveTitle}>
-                    Active Station
-                  </ThemeTextPrimary>
-                  <ThemeTextPrimary
-                    style={[
-                      styles.liveQueueStatusText,
-                      { color: isOnline ? "#0d9488" : "#dc2626" },
-                    ]}
-                  >
-                    {isOnline ? "Online" : "Offline"}
-                  </ThemeTextPrimary>
-                </View>
-              </View>
-
-              {/* Switch Toggle */}
-              <Switch
-                value={isOnline}
-                onValueChange={setIsOnline}
-                thumbColor={isOnline ? "#fff" : ("#cbd5e1")}
-                trackColor={{ false: "#e2e8f0", true: "#14b8a6" }}
-              />
-            </View>
-
-            {/* Divider */}
-            <View
-              style={[
-                styles.liveQueueDivider,
-                { borderColor: colors.borderColor1 },
-              ]}
-            />
-
-            {/* Stats Row */}
-            <View style={styles.liveQueueGrid}>
-              {[
-                { label: "System", value: "On", color: "#22c55e" },
-                { label: "Booking", value: "4", color: "#a855f7" },
-                { label: "In Queue", value: "0", color: "#3b82f6" },
-                { label: "Clock", value: "In", color: "#eab308" },
-              ].map((item, index) => (
-                <View
-                  key={index}
-                  style={[
-                    styles.liveQueueGridBox,
-                    { backgroundColor: colors.background2 },
-                  ]}
-                >
-                  <ThemeTextSecondary style={styles.liveQueueGridLabel}>
+                  <ThemeTextSecondary>
                     {item.label}
                   </ThemeTextSecondary>
-                  <ThemeTextPrimary style={[styles.liveQueueGridValue, { color: item.color }]}>
+                  <ThemeTextPrimary>
                     {item.value}
                   </ThemeTextPrimary>
                 </View>
-              ))}
-            </View>
+              </View>
+            ))}
           </View>
         </View>
 
@@ -286,11 +273,10 @@ const index = () => {
               </View>
             ))}
           </View>
-
-
         </View>
 
-      </ScrollView>
+      </ScrollView >
+
     </ThemeSafeAreaView >
   )
 }
@@ -298,13 +284,6 @@ const index = () => {
 export default index
 
 const styles = StyleSheet.create({
-
-  scrollContainer: {
-    paddingHorizontal: scale(15),
-    paddingVertical: verticalScale(15),
-    gap: verticalScale(15)
-  },
-
   image: {
     width: scale(40),
     height: scale(40),
@@ -312,9 +291,10 @@ const styles = StyleSheet.create({
     borderRadius: scale(20),
   },
 
-  upcommingAppointmentSection: {
-    flexDirection: "column",
-    gap: verticalScale(10)
+  scrollContainer: {
+    paddingHorizontal: scale(15),
+    paddingVertical: verticalScale(15),
+    gap: verticalScale(15)
   },
 
   card: {
@@ -325,29 +305,20 @@ const styles = StyleSheet.create({
   },
   topRow: {
     flexDirection: 'row',
+    alignItems: "center",
     gap: scale(12),
+    paddingBottom: verticalScale(10),
+    borderBottomWidth: 1,
   },
-  dateBox: {
-    width: scale(70),
+  iconBox: {
+    width: scale(50),
+    height: scale(50),
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(255,255,255,0.25)',
     borderRadius: scale(10),
-    paddingVertical: verticalScale(10),
   },
-  dateDay: {
-    color: '#fff',
-    fontSize: scale(22),
-    fontFamily: "AirbnbCereal_W_Bd"
-  },
-  dateMonth: {
-    color: '#fff',
-    fontSize: scale(18),
-  },
-  dateTime: {
-    color: '#fff',
-    fontSize: scale(12),
-  },
+
   clientName: {
     color: '#fff',
     fontSize: scale(18),
@@ -358,7 +329,8 @@ const styles = StyleSheet.create({
   },
   buttonRow: {
     flexDirection: 'row',
-    marginTop: verticalScale(20),
+    justifyContent: "space-between",
+    marginTop: verticalScale(15),
     gap: scale(12),
   },
   cancelBtn: {
@@ -378,65 +350,35 @@ const styles = StyleSheet.create({
   cancelText: {
     color: '#fff',
   },
-  serveText: {
-    color: '#0d9488',
-  },
 
   liveStatusSection: {
     flexDirection: "column",
     gap: verticalScale(10)
   },
 
-  liveQueueCard: {
-    borderWidth: 1,
-    borderRadius: moderateScale(16),
-    padding: moderateScale(12),
-  },
-  liveQueueTopRow: {
+  statusGrid: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  liveQueueLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: scale(10),
-  },
-  liveQueueIconContainer: {
-    padding: moderateScale(6),
-    borderRadius: 999,
-  },
-  liveQueueActiveTitle: {
-    fontSize: scale(14),
-  },
-  liveQueueStatusText: {
-    fontSize: scale(14),
-  },
-  liveQueueDivider: {
-    borderTopWidth: 1,
-    marginVertical: verticalScale(10),
-  },
-  liveQueueGrid: {
-    flexDirection: "row",
-    justifyContent: "space-between",
     flexWrap: "wrap",
-    gap: scale(8),
+    justifyContent: "space-between",
+    gap: verticalScale(16)
   },
-  liveQueueGridBox: {
-    flex: 1,
-    paddingVertical: verticalScale(8),
-    borderRadius: moderateScale(10),
+  statusCard: {
+    borderWidth: scale(1),
+    borderRadius: scale(16),
+    height: verticalScale(60),
+    paddingHorizontal: scale(8),
+    width: "47%",
+    flexDirection: "row",
     alignItems: "center",
+    // marginBottom: verticalScale(16),
+    gap: scale(12),
   },
-  liveQueueGridLabel: {
-    fontSize: scale(13),
-    fontFamily: "AirbnbCereal_W_Bd",
-    opacity: 0.8,
+
+  statusIconContainer: {
+    padding: scale(7),
+    borderRadius: scale(12),
   },
-  liveQueueGridValue: {
-    fontWeight: "700",
-    marginTop: verticalScale(3),
-  },
+
 
   weeklyReportsSection: {
     flexDirection: "column",
@@ -488,4 +430,9 @@ const styles = StyleSheet.create({
     height: "100%",
     borderRadius: moderateScale(8),
   },
+
 })
+
+
+
+
