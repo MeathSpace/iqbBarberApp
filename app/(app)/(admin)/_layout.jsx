@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native'
 
 // **THIS IS WHERE YOU ADD THE AUTH CHECK**
 
-const AppLayout = () => {
+const AdminLayout = () => {
     return (
         <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(admintabs)" />
@@ -13,6 +13,6 @@ const AppLayout = () => {
     )
 }
 
-export default AppLayout
+export default AdminLayout
 
 const styles = StyleSheet.create({})

@@ -17,7 +17,7 @@ const SignIn = () => {
     const [showPassword, setShowPassword] = useState(false)
 
     const handleSignIn = () => {
-        router.push("/(admintabs)/(home)")
+        router.push("/(admin)/(admintabs)/(home)")
     }
 
     const { colors } = useTheme()

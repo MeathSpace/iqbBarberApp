@@ -5,9 +5,9 @@ import { useState } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import Animated, { useAnimatedStyle, withTiming } from "react-native-reanimated";
 import { scale, verticalScale } from 'react-native-size-matters';
-import ThemeSafeAreaView from '../../../../components/ThemeSafeAreaView';
-import ThemeTextPrimary from '../../../../components/ThemeTextPrimary';
-import ThemeTextSecondary from '../../../../components/ThemeTextSecondary';
+import ThemeSafeAreaView from '../../../../../components/ThemeSafeAreaView';
+import ThemeTextPrimary from '../../../../../components/ThemeTextPrimary';
+import ThemeTextSecondary from '../../../../../components/ThemeTextSecondary';
 
 const index = () => {
 

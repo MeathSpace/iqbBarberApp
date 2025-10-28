@@ -5,9 +5,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
-import ThemeSafeAreaView from '../../../../components/ThemeSafeAreaView';
-import ThemeTextPrimary from '../../../../components/ThemeTextPrimary';
-import { AboutIcon, HelpSupportIcon, ReportIcon, RightIcon } from '../../../../constants/icons';
+import ThemeSafeAreaView from '../../../../../components/ThemeSafeAreaView';
+import ThemeTextPrimary from '../../../../../components/ThemeTextPrimary';
+import { AboutIcon, HelpSupportIcon, ReportIcon, RightIcon } from '../../../../../constants/icons';
 
 const index = () => {
 

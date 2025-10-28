@@ -4,10 +4,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
-import ThemeSafeAreaView from '../../../../components/ThemeSafeAreaView';
-import ThemeTextPrimary from '../../../../components/ThemeTextPrimary';
-import ThemeTextSecondary from '../../../../components/ThemeTextSecondary';
-import { CalendarIcon, NotificationIcon, ProfileIcon, QueueIcon, ScissorIcon } from '../../../../constants/icons';
+import ThemeSafeAreaView from '../../../../../components/ThemeSafeAreaView';
+import ThemeTextPrimary from '../../../../../components/ThemeTextPrimary';
+import ThemeTextSecondary from '../../../../../components/ThemeTextSecondary';
+import { CalendarIcon, NotificationIcon, ProfileIcon, QueueIcon, ScissorIcon } from '../../../../../constants/icons';
 
 const index = () => {
 

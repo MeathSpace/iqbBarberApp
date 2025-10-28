@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native'
 
 // **THIS IS WHERE YOU ADD THE AUTH CHECK**
 
-const AppLayout = () => {
+const BarberLayout = () => {
     return (
         <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(barbertabs)" />
@@ -11,6 +11,6 @@ const AppLayout = () => {
     )
 }
 
-export default AppLayout
+export default BarberLayout
 
 const styles = StyleSheet.create({})

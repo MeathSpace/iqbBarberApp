@@ -6,8 +6,8 @@ import { StyleSheet } from 'react-native'
 const AppLayout = () => {
     return (
         <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(admintabs)" />
-            <Stack.Screen name="(barbertabs)" />
+            <Stack.Screen name="(admin)" />
+            <Stack.Screen name="(barber)" />
         </Stack>
     )
 }

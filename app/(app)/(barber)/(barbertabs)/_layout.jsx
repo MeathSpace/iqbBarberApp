@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { CalendarIcon, HomeIcon, ProfileIcon, QueueIcon, SalonIcon } from '../../../constants/icons'
 import { scale, verticalScale } from 'react-native-size-matters'
+import { CalendarIcon, HomeIcon, ProfileIcon, QueueIcon, SalonIcon } from '../../../../constants/icons'
 
 const BarberTabLayout = () => {
     const insets = useSafeAreaInsets()

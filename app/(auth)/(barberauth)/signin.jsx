@@ -20,7 +20,7 @@ const SignIn = () => {
     console.log("Email:", email)
     console.log("Password:", password)
 
-    router.push("/(barbertabs)/(home)")
+    router.push("/(barber)/(barbertabs)/(home)")
   }
 
   const { colors } = useTheme()

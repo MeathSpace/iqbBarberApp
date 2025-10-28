@@ -7,11 +7,11 @@ import { FlatList, Linking, Platform, StyleSheet, TouchableOpacity, useColorSche
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
-import ThemeSafeAreaView from '../../../../components/ThemeSafeAreaView';
-import ThemeTextPrimary from '../../../../components/ThemeTextPrimary';
-import ThemeTextSecondary from '../../../../components/ThemeTextSecondary';
-import { ContactIcon, EmailIcon, FacebookIcon, InstagramIcon, MapIcon, RightIcon, TiktokIcon, WebIcon, WhatsappIcon, XIcon } from '../../../../constants/icons';
-import { formatMinutesToHrMin } from '../../../../utils/formatedServiceDate';
+import ThemeSafeAreaView from '../../../../../components/ThemeSafeAreaView';
+import ThemeTextPrimary from '../../../../../components/ThemeTextPrimary';
+import ThemeTextSecondary from '../../../../../components/ThemeTextSecondary';
+import { ContactIcon, EmailIcon, FacebookIcon, InstagramIcon, MapIcon, RightIcon, TiktokIcon, WebIcon, WhatsappIcon, XIcon } from '../../../../../constants/icons';
+import { formatMinutesToHrMin } from '../../../../../utils/formatedServiceDate';
 
 const index = () => {
 

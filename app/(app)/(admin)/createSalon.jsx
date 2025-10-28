@@ -1,11 +1,11 @@
 import { useTheme } from '@react-navigation/native'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters'
+import { SalonIcon } from '../../../constants/icons'
+import { useRouter } from 'expo-router'
 import ThemeSafeAreaView from '../../../components/ThemeSafeAreaView'
 import ThemeTextPrimary from '../../../components/ThemeTextPrimary'
 import ThemeTextSecondary from '../../../components/ThemeTextSecondary'
-import { SalonIcon } from '../../../constants/icons'
-import { useRouter } from 'expo-router'
 
 const createSalon = () => {
 

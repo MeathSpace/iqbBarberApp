@@ -6,10 +6,10 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Keyboard, Modal, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, TouchableWithoutFeedback, useColorScheme, View } from 'react-native';
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
-import ThemeSafeAreaView from '../../../../components/ThemeSafeAreaView';
-import ThemeTextPrimary from '../../../../components/ThemeTextPrimary';
-import ThemeTextSecondary from '../../../../components/ThemeTextSecondary';
-import { CalendarIcon, CameraIcon, CheckIcon, DownIcon, LeftIcon } from '../../../../constants/icons';
+import ThemeSafeAreaView from '../../../../../components/ThemeSafeAreaView';
+import ThemeTextPrimary from '../../../../../components/ThemeTextPrimary';
+import ThemeTextSecondary from '../../../../../components/ThemeTextSecondary';
+import { CalendarIcon, CameraIcon, CheckIcon, DownIcon, LeftIcon } from '../../../../../constants/icons';
 
 const manageProfile = () => {
 

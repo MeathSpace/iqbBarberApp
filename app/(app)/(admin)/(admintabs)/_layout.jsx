@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { scale, verticalScale } from 'react-native-size-matters'
-import { HomeIcon, ProfileIcon, QueueIcon } from '../../../constants/icons'
+import { HomeIcon, ProfileIcon, QueueIcon } from '../../../../constants/icons'
 
 const AdminTabLayout = () => {
     const insets = useSafeAreaInsets()

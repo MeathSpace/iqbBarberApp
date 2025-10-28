@@ -3,10 +3,10 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, StyleSheet, Switch, TouchableOpacity, View } from 'react-native';
 import { scale, verticalScale } from 'react-native-size-matters';
-import ThemeSafeAreaView from '../../../../components/ThemeSafeAreaView';
-import ThemeTextPrimary from '../../../../components/ThemeTextPrimary';
-import ThemeTextSecondary from '../../../../components/ThemeTextSecondary';
-import { LeftIcon } from '../../../../constants/icons';
+import ThemeSafeAreaView from '../../../../../components/ThemeSafeAreaView';
+import ThemeTextPrimary from '../../../../../components/ThemeTextPrimary';
+import ThemeTextSecondary from '../../../../../components/ThemeTextSecondary';
+import { LeftIcon } from '../../../../../constants/icons';
 
 const appointmentAvailability = () => {
 
