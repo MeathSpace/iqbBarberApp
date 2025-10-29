@@ -1,4 +1,4 @@
-import { AntDesign, Entypo, Feather, FontAwesome, FontAwesome5, FontAwesome6, Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
+import { AntDesign, Entypo, Feather, FontAwesome, FontAwesome5, FontAwesome6, Foundation, Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import { moderateScale } from "react-native-size-matters";
 
 export const EyeIcon = ({ size = moderateScale(24), color = 'black', style }) => (
@@ -113,5 +113,13 @@ export const EmailIcon = ({ size = moderateScale(24), color = 'black', style }) 
 
 export const ScissorIcon = ({ size = moderateScale(24), color = 'black', style }) => (
     <Entypo name="scissors" size={size} color={color} style={style} />
+);
+
+export const CrownIcon = ({ size = moderateScale(24), color = 'black', style }) => (
+    <Foundation name="crown" size={size} color={color} style={style}  />
+);
+
+export const DeleteIcon = ({ size = moderateScale(24), color = 'black', style }) => (
+    <MaterialIcons name="delete-forever" size={size} color={color} style={style} />
 );
 
