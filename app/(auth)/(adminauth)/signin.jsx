@@ -83,7 +83,7 @@ const SignIn = () => {
                                     color: colors.textColor1
                                 }]}
                             />
-                            <Pressable
+                            <TouchableOpacity
                                 onPress={() => setShowPassword(!showPassword)}
                                 style={styles.eyeIcon}
                             >
@@ -92,7 +92,7 @@ const SignIn = () => {
                                 ) : (
                                     <EyeIcon size={20} color="#777" />
                                 )}
-                            </Pressable>
+                            </TouchableOpacity>
                         </View>
                     </View>
 

@@ -302,7 +302,7 @@ import { scale, verticalScale } from 'react-native-size-matters'
 import ThemeSafeAreaView from '../../../components/ThemeSafeAreaView'
 import ThemeTextPrimary from '../../../components/ThemeTextPrimary'
 import ThemeTextSecondary from '../../../components/ThemeTextSecondary'
-import { LeftIcon } from '../../../constants/icons'
+import { DownIcon, LeftIcon } from '../../../constants/icons'
 
 const CreateSalonForm = () => {
 
@@ -319,10 +319,24 @@ const CreateSalonForm = () => {
   ]
 
   const [selectedStep, setSelectedStep] = useState(1)
+
+  // Step 1 
   const [salonName, setSalonName] = useState('')
   const [salonDescription, setSalonDescription] = useState('')
   const [salonEmail, setSalonEmail] = useState('')
   const [salonMobileNumber, setSalonMobileNumber] = useState('')
+
+
+  // Step 2
+  const [salonType, setSalonType] = useState("barbershop")
+  const [salonAddress, setSalonAddress] = useState("")
+  const [salonPostCode, setSalonPostCode] = useState("")
+  const [salonCity, setSalonCity] = useState("")
+  const [salonCountry, setSalonCountry] = useState("")
+  const [salonLatitude, setSalonLatitude] = useState("")
+  const [salonLongitude, setSalonLongitude] = useState("")
+  const [salonTimezone, setSalonTimezone] = useState("")
+  const [salonTypeDrop, setSalonTypeDrop] = useState(false)
 
   return (
     <ThemeSafeAreaView edges={['top']}>
@@ -517,16 +531,151 @@ const CreateSalonForm = () => {
               </View>
             </>
           )}
+
+          {selectedStep === 2 && (
+            <>
+              <View>
+                <ThemeTextPrimary
+                  style={{
+                    fontSize: scale(18),
+                    fontFamily: 'AirbnbCereal_W_Bd',
+                  }}
+                >
+                  Business Information
+                </ThemeTextPrimary>
+                <ThemeTextSecondary style={{ marginTop: verticalScale(5) }}>
+                  Fill in your salon’s business information to continue.
+                </ThemeTextSecondary>
+              </View>
+
+              <View
+                style={{
+                  marginVertical: verticalScale(15),
+                  flexDirection: 'column',
+                  gap: verticalScale(15),
+                }}
+              >
+
+                {/* Salon type */}
+                <View style={{ gap: verticalScale(10), position: "relative" }}>
+                  <ThemeTextPrimary>Salon Type</ThemeTextPrimary>
+                  <View style={[styles.inputContainer, {
+                    backgroundColor: colors.inputColor,
+                    borderColor: colors.borderColor1
+                  }]}>
+                    <TextInput
+                      editable
+                      placeholder="Enter your salon type"
+                      value={salonType}
+                      onChangeText={setSalonType}
+                      placeholderTextColor={colors.textColor2}
+                      style={[styles.inputField, {
+                        flex: 1,
+                        borderWidth: scale(0),
+                        color: colors.textColor1,
+                        backgroundColor: colors.background,
+                      }]}
+                    />
+                    <TouchableOpacity
+                      onPress={() => setSalonTypeDrop((prev) => !prev)}
+                      style={[styles.dropIcon, {
+                        backgroundColor: colors.background,
+                      }]}
+                    >
+                      <DownIcon size={20} color="#777" />
+                    </TouchableOpacity>
+                  </View>
+
+                  {
+                    salonTypeDrop && (
+                      <View
+                        style={{
+                          width: "100%",
+                          height: verticalScale(100),
+                          position: "absolute",
+                          top: verticalScale(80),
+                          left: scale(0),
+                          right: scale(0),
+                          borderRadius: scale(8),
+                          padding: scale(10),
+                          zIndex: 10,
+                          borderWidth: scale(1),
+                          backgroundColor: colors.background,
+                          borderColor: colors.borderColor1
+                        }}>
+                        <ThemeTextPrimary>Hiiicajscn</ThemeTextPrimary>
+                      </View>
+                    )
+                  }
+
+                </View>
+
+                {/* Address */}
+                <View style={{ gap: verticalScale(10) }}>
+                  <ThemeTextPrimary>Salon Address</ThemeTextPrimary>
+                  <TextInput
+                    editable
+                    placeholder="Enter your salon address"
+                    value={salonAddress}
+                    onChangeText={setSalonAddress}
+                    placeholderTextColor={colors.textColor2}
+                    style={[
+                      styles.inputField,
+                      {
+                        backgroundColor: colors.background,
+                        borderColor: colors.borderColor1,
+                        color: colors.textColor1,
+                      },
+                    ]}
+                  />
+                </View>
+
+              </View>
+
+            </>
+          )}
+
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* Continue Button */}
-      <TouchableOpacity
-        style={styles.nextButton}
-        activeOpacity={0.8}
-      >
-        <ThemeTextPrimary style={{ color: 'white', textAlign: 'center' }}>Continue</ThemeTextPrimary>
-      </TouchableOpacity>
+      {selectedStep === 1 && (
+        <TouchableOpacity
+          style={styles.nextButton}
+          activeOpacity={0.8}
+          onPress={() => setSelectedStep(2)}
+        >
+          <ThemeTextPrimary style={{ color: 'white', textAlign: 'center' }}>Continue</ThemeTextPrimary>
+        </TouchableOpacity>
+      )}
+
+      {selectedStep === 2 && (
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: scale(10),
+            width: "95%",
+            marginHorizontal: "auto"
+          }}
+        >
+          <TouchableOpacity
+            style={[styles.nextButton, { flex: 1, backgroundColor: colors.progressBgColor }]}
+            activeOpacity={0.8}
+            onPress={() => setSelectedStep(1)}
+          >
+            <ThemeTextPrimary style={{ color: colors.textColor1, textAlign: 'center' }}>Back</ThemeTextPrimary>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.nextButton, { flex: 1 }]}
+            activeOpacity={0.8}
+            onPress={() => setSelectedStep(3)}
+          >
+            <ThemeTextPrimary style={{ color: 'white', textAlign: 'center' }}>Continue</ThemeTextPrimary>
+          </TouchableOpacity>
+        </View>
+      )}
+
     </ThemeSafeAreaView>
   )
 }
@@ -596,6 +745,17 @@ const styles = StyleSheet.create({
     marginBottom: verticalScale(20),
     width: '95%',
     alignSelf: 'center',
+  },
+
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: scale(1),
+    borderRadius: scale(8),
+  },
+
+  dropIcon: {
+    padding: scale(8),
   },
 })
 
