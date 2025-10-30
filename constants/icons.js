@@ -17,6 +17,10 @@ export const CheckIcon = ({ size = moderateScale(24), color = 'black', style }) 
     <Feather name="check" size={size} color={color} style={style} />
 );
 
+export const CheckCircleIcon = ({ size = moderateScale(24), color = 'black', style }) => (
+    <FontAwesome5 name="check-circle" size={size} color={color} style={style} />
+);
+
 export const CalendarIcon = ({ size = moderateScale(24), color = 'black', style }) => (
     <Ionicons name="calendar-outline" size={size} color={color} style={style} />
 );
@@ -118,6 +122,11 @@ export const ScissorIcon = ({ size = moderateScale(24), color = 'black', style }
 export const CrownIcon = ({ size = moderateScale(24), color = 'black', style }) => (
     <Foundation name="crown" size={size} color={color} style={style}  />
 );
+
+export const CrossCircleIcon = ({ size = moderateScale(24), color = 'black', style }) => (
+   <Feather name="x-circle" size={size} color={color} style={style}   />
+);
+
 
 export const DeleteIcon = ({ size = moderateScale(24), color = 'black', style }) => (
     <MaterialIcons name="delete-forever" size={size} color={color} style={style} />

@@ -1,6 +1,7 @@
 import PhoneInput from "@linhnguyen96114/react-native-phone-input";
 import { useTheme } from "@react-navigation/native";
 import { Image } from "expo-image";
+import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -21,7 +22,12 @@ import {
   CheckIcon,
   DeleteIcon,
   DownIcon,
+  FacebookIcon,
+  InstagramIcon,
   LeftIcon,
+  TiktokIcon,
+  WebIcon,
+  XIcon,
 } from "../../../constants/icons";
 
 const CreateSalonForm = () => {
@@ -73,6 +79,26 @@ const CreateSalonForm = () => {
   const [salonServiceCategoryDrop, setSalonServiceCategoryDrop] =
     useState(false);
 
+  const pickSalonLogo = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      alert("Sorry, we need media library permissions to make this work!");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      const selectedImageUri = result.assets[0].uri;
+      // do something with selectedImageUri
+      console.log("Selected Image:", selectedImageUri);
+    }
+  };
+
   return (
     <ThemeSafeAreaView edges={["top"]}>
       {/* Header */}
@@ -93,7 +119,12 @@ const CreateSalonForm = () => {
         {stepper.map((item) => (
           <View key={item.id} style={styles.stepItem}>
             <TouchableOpacity
-              onPress={() => setSelectedStep(item.id)}
+              onPress={() => {
+                if (completedSteps.includes(item.id)) {
+                  setSelectedStep(item.id);
+                }
+                return;
+              }}
               style={[
                 styles.stepCircle,
                 {
@@ -104,7 +135,7 @@ const CreateSalonForm = () => {
               ]}
             >
               {completedSteps.includes(item.id) ? (
-                <CheckIcon color="#ffffff" size={scale(20)}/>
+                <CheckIcon color="#ffffff" size={scale(20)} />
               ) : (
                 <ThemeTextPrimary
                   style={{
@@ -615,7 +646,13 @@ const CreateSalonForm = () => {
                 </View>
 
                 {/* Salon Timezone */}
-                <View style={{ gap: verticalScale(10), position: "relative", paddingBottom: verticalScale(30) }}>
+                <View
+                  style={{
+                    gap: verticalScale(10),
+                    position: "relative",
+                    paddingBottom: verticalScale(30),
+                  }}
+                >
                   <ThemeTextPrimary>Timezone</ThemeTextPrimary>
                   <View
                     style={[
@@ -1005,210 +1042,510 @@ const CreateSalonForm = () => {
                 </TouchableOpacity>
               </View>
 
+              {[0, 1, 2, 3, 4].map((item) => {
+                return (
+                  <View
+                    key={item}
+                    style={[
+                      styles.serviceCard,
+                      {
+                        backgroundColor: colors.background,
+                        borderColor: colors.borderColor1,
+                      },
+                    ]}
+                  >
+                    <View
+                      style={[
+                        styles.serviceCardTop,
+                        {
+                          borderBottomColor: colors.borderColor1,
+                        },
+                      ]}
+                    >
+                      <View
+                        style={{
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
+                        <Image
+                          style={{
+                            width: scale(45),
+                            height: scale(45),
+                            borderRadius: scale(45),
+                          }}
+                          source="https://i.pinimg.com/736x/0f/5d/ac/0f5dac39ba6687e95f08623a9c9faca9.jpg"
+                          contentFit="cover"
+                          transition={1000}
+                        />
+
+                        <ThemeTextPrimary>Haircut</ThemeTextPrimary>
+                        <ThemeTextSecondary>
+                          Best haircut in town
+                        </ThemeTextSecondary>
+                        <ThemeTextSecondary>Haircut</ThemeTextSecondary>
+                      </View>
+
+                      <TouchableOpacity
+                        style={{
+                          position: "absolute",
+                          top: verticalScale(10),
+                          right: scale(10),
+                        }}
+                      >
+                        <DeleteIcon color="red" />
+                      </TouchableOpacity>
+                    </View>
+
+                    <View style={[styles.serviceCardBottom]}>
+                      {/* Price Section */}
+                      <View
+                        style={{
+                          alignItems: "center", // ✅ centers both text and input horizontally
+                          gap: verticalScale(8),
+                        }}
+                      >
+                        <ThemeTextPrimary
+                          style={{
+                            fontFamily: "AirbnbCereal_W_Bd",
+                            textAlign: "center",
+                          }}
+                        >
+                          Price
+                        </ThemeTextPrimary>
+
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                          }}
+                        >
+                          <ThemeTextPrimary
+                            style={{
+                              marginRight: scale(4),
+                              fontSize: scale(16),
+                            }}
+                          >
+                            $
+                          </ThemeTextPrimary>
+
+                          <TextInput
+                            editable
+                            style={{
+                              borderBottomColor: colors.borderColor1,
+                              borderBottomWidth: scale(1),
+                              textAlign: "center",
+                              width: scale(50),
+                              fontSize: scale(16),
+                            }}
+                          />
+                        </View>
+                      </View>
+
+                      {/* Estimated Time Section */}
+                      <View
+                        style={{
+                          alignItems: "center", // ✅ centers both text and input horizontally
+                          gap: verticalScale(8),
+                        }}
+                      >
+                        <ThemeTextPrimary
+                          style={{
+                            fontFamily: "AirbnbCereal_W_Bd",
+                            textAlign: "center",
+                          }}
+                        >
+                          Estimated Time
+                        </ThemeTextPrimary>
+
+                        <TextInput
+                          editable
+                          style={{
+                            borderBottomColor: colors.borderColor1,
+                            borderBottomWidth: scale(1),
+                            textAlign: "center",
+                            width: scale(60),
+                            fontSize: scale(16),
+                          }}
+                        />
+                      </View>
+                    </View>
+                  </View>
+                );
+              })}
+            </>
+          )}
+
+          {selectedStep === 4 && (
+            <>
+              <View>
+                <ThemeTextPrimary
+                  style={{
+                    fontSize: scale(18),
+                    fontFamily: "AirbnbCereal_W_Bd",
+                  }}
+                >
+                  Gallery
+                </ThemeTextPrimary>
+                <ThemeTextSecondary style={{ marginTop: verticalScale(5) }}>
+                  Upload your salon’s images to complete the gallery setup.
+                </ThemeTextSecondary>
+              </View>
+
               <View
                 style={{
-                  width: "100%",
-                  height: verticalScale(200),
-                  backgroundColor: colors.background,
-                  borderWidth: scale(1),
-                  borderColor: colors.borderColor1,
-                  borderRadius: scale(8),
+                  marginVertical: verticalScale(15),
+                  flexDirection: "column",
+                  gap: verticalScale(15),
                 }}
               >
                 <View
                   style={{
-                    justifyContent: "center",
-                    alignItems: "center",
-                    padding: scale(10),
-                    borderBottomColor: colors.borderColor1,
-                    borderBottomWidth: scale(1),
-                    position: "relative",
-                  }}
-                >
-                  <View
-                    style={{
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Image
-                      style={{
-                        width: scale(45),
-                        height: scale(45),
-                        borderRadius: scale(45),
-                      }}
-                      source="https://i.pinimg.com/736x/0f/5d/ac/0f5dac39ba6687e95f08623a9c9faca9.jpg"
-                      contentFit="cover"
-                      transition={1000}
-                    />
-
-                    <ThemeTextPrimary>Haircut</ThemeTextPrimary>
-                    <ThemeTextSecondary>
-                      Best haircut in town
-                    </ThemeTextSecondary>
-                    <ThemeTextSecondary>Haircut</ThemeTextSecondary>
-                  </View>
-
-                  <TouchableOpacity
-                    style={{
-                      position: "absolute",
-                      top: verticalScale(10),
-                      right: scale(10),
-                    }}
-                  >
-                    <DeleteIcon color="red" />
-                  </TouchableOpacity>
-                </View>
-
-                {/* <View
-                  style={{
                     flexDirection: "row",
                     alignItems: "center",
-                    justifyContent: "space-around",
-                    padding: scale(10),
+                    justifyContent: "space-between",
                   }}
                 >
                   <View
                     style={{
                       flexDirection: "column",
-                      gap: verticalScale(5),
+                      gap: verticalScale(10),
                     }}
                   >
-                    <ThemeTextPrimary
-                      style={{
-                        fontFamily: "AirbnbCereal_W_Bd",
-                        textAlign: "center",
-                      }}
+                    <ThemeTextPrimary>Upload salon logo</ThemeTextPrimary>
+                    <TouchableOpacity
+                      onPress={pickSalonLogo}
+                      style={styles.imgButton}
                     >
-                      Price
-                    </ThemeTextPrimary>
-
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: scale(10),
-                      }}
-                    >
-                      <ThemeTextPrimary>$</ThemeTextPrimary>
-                      <TextInput
-                        editable
-                        style={{
-                          borderBottomColor: colors.borderColor1,
-                          borderBottomWidth: scale(1),
-                          textAlign: "center",
-                          width: scale(40),
-                          fontSize: scale(16),
-                        }}
-                      />
-                    </View>
+                      <ThemeTextPrimary
+                        style={{ color: "white", textAlign: "center" }}
+                      >
+                        Upload
+                      </ThemeTextPrimary>
+                    </TouchableOpacity>
                   </View>
 
-                  <View>
-                    <ThemeTextPrimary
-                      style={{
-                        fontFamily: "AirbnbCereal_W_Bd",
-                        textAlign: "center",
-                      }}
-                    >
-                      Estimated Time
-                    </ThemeTextPrimary>
-
-                    <TextInput
-                      editable
-                      style={{
-                        borderBottomColor: colors.borderColor1,
-                        borderBottomWidth: scale(1),
-                        textAlign: "center",
-                        width: scale(60),
-                        fontSize: scale(16),
-                      }}
-                    />
-                  </View>
-                </View> */}
+                  <Image
+                    style={{
+                      width: scale(65),
+                      height: scale(65),
+                      borderRadius: scale(8),
+                    }}
+                    source="https://i.pinimg.com/736x/0f/5d/ac/0f5dac39ba6687e95f08623a9c9faca9.jpg"
+                    contentFit="cover"
+                    transition={1000}
+                  />
+                </View>
 
                 <View
                   style={{
-                    flexDirection: "row",
-                    justifyContent: "space-around",
-                    alignItems: "center",
-                    padding: scale(10),
+                    flexDirection: "column",
+                    gap: verticalScale(10),
                   }}
                 >
-                  {/* Price Section */}
-                  <View
-                    style={{
-                      alignItems: "center", // ✅ centers both text and input horizontally
-                      gap: verticalScale(8),
-                    }}
+                  <ThemeTextPrimary>
+                    Please select high-quality images to showcase your salon.
+                  </ThemeTextPrimary>
+
+                  <TouchableOpacity
+                    onPress={pickSalonLogo}
+                    style={styles.imgButton}
                   >
                     <ThemeTextPrimary
-                      style={{
-                        fontFamily: "AirbnbCereal_W_Bd",
-                        textAlign: "center",
-                      }}
+                      style={{ color: "white", textAlign: "center" }}
                     >
-                      Price
+                      Upload
                     </ThemeTextPrimary>
+                  </TouchableOpacity>
+                </View>
 
+                {[0, 1, 2, 3, 4].map((item) => {
+                  return (
                     <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                      }}
+                      key={item}
+                      style={[
+                        styles.galleryItemContainer,
+                        {
+                          backgroundColor: colors.background,
+                          borderColor: colors.borderColor1,
+                        },
+                      ]}
                     >
-                      <ThemeTextPrimary
-                        style={{
-                          marginRight: scale(4),
-                          fontSize: scale(16),
-                        }}
-                      >
-                        $
-                      </ThemeTextPrimary>
-
-                      <TextInput
-                        editable
-                        style={{
-                          borderBottomColor: colors.borderColor1,
-                          borderBottomWidth: scale(1),
-                          textAlign: "center",
-                          width: scale(50),
-                          fontSize: scale(16),
-                        }}
+                      <Image
+                        style={styles.galleryImage}
+                        source="https://i.pinimg.com/736x/0f/5d/ac/0f5dac39ba6687e95f08623a9c9faca9.jpg"
+                        contentFit="cover"
+                        transition={1000}
                       />
+                      <View style={styles.galleryBtnContainer}>
+                        <TouchableOpacity
+                          style={[
+                            styles.galleryBtn,
+                            {
+                              backgroundColor: "#ef44443b",
+                              borderColor: "#ef4444",
+                              borderWidth: scale(1),
+                            },
+                          ]}
+                        >
+                          <ThemeTextSecondary style={{ color: "#ef4444" }}>
+                            Delete
+                          </ThemeTextSecondary>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[
+                            styles.galleryBtn,
+                            {
+                              backgroundColor: "#2563eb3b",
+                              borderColor: "#2563eb",
+                              borderWidth: scale(1),
+                            },
+                          ]}
+                        >
+                          <ThemeTextSecondary style={{ color: "#2563eb" }}>
+                            Edit
+                          </ThemeTextSecondary>
+                        </TouchableOpacity>
+                      </View>
                     </View>
-                  </View>
+                  );
+                })}
+              </View>
+            </>
+          )}
 
-                  {/* Estimated Time Section */}
+          {selectedStep === 5 && (
+            <>
+              <View>
+                <ThemeTextPrimary
+                  style={{
+                    fontSize: scale(18),
+                    fontFamily: "AirbnbCereal_W_Bd",
+                  }}
+                >
+                  Social Links
+                </ThemeTextPrimary>
+                <ThemeTextSecondary style={{ marginTop: verticalScale(5) }}>
+                  Add your salon's social media links to enhance your online
+                  presence.
+                </ThemeTextSecondary>
+              </View>
+
+              <View
+                style={{
+                  marginVertical: verticalScale(15),
+                  flexDirection: "column",
+                  gap: verticalScale(15),
+                }}
+              >
+                <View
+                  style={[
+                    styles.socialInputFieldContainer,
+                    {
+                      backgroundColor: colors.background,
+                      borderColor: colors.borderColor1,
+                    },
+                  ]}
+                >
                   <View
                     style={{
-                      alignItems: "center", // ✅ centers both text and input horizontally
-                      gap: verticalScale(8),
+                      width: verticalScale(40),
+                      height: verticalScale(40),
+                      borderRightColor: colors.borderColor1,
+                      borderRightWidth: scale(1),
+                      justifyContent: "center",
+                      alignItems: "center",
                     }}
                   >
-                    <ThemeTextPrimary
-                      style={{
-                        fontFamily: "AirbnbCereal_W_Bd",
-                        textAlign: "center",
-                      }}
-                    >
-                      Estimated Time
-                    </ThemeTextPrimary>
-
-                    <TextInput
-                      editable
-                      style={{
-                        borderBottomColor: colors.borderColor1,
-                        borderBottomWidth: scale(1),
-                        textAlign: "center",
-                        width: scale(60),
-                        fontSize: scale(16),
-                      }}
-                    />
+                    <WebIcon />
                   </View>
+                  <TextInput
+                    editable
+                    placeholder="https://www.salon.com/"
+                    value={salonName}
+                    onChangeText={setSalonName}
+                    placeholderTextColor={colors.textColor2}
+                    style={[
+                      styles.socialInputField,
+                      {
+                        backgroundColor: colors.background,
+                        color: colors.textColor1,
+                        borderTopColor: colors.borderColor1,
+                        borderRightColor: colors.borderColor1,
+                        borderBottomColor: colors.borderColor1,
+                      },
+                    ]}
+                  />
+                </View>
+
+                <View
+                  style={[
+                    styles.socialInputFieldContainer,
+                    {
+                      backgroundColor: colors.background,
+                      borderColor: colors.borderColor1,
+                    },
+                  ]}
+                >
+                  <View
+                    style={{
+                      width: verticalScale(40),
+                      height: verticalScale(40),
+                      borderRightColor: colors.borderColor1,
+                      borderRightWidth: scale(1),
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <FacebookIcon />
+                  </View>
+                  <TextInput
+                    editable
+                    placeholder="https://www.facebook.com/salon/"
+                    value={salonName}
+                    onChangeText={setSalonName}
+                    placeholderTextColor={colors.textColor2}
+                    style={[
+                      styles.socialInputField,
+                      {
+                        backgroundColor: colors.background,
+                        color: colors.textColor1,
+                        borderTopColor: colors.borderColor1,
+                        borderRightColor: colors.borderColor1,
+                        borderBottomColor: colors.borderColor1,
+                      },
+                    ]}
+                  />
+                </View>
+
+                <View
+                  style={[
+                    styles.socialInputFieldContainer,
+                    {
+                      backgroundColor: colors.background,
+                      borderColor: colors.borderColor1,
+                    },
+                  ]}
+                >
+                  <View
+                    style={{
+                      width: verticalScale(40),
+                      height: verticalScale(40),
+                      borderRightColor: colors.borderColor1,
+                      borderRightWidth: scale(1),
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <InstagramIcon />
+                  </View>
+                  <TextInput
+                    editable
+                    placeholder="https://www.instagram.com/salon"
+                    value={salonName}
+                    onChangeText={setSalonName}
+                    placeholderTextColor={colors.textColor2}
+                    style={[
+                      styles.socialInputField,
+                      {
+                        backgroundColor: colors.background,
+                        color: colors.textColor1,
+                        borderTopColor: colors.borderColor1,
+                        borderRightColor: colors.borderColor1,
+                        borderBottomColor: colors.borderColor1,
+                      },
+                    ]}
+                  />
+                </View>
+
+                <View
+                  style={[
+                    styles.socialInputFieldContainer,
+                    {
+                      backgroundColor: colors.background,
+                      borderColor: colors.borderColor1,
+                    },
+                  ]}
+                >
+                  <View
+                    style={{
+                      width: verticalScale(40),
+                      height: verticalScale(40),
+                      borderRightColor: colors.borderColor1,
+                      borderRightWidth: scale(1),
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <XIcon />
+                  </View>
+                  <TextInput
+                    editable
+                    placeholder="https://x.com/Salon"
+                    value={salonName}
+                    onChangeText={setSalonName}
+                    placeholderTextColor={colors.textColor2}
+                    style={[
+                      styles.socialInputField,
+                      {
+                        backgroundColor: colors.background,
+                        color: colors.textColor1,
+                        borderTopColor: colors.borderColor1,
+                        borderRightColor: colors.borderColor1,
+                        borderBottomColor: colors.borderColor1,
+                      },
+                    ]}
+                  />
+                </View>
+
+                <View
+                  style={[
+                    styles.socialInputFieldContainer,
+                    {
+                      backgroundColor: colors.background,
+                      borderColor: colors.borderColor1,
+                    },
+                  ]}
+                >
+                  <View
+                    style={{
+                      width: verticalScale(40),
+                      height: verticalScale(40),
+                      borderRightColor: colors.borderColor1,
+                      borderRightWidth: scale(1),
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <TiktokIcon />
+                  </View>
+                  <TextInput
+                    editable
+                    placeholder="https://www.tiktok.com/salon"
+                    value={salonName}
+                    onChangeText={setSalonName}
+                    placeholderTextColor={colors.textColor2}
+                    style={[
+                      styles.socialInputField,
+                      {
+                        backgroundColor: colors.background,
+                        color: colors.textColor1,
+                        borderTopColor: colors.borderColor1,
+                        borderRightColor: colors.borderColor1,
+                        borderBottomColor: colors.borderColor1,
+                      },
+                    ]}
+                  />
                 </View>
               </View>
             </>
+          )}
+
+          {selectedStep === 6 && (
+            <ThemeTextSecondary>
+              All steps have been successfully completed. Please click the
+              Update button to save your changes.
+            </ThemeTextSecondary>
           )}
         </ScrollView>
       </KeyboardAvoidingView>
@@ -1309,6 +1646,134 @@ const CreateSalonForm = () => {
           >
             <ThemeTextPrimary style={{ color: "white", textAlign: "center" }}>
               Continue
+            </ThemeTextPrimary>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {selectedStep === 4 && (
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: scale(10),
+            width: "95%",
+            marginHorizontal: "auto",
+          }}
+        >
+          <TouchableOpacity
+            style={[
+              styles.nextButton,
+              { flex: 1, backgroundColor: colors.progressBgColor },
+            ]}
+            activeOpacity={0.8}
+            onPress={() => {
+              setSelectedStep(3);
+              setCompletedSteps([1, 2]);
+            }}
+          >
+            <ThemeTextPrimary
+              style={{ color: colors.textColor1, textAlign: "center" }}
+            >
+              Back
+            </ThemeTextPrimary>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.nextButton, { flex: 1 }]}
+            activeOpacity={0.8}
+            onPress={() => {
+              setSelectedStep(5);
+              setCompletedSteps([1, 2, 3, 4]);
+            }}
+          >
+            <ThemeTextPrimary style={{ color: "white", textAlign: "center" }}>
+              Continue
+            </ThemeTextPrimary>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {selectedStep === 5 && (
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: scale(10),
+            width: "95%",
+            marginHorizontal: "auto",
+          }}
+        >
+          <TouchableOpacity
+            style={[
+              styles.nextButton,
+              { flex: 1, backgroundColor: colors.progressBgColor },
+            ]}
+            activeOpacity={0.8}
+            onPress={() => {
+              setSelectedStep(4);
+              setCompletedSteps([1, 2, 3]);
+            }}
+          >
+            <ThemeTextPrimary
+              style={{ color: colors.textColor1, textAlign: "center" }}
+            >
+              Back
+            </ThemeTextPrimary>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.nextButton, { flex: 1 }]}
+            activeOpacity={0.8}
+            onPress={() => {
+              setSelectedStep(6);
+              setCompletedSteps([1, 2, 3, 4, 5]);
+            }}
+          >
+            <ThemeTextPrimary style={{ color: "white", textAlign: "center" }}>
+              Continue
+            </ThemeTextPrimary>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {selectedStep === 6 && (
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: scale(10),
+            width: "95%",
+            marginHorizontal: "auto",
+          }}
+        >
+          <TouchableOpacity
+            style={[
+              styles.nextButton,
+              { flex: 1, backgroundColor: colors.progressBgColor },
+            ]}
+            activeOpacity={0.8}
+            onPress={() => {
+              setSelectedStep(5);
+              setCompletedSteps([1, 2, 3, 4]);
+            }}
+          >
+            <ThemeTextPrimary
+              style={{ color: colors.textColor1, textAlign: "center" }}
+            >
+              Back
+            </ThemeTextPrimary>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.nextButton, { flex: 1 }]}
+            activeOpacity={0.8}
+            onPress={() => {
+              router.push("/(admintabs)/(home)");
+            }}
+          >
+            <ThemeTextPrimary style={{ color: "white", textAlign: "center" }}>
+              Finish
             </ThemeTextPrimary>
           </TouchableOpacity>
         </View>
@@ -1424,5 +1889,81 @@ const styles = StyleSheet.create({
     paddingVertical: verticalScale(12),
     borderRadius: scale(8),
     marginVertical: verticalScale(5),
+  },
+
+  serviceCard: {
+    width: "100%",
+    height: verticalScale(200),
+    borderWidth: scale(1),
+    borderRadius: scale(8),
+    marginBottom: verticalScale(15),
+  },
+
+  serviceCardTop: {
+    justifyContent: "center",
+    alignItems: "center",
+    padding: scale(10),
+    borderBottomWidth: scale(1),
+    position: "relative",
+  },
+  serviceCardBottom: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+    padding: scale(10),
+  },
+  imgButton: {
+    width: scale(100),
+    backgroundColor: "#14b8a6",
+    paddingVertical: verticalScale(8),
+    borderRadius: scale(8),
+  },
+
+  galleryItemContainer: {
+    borderWidth: scale(1),
+    borderRadius: scale(10),
+  },
+
+  galleryImage: {
+    flex: 1,
+    height: verticalScale(120),
+    borderRadius: scale(8),
+    margin: scale(10),
+  },
+
+  galleryBtnContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: scale(10),
+    paddingBottom: scale(10),
+  },
+  galleryBtn: {
+    height: verticalScale(30),
+    width: scale(80),
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: scale(20),
+  },
+
+  socialInputFieldContainer: {
+    height: verticalScale(40),
+    borderRadius: scale(8),
+    borderWidth: scale(1),
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  socialInputField: {
+    flex: 1,
+    height: verticalScale(40),
+    paddingHorizontal: scale(10),
+    borderTopRightRadius: scale(8),
+    borderBottomRightRadius: scale(8),
+    borderTopWidth: scale(1),
+    borderRightWidth: scale(1),
+    borderBottomWidth: scale(1),
+    fontSize: scale(14),
+    fontFamily: "AirbnbCereal_W_Md",
   },
 });

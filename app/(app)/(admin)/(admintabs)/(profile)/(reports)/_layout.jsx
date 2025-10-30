@@ -1,16 +1,16 @@
 import { Stack } from 'expo-router'
 import { StyleSheet } from 'react-native'
 
-const ProfileLayout = () => {
+const ReportLayout = () => {
     return (
         <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="index" />
-            <Stack.Screen name="manageProfile" />
-            <Stack.Screen name="(reports)" />
+            <Stack.Screen name="appointmentReport" />
+            <Stack.Screen name="queueReport" />
         </Stack>
     )
 }
 
-export default ProfileLayout
+export default ReportLayout
 
 const styles = StyleSheet.create({})

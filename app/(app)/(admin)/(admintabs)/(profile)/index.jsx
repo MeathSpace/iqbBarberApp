@@ -21,7 +21,7 @@ const index = () => {
       darkBg: '#5b21b633',
       lightColor: "#2563eb",
       darkColor: '#c4b5fd',
-      route: "/connectSalon",
+      route: "/(reports)",
       display: true
     },
     {
@@ -55,7 +55,7 @@ const index = () => {
   return (
     <ThemeSafeAreaView
       style={{
-        backgroundColor: colors.background2,
+        backgroundColor: colors.background,
         padding: scale(15)
       }}
       edges={['top', 'left', 'right']}
@@ -96,7 +96,9 @@ const index = () => {
 
             return (
               <View key={idx}>
-                <TouchableOpacity activeOpacity={0.8} style={styles.optionRow} onPress={() => { }}>
+                <TouchableOpacity activeOpacity={0.8} style={styles.optionRow} onPress={() => { 
+                  router.push(opt.route)
+                }}>
                   <View style={[styles.optionIconWrapper, { backgroundColor: opt.lightBg }]}>
                     {opt.icon}
                   </View>
