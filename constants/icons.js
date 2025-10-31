@@ -127,7 +127,6 @@ export const CrossCircleIcon = ({ size = moderateScale(24), color = 'black', sty
    <Feather name="x-circle" size={size} color={color} style={style}   />
 );
 
-
 export const DeleteIcon = ({ size = moderateScale(24), color = 'black', style }) => (
     <MaterialIcons name="delete-forever" size={size} color={color} style={style} />
 );

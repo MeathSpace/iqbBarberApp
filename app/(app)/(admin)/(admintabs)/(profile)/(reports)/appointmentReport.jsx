@@ -1,4 +1,5 @@
 import { useTheme } from "@react-navigation/native";
+import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
   ScrollView,
@@ -8,21 +9,44 @@ import {
   View,
 } from "react-native";
 import { AnimatedCircularProgress } from "react-native-circular-progress";
+import { BarChart } from "react-native-gifted-charts";
 import { scale, verticalScale } from "react-native-size-matters";
 import ThemeSafeAreaView from "../../../../../../components/ThemeSafeAreaView";
 import ThemeTextPrimary from "../../../../../../components/ThemeTextPrimary";
 import {
   CheckCircleIcon,
   CrossCircleIcon,
+  LeftIcon,
 } from "../../../../../../constants/icons";
 
 const appointmentReport = () => {
+  const router = useRouter();
   const { colors } = useTheme();
 
   const [tabData, setTabData] = useState(["Daily", "Weekly", "Monthly"]);
 
   const [selectedTab, setSelectedTab] = useState("Daily");
   const colorScheme = useColorScheme();
+
+  const serveData = [
+    { value: 50, label: "Mon" },
+    { value: 80, label: "Tue" },
+    { value: 90, label: "Wed" },
+    { value: 70, label: "Thu" },
+    { value: 60, label: "Fri" },
+    { value: 40, label: "Sat" },
+    { value: 30, label: "Sun" },
+  ];
+
+  const cancelData = [
+    { value: 35, label: "Mon" },
+    { value: 55, label: "Tue" },
+    { value: 25, label: "Wed" },
+    { value: 70, label: "Thu" },
+    { value: 45, label: "Fri" },
+    { value: 60, label: "Sat" },
+    { value: 30, label: "Sun" },
+  ];
 
   return (
     <ThemeSafeAreaView
@@ -32,6 +56,31 @@ const appointmentReport = () => {
       }}
       edges={["top", "left", "right"]}
     >
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          gap: scale(10),
+          marginBottom: verticalScale(20),
+        }}
+      >
+        <TouchableOpacity
+          onPress={() => {
+            router.back();
+          }}
+        >
+          <LeftIcon color={colors.textColor1} size={scale(18)} />
+        </TouchableOpacity>
+        <ThemeTextPrimary
+          style={{
+            flex: 1,
+            fontSize: scale(18),
+            fontFamily: "AirbnbCereal_W_XBd",
+          }}
+        >
+          Appointment Report
+        </ThemeTextPrimary>
+      </View>
       <View
         style={{
           flexDirection: "row",
@@ -60,19 +109,6 @@ const appointmentReport = () => {
                 setSelectedTab(item);
               }}
             >
-              {/* <ThemeTextPrimary
-                style={{
-                  fontSize: scale(12),
-                  color:
-                    selectedTab === item
-                      ? "#fff"
-                      : colorScheme === "dark"
-                      ? "#fff"
-                      : "#000",
-                }}
-              >
-                {item}
-              </ThemeTextPrimary> */}
               <ThemeTextPrimary
                 style={{
                   fontSize: scale(14),
@@ -102,7 +138,6 @@ const appointmentReport = () => {
           <View
             style={{
               backgroundColor: colors.background2,
-              // height: verticalScale(150),
               borderRadius: scale(8),
               borderWidth: scale(1),
               borderColor: colors.borderColor1,
@@ -387,6 +422,286 @@ const appointmentReport = () => {
           </View>
         </ScrollView>
       )}
+
+      {selectedTab === "Weekly" && (
+        <ScrollView
+          style={{
+            flex: 1,
+            marginTop: verticalScale(20),
+          }}
+          showsVerticalScrollIndicator={false}
+        >
+          <View
+            style={{
+              backgroundColor: colors.background2,
+              borderRadius: scale(8),
+              borderWidth: scale(1),
+              borderColor: colors.borderColor1,
+              padding: scale(12),
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: scale(15),
+            }}
+          >
+            <AnimatedCircularProgress
+              size={scale(85)}
+              width={scale(10)}
+              fill={99}
+              tintColor="#9333ea"
+              // onAnimationComplete={() => console.log("onAnimationComplete")}
+              backgroundColor={colors.progressBgColor}
+            >
+              {() => <ThemeTextPrimary>{230}</ThemeTextPrimary>}
+            </AnimatedCircularProgress>
+
+            <AnimatedCircularProgress
+              size={scale(85)}
+              width={scale(10)}
+              fill={85}
+              tintColor="#16a34a"
+              // onAnimationComplete={() => console.log("onAnimationComplete")}
+              backgroundColor={colors.progressBgColor}
+            >
+              {() => <ThemeTextPrimary>{180}</ThemeTextPrimary>}
+            </AnimatedCircularProgress>
+
+            <AnimatedCircularProgress
+              size={scale(85)}
+              width={scale(10)}
+              fill={30}
+              tintColor="#ef4444"
+              // onAnimationComplete={() => console.log("onAnimationComplete")}
+              backgroundColor={colors.progressBgColor}
+            >
+              {() => <ThemeTextPrimary>{50}</ThemeTextPrimary>}
+            </AnimatedCircularProgress>
+          </View>
+
+          <View
+            style={{
+              marginTop: verticalScale(20),
+              gap: verticalScale(15),
+            }}
+          >
+            <View
+              style={[
+                styles.report_card,
+                {
+                  backgroundColor: colors.background2,
+                  borderColor: colors.borderColor1,
+                },
+              ]}
+            >
+              <ThemeTextPrimary
+                style={{
+                  textAlign: "center",
+                  textTransform: "uppercase",
+                  fontSize: scale(14),
+                  fontFamily: "AirbnbCereal_W_Bd",
+                }}
+              >
+                Serve Appointments
+              </ThemeTextPrimary>
+              <BarChart
+                data={serveData}
+                barWidth={scale(25)}
+                spacing={scale(20)}
+                frontColor="#a3e635" // bottom color
+                gradientColor="#22c55e" // top color
+                showGradient // enables gradient
+                yAxisThickness={0}
+                yAxisTextStyle={{ color: "gray", fontSize: scale(12) }}
+                xAxisThickness={0}
+                xAxisLabelTextStyle={{ color: "gray", fontSize: scale(12) }}
+                hideRules={true}
+                isAnimated
+                animationDuration={300}
+                barBorderRadius={scale(3)}
+                height={verticalScale(190)}
+              />
+            </View>
+
+            <View
+              style={[
+                styles.report_card,
+                {
+                  backgroundColor: colors.background2,
+                  borderColor: colors.borderColor1,
+                },
+              ]}
+            >
+              <ThemeTextPrimary
+                style={{
+                  textAlign: "center",
+                  textTransform: "uppercase",
+                  fontSize: scale(14),
+                  fontFamily: "AirbnbCereal_W_Bd",
+                }}
+              >
+                Cancel Appointments
+              </ThemeTextPrimary>
+              <BarChart
+                data={cancelData}
+                barWidth={scale(25)}
+                spacing={scale(20)}
+                frontColor="#f87171" // bottom (light red)
+                gradientColor="#dc2626" // top (deep red)
+                showGradient // enables gradient
+                yAxisThickness={0}
+                yAxisTextStyle={{ color: "gray", fontSize: scale(12) }}
+                xAxisThickness={0}
+                xAxisLabelTextStyle={{ color: "gray", fontSize: scale(12) }}
+                hideRules={true}
+                isAnimated
+                animationDuration={300}
+                barBorderRadius={scale(3)}
+                height={verticalScale(190)}
+              />
+            </View>
+          </View>
+        </ScrollView>
+      )}
+
+      {selectedTab === "Monthly" && (
+        <ScrollView
+          style={{
+            flex: 1,
+            marginTop: verticalScale(20),
+          }}
+          showsVerticalScrollIndicator={false}
+        >
+          <View
+            style={{
+              backgroundColor: colors.background2,
+              borderRadius: scale(8),
+              borderWidth: scale(1),
+              borderColor: colors.borderColor1,
+              padding: scale(12),
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: scale(15),
+            }}
+          >
+            <AnimatedCircularProgress
+              size={scale(85)}
+              width={scale(10)}
+              fill={99}
+              tintColor="#9333ea"
+              // onAnimationComplete={() => console.log("onAnimationComplete")}
+              backgroundColor={colors.progressBgColor}
+            >
+              {() => <ThemeTextPrimary>{950}</ThemeTextPrimary>}
+            </AnimatedCircularProgress>
+
+            <AnimatedCircularProgress
+              size={scale(85)}
+              width={scale(10)}
+              fill={85}
+              tintColor="#16a34a"
+              // onAnimationComplete={() => console.log("onAnimationComplete")}
+              backgroundColor={colors.progressBgColor}
+            >
+              {() => <ThemeTextPrimary>{780}</ThemeTextPrimary>}
+            </AnimatedCircularProgress>
+
+            <AnimatedCircularProgress
+              size={scale(85)}
+              width={scale(10)}
+              fill={30}
+              tintColor="#ef4444"
+              // onAnimationComplete={() => console.log("onAnimationComplete")}
+              backgroundColor={colors.progressBgColor}
+            >
+              {() => <ThemeTextPrimary>{150}</ThemeTextPrimary>}
+            </AnimatedCircularProgress>
+          </View>
+
+          <View
+            style={{
+              marginTop: verticalScale(20),
+              gap: verticalScale(15),
+            }}
+          >
+            <View
+              style={[
+                styles.report_card,
+                {
+                  backgroundColor: colors.background2,
+                  borderColor: colors.borderColor1,
+                },
+              ]}
+            >
+              <ThemeTextPrimary
+                style={{
+                  textAlign: "center",
+                  textTransform: "uppercase",
+                  fontSize: scale(14),
+                  fontFamily: "AirbnbCereal_W_Bd",
+                }}
+              >
+                Serve Appointments
+              </ThemeTextPrimary>
+              <BarChart
+                data={serveData}
+                barWidth={scale(25)}
+                spacing={scale(20)}
+                frontColor="#a3e635" // bottom color
+                gradientColor="#22c55e" // top color
+                showGradient // enables gradient
+                yAxisThickness={0}
+                yAxisTextStyle={{ color: "gray", fontSize: scale(12) }}
+                xAxisThickness={0}
+                xAxisLabelTextStyle={{ color: "gray", fontSize: scale(12) }}
+                hideRules={true}
+                isAnimated
+                animationDuration={300}
+                barBorderRadius={scale(3)}
+                height={verticalScale(190)}
+              />
+            </View>
+
+            <View
+              style={[
+                styles.report_card,
+                {
+                  backgroundColor: colors.background2,
+                  borderColor: colors.borderColor1,
+                },
+              ]}
+            >
+              <ThemeTextPrimary
+                style={{
+                  textAlign: "center",
+                  textTransform: "uppercase",
+                  fontSize: scale(14),
+                  fontFamily: "AirbnbCereal_W_Bd",
+                }}
+              >
+                Cancel Appointments
+              </ThemeTextPrimary>
+              <BarChart
+                data={cancelData}
+                barWidth={scale(25)}
+                spacing={scale(20)}
+                frontColor="#f87171" // bottom (light red)
+                gradientColor="#dc2626" // top (deep red)
+                showGradient // enables gradient
+                yAxisThickness={0}
+                yAxisTextStyle={{ color: "gray", fontSize: scale(12) }}
+                xAxisThickness={0}
+                xAxisLabelTextStyle={{ color: "gray", fontSize: scale(12) }}
+                hideRules={true}
+                isAnimated
+                animationDuration={300}
+                barBorderRadius={scale(3)}
+                height={verticalScale(190)}
+              />
+            </View>
+          </View>
+        </ScrollView>
+      )}
     </ThemeSafeAreaView>
   );
 };
@@ -411,5 +726,14 @@ const styles = StyleSheet.create({
     borderWidth: scale(1),
     paddingHorizontal: scale(12),
     height: verticalScale(50),
+  },
+
+  report_card: {
+    width: "100%",
+    padding: scale(12),
+    borderWidth: scale(1),
+    flexDirection: "column",
+    gap: verticalScale(10),
+    borderRadius: scale(8),
   },
 });

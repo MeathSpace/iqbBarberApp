@@ -37,7 +37,7 @@ const RootLayout = () => {
       ...DefaultTheme.colors,
       background: '#f8fafc',
       background2: "#ffffff",
-      textColor1: "#000000",
+      textColor1: "#111827",
       textColor2: "#808080",
       borderColor1: "#e5e7eb",
       inputColor: "#ffffff",

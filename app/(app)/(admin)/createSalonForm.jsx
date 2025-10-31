@@ -1357,7 +1357,7 @@ const CreateSalonForm = () => {
                       alignItems: "center",
                     }}
                   >
-                    <WebIcon />
+                    <WebIcon color={colors.textColor1} />
                   </View>
                   <TextInput
                     editable
@@ -1397,7 +1397,7 @@ const CreateSalonForm = () => {
                       alignItems: "center",
                     }}
                   >
-                    <FacebookIcon />
+                    <FacebookIcon color={colors.textColor1} />
                   </View>
                   <TextInput
                     editable
@@ -1437,7 +1437,7 @@ const CreateSalonForm = () => {
                       alignItems: "center",
                     }}
                   >
-                    <InstagramIcon />
+                    <InstagramIcon color={colors.textColor1}/>
                   </View>
                   <TextInput
                     editable
@@ -1477,7 +1477,7 @@ const CreateSalonForm = () => {
                       alignItems: "center",
                     }}
                   >
-                    <XIcon />
+                    <XIcon color={colors.textColor1}/>
                   </View>
                   <TextInput
                     editable
@@ -1517,7 +1517,7 @@ const CreateSalonForm = () => {
                       alignItems: "center",
                     }}
                   >
-                    <TiktokIcon />
+                    <TiktokIcon color={colors.textColor1}/>
                   </View>
                   <TextInput
                     editable

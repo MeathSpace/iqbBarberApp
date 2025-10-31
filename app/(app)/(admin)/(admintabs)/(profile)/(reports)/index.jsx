@@ -19,10 +19,10 @@ const index = () => {
     {
       label: "Appointment Reports",
       icon: <CalendarIcon color="#2563eb" />,
-      lightBg: "#ede9fe",
-      darkBg: "#5b21b633",
-      lightColor: "#2563eb",
-      darkColor: "#c4b5fd",
+      lightBg: "#dbeafe", 
+      darkBg: "#1e3a8a33",
+      lightColor: "#2563eb", 
+      darkColor: "#93c5fd", 
       route: "/appointmentReport",
       display: true,
     },
@@ -51,6 +51,7 @@ const index = () => {
           flexDirection: "row",
           alignItems: "center",
           gap: scale(10),
+          marginBottom: verticalScale(20),
         }}
       >
         <TouchableOpacity
@@ -131,7 +132,6 @@ const styles = StyleSheet.create({
   optionsBox: {
     borderRadius: scale(16),
     borderWidth: scale(1),
-    marginTop: verticalScale(20)
   },
   optionRow: {
     flexDirection: "row",
