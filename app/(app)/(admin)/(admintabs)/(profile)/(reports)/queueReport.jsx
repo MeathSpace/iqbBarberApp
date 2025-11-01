@@ -21,10 +21,6 @@ import {
 import { useAdminAuth } from "../../../../../../context/admin/AuthContext";
 
 const queueReport = () => {
-  const { user } = useAdminAuth();
-
-  console.log("Admin user Home ", user);
-
   const router = useRouter();
   const { colors } = useTheme();
 

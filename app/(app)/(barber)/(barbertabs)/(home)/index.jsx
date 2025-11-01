@@ -23,14 +23,6 @@ import { useBarberGlobal } from "../../../../../context/barber/GlobalContext";
 import { useBarberAuth } from "../../../../../context/barber/AuthContext";
 
 const index = () => {
-  const { global } = useBarberGlobal();
-
-  console.log("Global Home ", global);
-
-  const { user } = useBarberAuth()
-
-  console.log("barber home ", user)
-
   const { colors } = useTheme();
   const [isOnline, setIsOnline] = useState(true);
 

@@ -14,8 +14,12 @@ import {
   RightIcon,
   SalonIcon,
 } from "../../../../../constants/icons";
+import { useAdminAuth } from "../../../../../context/admin/AuthContext";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const index = () => {
+  const { setUserSalonId } = useAdminAuth();
+
   const { colors } = useTheme();
 
   const profileOptions = [
@@ -32,10 +36,10 @@ const index = () => {
     {
       label: "Change Salon",
       icon: <SalonIcon color="#7c3aed" />,
-      lightBg: "#f3e8ff", 
-      darkBg: "#6d28d933", 
+      lightBg: "#f3e8ff",
+      darkBg: "#6d28d933",
       lightColor: "#7c3aed",
-      darkColor: "#c4b5fd", 
+      darkColor: "#c4b5fd",
       route: "/changeSalon",
       display: true,
     },
@@ -63,7 +67,9 @@ const index = () => {
 
   const router = useRouter();
 
-  const logoutPressed = () => {
+  const logoutPressed = async() => {
+    await AsyncStorage.removeItem("adminEmail");
+    await AsyncStorage.removeItem("adminSalonId");
     router.replace("/(adminauth)/signin");
   };
 
@@ -188,6 +194,14 @@ const index = () => {
           <ThemeTextPrimary style={[styles.logoutText, { color: "#dc2626" }]}>
             Log Out
           </ThemeTextPrimary>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => {
+            setUserSalonId((prev) => prev + 1);
+          }}
+        >
+          <ThemeTextPrimary>Change SALON ID</ThemeTextPrimary>
         </TouchableOpacity>
       </ScrollView>
     </ThemeSafeAreaView>

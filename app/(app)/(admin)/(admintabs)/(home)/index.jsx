@@ -18,14 +18,6 @@ import { useAdminGlobal } from "../../../../../context/admin/GlobalContext";
 import { useAdminAuth } from "../../../../../context/admin/AuthContext";
 
 const index = () => {
-  const { global } = useAdminGlobal();
-
-  console.log("Global Home ", global);
-
-  const { user } = useAdminAuth();
-
-  console.log("Admin user Home ", user);
-
   const { colors } = useTheme();
   const [isOnline, setIsOnline] = useState(true);
 
