@@ -1,15 +1,35 @@
-import { useTheme } from '@react-navigation/native'
-import { Image } from 'expo-image'
-import { LinearGradient } from 'expo-linear-gradient'
-import { useState } from 'react'
-import { ScrollView, StyleSheet, Switch, TouchableOpacity, View } from 'react-native'
-import { moderateScale, scale, verticalScale } from 'react-native-size-matters'
-import ThemeSafeAreaView from '../../../../../components/ThemeSafeAreaView'
-import ThemeTextPrimary from '../../../../../components/ThemeTextPrimary'
-import ThemeTextSecondary from '../../../../../components/ThemeTextSecondary'
-import { CalendarIcon, NotificationIcon, QueueIcon, WifiIcon } from '../../../../../constants/icons'
+import { useTheme } from "@react-navigation/native";
+import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
+import { useState } from "react";
+import {
+  ScrollView,
+  StyleSheet,
+  Switch,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { moderateScale, scale, verticalScale } from "react-native-size-matters";
+import ThemeSafeAreaView from "../../../../../components/ThemeSafeAreaView";
+import ThemeTextPrimary from "../../../../../components/ThemeTextPrimary";
+import ThemeTextSecondary from "../../../../../components/ThemeTextSecondary";
+import {
+  CalendarIcon,
+  NotificationIcon,
+  QueueIcon,
+  WifiIcon,
+} from "../../../../../constants/icons";
+import { useBarberGlobal } from "../../../../../context/barber/GlobalContext";
+import { useBarberAuth } from "../../../../../context/barber/AuthContext";
 
 const index = () => {
+  const { global } = useBarberGlobal();
+
+  console.log("Global Home ", global);
+
+  const { user } = useBarberAuth()
+
+  console.log("barber home ", user)
 
   const { colors } = useTheme();
   const [isOnline, setIsOnline] = useState(true);
@@ -42,25 +62,30 @@ const index = () => {
   return (
     <ThemeSafeAreaView
       style={{
-        backgroundColor: colors.background2
-      }}
-      edges={['top', 'left', 'right']}>
-      {/* Header */}
-      <View style={{
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        height: verticalScale(60),
         backgroundColor: colors.background2,
-        borderBottomColor: colors.borderColor1,
-        borderBottomWidth: scale(1),
-        paddingHorizontal: scale(12)
-      }}>
-        <View style={{
+      }}
+      edges={["top", "left", "right"]}
+    >
+      {/* Header */}
+      <View
+        style={{
           flexDirection: "row",
           alignItems: "center",
-          gap: scale(10)
-        }}>
+          justifyContent: "space-between",
+          height: verticalScale(60),
+          backgroundColor: colors.background2,
+          borderBottomColor: colors.borderColor1,
+          borderBottomWidth: scale(1),
+          paddingHorizontal: scale(12),
+        }}
+      >
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: scale(10),
+          }}
+        >
           <Image
             style={styles.image}
             source="https://i.pinimg.com/736x/0f/5d/ac/0f5dac39ba6687e95f08623a9c9faca9.jpg"
@@ -80,19 +105,26 @@ const index = () => {
       <ScrollView
         showsVerticalScrollIndicator={false}
         style={{
-          flex: 1
+          flex: 1,
         }}
         contentContainerStyle={styles.scrollContainer}
       >
         {/* Section 1 */}
         <View style={styles.upcommingAppointmentSection}>
-          <ThemeTextPrimary style={[styles.sectionTitle, {
-            fontSize: scale(18),
-            fontFamily: "AirbnbCereal_W_Bd"
-          }]}>Upcoming Appointments</ThemeTextPrimary>
+          <ThemeTextPrimary
+            style={[
+              styles.sectionTitle,
+              {
+                fontSize: scale(18),
+                fontFamily: "AirbnbCereal_W_Bd",
+              },
+            ]}
+          >
+            Upcoming Appointments
+          </ThemeTextPrimary>
 
           <LinearGradient
-            colors={['#14b8a6', '#0d9488']}
+            colors={["#14b8a6", "#0d9488"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.card}
@@ -101,48 +133,75 @@ const index = () => {
               {/* DATE BOX */}
               <View style={styles.dateBox}>
                 <ThemeTextPrimary style={styles.dateDay}>17</ThemeTextPrimary>
-                <ThemeTextPrimary style={styles.dateMonth}>July</ThemeTextPrimary>
-                <ThemeTextSecondary style={styles.dateTime}>12:30</ThemeTextSecondary>
+                <ThemeTextPrimary style={styles.dateMonth}>
+                  July
+                </ThemeTextPrimary>
+                <ThemeTextSecondary style={styles.dateTime}>
+                  12:30
+                </ThemeTextSecondary>
               </View>
 
               {/* CLIENT INFO */}
               <View style={{ flex: 1 }}>
-                <ThemeTextPrimary style={styles.clientName}>Michael Swath</ThemeTextPrimary>
-                <ThemeTextSecondary style={styles.clientDetails}>3 Services | $79.00</ThemeTextSecondary>
-                <ThemeTextSecondary style={styles.clientDetails}>Approx. 25 mins</ThemeTextSecondary>
+                <ThemeTextPrimary style={styles.clientName}>
+                  Michael Swath
+                </ThemeTextPrimary>
+                <ThemeTextSecondary style={styles.clientDetails}>
+                  3 Services | $79.00
+                </ThemeTextSecondary>
+                <ThemeTextSecondary style={styles.clientDetails}>
+                  Approx. 25 mins
+                </ThemeTextSecondary>
               </View>
             </View>
 
             {/* ACTION BUTTONS */}
             <View style={styles.buttonRow}>
-              <TouchableOpacity style={[styles.cancelBtn, {
-                borderColor: "#e5e7eb",
-                borderWidth: scale(0.5)
-              }]}>
-                <ThemeTextPrimary style={styles.cancelText}>Cancel</ThemeTextPrimary>
+              <TouchableOpacity
+                style={[
+                  styles.cancelBtn,
+                  {
+                    borderColor: "#e5e7eb",
+                    borderWidth: scale(0.5),
+                  },
+                ]}
+              >
+                <ThemeTextPrimary style={styles.cancelText}>
+                  Cancel
+                </ThemeTextPrimary>
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.serveBtn}>
-                <ThemeTextPrimary style={styles.serveText}>Serve</ThemeTextPrimary>
+                <ThemeTextPrimary style={styles.serveText}>
+                  Serve
+                </ThemeTextPrimary>
               </TouchableOpacity>
             </View>
           </LinearGradient>
-
         </View>
 
         {/* Section 2 */}
 
         <View style={styles.liveStatusSection}>
-          <ThemeTextPrimary style={[styles.sectionTitle, {
-            fontSize: scale(18),
-            fontFamily: "AirbnbCereal_W_Bd"
-          }]}>Live Status</ThemeTextPrimary>
-
+          <ThemeTextPrimary
+            style={[
+              styles.sectionTitle,
+              {
+                fontSize: scale(18),
+                fontFamily: "AirbnbCereal_W_Bd",
+              },
+            ]}
+          >
+            Live Status
+          </ThemeTextPrimary>
 
           <View
             style={[
               styles.liveQueueCard,
-              { backgroundColor: colors.background, borderColor: colors.borderColor1 },
+              {
+                backgroundColor: colors.background,
+                borderColor: colors.borderColor1,
+              },
             ]}
           >
             {/* Top Section */}
@@ -151,10 +210,13 @@ const index = () => {
                 <View
                   style={[
                     styles.liveQueueIconContainer,
-                    { backgroundColor: isOnline ? "#99f6e4" : "#fecaca", },
+                    { backgroundColor: isOnline ? "#99f6e4" : "#fecaca" },
                   ]}
                 >
-                  <WifiIcon size={scale(18)} color={isOnline ? "#0d9488" : "#dc2626"} />
+                  <WifiIcon
+                    size={scale(18)}
+                    color={isOnline ? "#0d9488" : "#dc2626"}
+                  />
                 </View>
 
                 <View>
@@ -176,7 +238,7 @@ const index = () => {
               <Switch
                 value={isOnline}
                 onValueChange={setIsOnline}
-                thumbColor={isOnline ? "#fff" : ("#cbd5e1")}
+                thumbColor={isOnline ? "#fff" : "#cbd5e1"}
                 trackColor={{ false: "#e2e8f0", true: "#14b8a6" }}
               />
             </View>
@@ -207,7 +269,9 @@ const index = () => {
                   <ThemeTextSecondary style={styles.liveQueueGridLabel}>
                     {item.label}
                   </ThemeTextSecondary>
-                  <ThemeTextPrimary style={[styles.liveQueueGridValue, { color: item.color }]}>
+                  <ThemeTextPrimary
+                    style={[styles.liveQueueGridValue, { color: item.color }]}
+                  >
                     {item.value}
                   </ThemeTextPrimary>
                 </View>
@@ -217,20 +281,31 @@ const index = () => {
         </View>
 
         {/* Section 3 */}
-        <View style={styles.
-          weeklyReportsSection}>
-          <ThemeTextPrimary style={[styles.sectionTitle, {
-            fontSize: scale(18),
-            fontFamily: "AirbnbCereal_W_Bd"
-          }]}>Weekly Reports</ThemeTextPrimary>
-
+        <View style={styles.weeklyReportsSection}>
+          <ThemeTextPrimary
+            style={[
+              styles.sectionTitle,
+              {
+                fontSize: scale(18),
+                fontFamily: "AirbnbCereal_W_Bd",
+              },
+            ]}
+          >
+            Weekly Reports
+          </ThemeTextPrimary>
 
           <View style={{ gap: verticalScale(12) }}>
             {reports.map((item, index) => (
-              <View key={index} style={[styles.weeklyReportCard, {
-                backgroundColor: colors.background,
-                borderColor: colors.borderColor1
-              }]}>
+              <View
+                key={index}
+                style={[
+                  styles.weeklyReportCard,
+                  {
+                    backgroundColor: colors.background,
+                    borderColor: colors.borderColor1,
+                  },
+                ]}
+              >
                 {/* Header Row */}
                 <View style={styles.weeklyReportHeader}>
                   <View
@@ -242,9 +317,14 @@ const index = () => {
                     {item.icon}
                   </View>
 
-                  <ThemeTextPrimary style={[styles.weeklyReportHeaderTitle, {
-                    // color: colors.textColor3
-                  }]}>
+                  <ThemeTextPrimary
+                    style={[
+                      styles.weeklyReportHeaderTitle,
+                      {
+                        // color: colors.textColor3
+                      },
+                    ]}
+                  >
                     {item.title}
                   </ThemeTextPrimary>
 
@@ -259,24 +339,40 @@ const index = () => {
                     <View key={i}>
                       <View style={styles.weeklyReportProgressTop}>
                         <ThemeTextPrimary
-                          style={[styles.weeklyReportProgressLabel, { color: progress.color }]}
+                          style={[
+                            styles.weeklyReportProgressLabel,
+                            { color: progress.color },
+                          ]}
                         >
                           {progress.label}
                         </ThemeTextPrimary>
-                        <ThemeTextSecondary style={[styles.weeklyReportProgressCount, {
-                          color: colors.textColor2
-                        }]}>
+                        <ThemeTextSecondary
+                          style={[
+                            styles.weeklyReportProgressCount,
+                            {
+                              color: colors.textColor2,
+                            },
+                          ]}
+                        >
                           {progress.count}
                         </ThemeTextSecondary>
                       </View>
 
-                      <View style={[styles.weeklyReportProgressBarBackground, {
-                        backgroundColor: colors.progressBgColor
-                      }]}>
+                      <View
+                        style={[
+                          styles.weeklyReportProgressBarBackground,
+                          {
+                            backgroundColor: colors.progressBgColor,
+                          },
+                        ]}
+                      >
                         <View
                           style={[
                             styles.weeklyReportProgressBarFill,
-                            { width: `${progress.value}%`, backgroundColor: progress.color },
+                            {
+                              width: `${progress.value}%`,
+                              backgroundColor: progress.color,
+                            },
                           ]}
                         />
                       </View>
@@ -286,35 +382,31 @@ const index = () => {
               </View>
             ))}
           </View>
-
-
         </View>
-
       </ScrollView>
-    </ThemeSafeAreaView >
-  )
-}
+    </ThemeSafeAreaView>
+  );
+};
 
-export default index
+export default index;
 
 const styles = StyleSheet.create({
-
   scrollContainer: {
     paddingHorizontal: scale(15),
     paddingVertical: verticalScale(15),
-    gap: verticalScale(15)
+    gap: verticalScale(15),
   },
 
   image: {
     width: scale(40),
     height: scale(40),
-    backgroundColor: '#0553',
+    backgroundColor: "#0553",
     borderRadius: scale(20),
   },
 
   upcommingAppointmentSection: {
     flexDirection: "column",
-    gap: verticalScale(10)
+    gap: verticalScale(10),
   },
 
   card: {
@@ -324,40 +416,40 @@ const styles = StyleSheet.create({
     marginRight: scale(12),
   },
   topRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: scale(12),
   },
   dateBox: {
     width: scale(70),
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.25)',
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.25)",
     borderRadius: scale(10),
     paddingVertical: verticalScale(10),
   },
   dateDay: {
-    color: '#fff',
+    color: "#fff",
     fontSize: scale(22),
-    fontFamily: "AirbnbCereal_W_Bd"
+    fontFamily: "AirbnbCereal_W_Bd",
   },
   dateMonth: {
-    color: '#fff',
+    color: "#fff",
     fontSize: scale(18),
   },
   dateTime: {
-    color: '#fff',
+    color: "#fff",
     fontSize: scale(12),
   },
   clientName: {
-    color: '#fff',
+    color: "#fff",
     fontSize: scale(18),
-    fontFamily: "AirbnbCereal_W_Bd"
+    fontFamily: "AirbnbCereal_W_Bd",
   },
   clientDetails: {
-    color: '#fff',
+    color: "#fff",
   },
   buttonRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginTop: verticalScale(20),
     gap: scale(12),
   },
@@ -365,26 +457,26 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: scale(10),
     paddingVertical: scale(10),
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
+    backgroundColor: "rgba(255,255,255,0.2)",
+    alignItems: "center",
   },
   serveBtn: {
     flex: 1,
     borderRadius: scale(10),
     paddingVertical: scale(10),
-    backgroundColor: '#fff',
-    alignItems: 'center',
+    backgroundColor: "#fff",
+    alignItems: "center",
   },
   cancelText: {
-    color: '#fff',
+    color: "#fff",
   },
   serveText: {
-    color: '#0d9488',
+    color: "#0d9488",
   },
 
   liveStatusSection: {
     flexDirection: "column",
-    gap: verticalScale(10)
+    gap: verticalScale(10),
   },
 
   liveQueueCard: {
@@ -440,7 +532,7 @@ const styles = StyleSheet.create({
 
   weeklyReportsSection: {
     flexDirection: "column",
-    gap: verticalScale(10)
+    gap: verticalScale(10),
   },
 
   weeklyReportCard: {
@@ -488,4 +580,4 @@ const styles = StyleSheet.create({
     height: "100%",
     borderRadius: moderateScale(8),
   },
-})
+});

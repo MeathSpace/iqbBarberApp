@@ -1,15 +1,30 @@
-import { useTheme } from '@react-navigation/native';
-import { Image } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useState } from 'react';
-import { ScrollView, StyleSheet, Switch, View } from 'react-native';
-import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
-import ThemeSafeAreaView from '../../../../../components/ThemeSafeAreaView';
-import ThemeTextPrimary from '../../../../../components/ThemeTextPrimary';
-import ThemeTextSecondary from '../../../../../components/ThemeTextSecondary';
-import { CalendarIcon, NotificationIcon, ProfileIcon, QueueIcon, ScissorIcon } from '../../../../../constants/icons';
+import { useTheme } from "@react-navigation/native";
+import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
+import { useState } from "react";
+import { ScrollView, StyleSheet, Switch, View } from "react-native";
+import { moderateScale, scale, verticalScale } from "react-native-size-matters";
+import ThemeSafeAreaView from "../../../../../components/ThemeSafeAreaView";
+import ThemeTextPrimary from "../../../../../components/ThemeTextPrimary";
+import ThemeTextSecondary from "../../../../../components/ThemeTextSecondary";
+import {
+  CalendarIcon,
+  NotificationIcon,
+  ProfileIcon,
+  QueueIcon,
+  ScissorIcon,
+} from "../../../../../constants/icons";
+import { useAdminGlobal } from "../../../../../context/admin/GlobalContext";
+import { useAdminAuth } from "../../../../../context/admin/AuthContext";
 
 const index = () => {
+  const { global } = useAdminGlobal();
+
+  console.log("Global Home ", global);
+
+  const { user } = useAdminAuth();
+
+  console.log("Admin user Home ", user);
 
   const { colors } = useTheme();
   const [isOnline, setIsOnline] = useState(true);
@@ -73,25 +88,30 @@ const index = () => {
   return (
     <ThemeSafeAreaView
       style={{
-        backgroundColor: colors.background2
-      }}
-      edges={['top', 'left', 'right']}>
-      {/* Header */}
-      <View style={{
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        height: verticalScale(60),
         backgroundColor: colors.background2,
-        borderBottomColor: colors.borderColor1,
-        borderBottomWidth: scale(1),
-        paddingHorizontal: scale(12)
-      }}>
-        <View style={{
+      }}
+      edges={["top", "left", "right"]}
+    >
+      {/* Header */}
+      <View
+        style={{
           flexDirection: "row",
           alignItems: "center",
-          gap: scale(10)
-        }}>
+          justifyContent: "space-between",
+          height: verticalScale(60),
+          backgroundColor: colors.background2,
+          borderBottomColor: colors.borderColor1,
+          borderBottomWidth: scale(1),
+          paddingHorizontal: scale(12),
+        }}
+      >
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: scale(10),
+          }}
+        >
           <Image
             style={styles.image}
             source="https://i.pinimg.com/736x/0f/5d/ac/0f5dac39ba6687e95f08623a9c9faca9.jpg"
@@ -111,7 +131,7 @@ const index = () => {
       <ScrollView
         showsVerticalScrollIndicator={false}
         style={{
-          flex: 1
+          flex: 1,
         }}
         contentContainerStyle={styles.scrollContainer}
       >
@@ -123,35 +143,46 @@ const index = () => {
           }]}>Upcoming Appointments</ThemeTextPrimary> */}
 
           <LinearGradient
-            colors={['#14b8a6', '#0d9488']}
+            colors={["#14b8a6", "#0d9488"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.card}
           >
-            <View style={[styles.topRow, {
-              borderBottomColor: "#efefef"
-            }]}>
-
+            <View
+              style={[
+                styles.topRow,
+                {
+                  borderBottomColor: "#efefef",
+                },
+              ]}
+            >
               {/* ICON BOX */}
               <View style={styles.iconBox}>
-                <ScissorIcon
-                  size={moderateScale(26)}
-                  color='#fff'
-                />
+                <ScissorIcon size={moderateScale(26)} color="#fff" />
               </View>
 
               {/* SALON INFO */}
               <View style={{ flex: 1 }}>
-                <ThemeTextPrimary style={styles.clientName}>Modern Stylist Salon</ThemeTextPrimary>
-                <ThemeTextSecondary style={styles.clientDetails}>Your destination for modern hair care.</ThemeTextSecondary>
+                <ThemeTextPrimary style={styles.clientName}>
+                  Modern Stylist Salon
+                </ThemeTextPrimary>
+                <ThemeTextSecondary style={styles.clientDetails}>
+                  Your destination for modern hair care.
+                </ThemeTextSecondary>
               </View>
             </View>
 
             {/* ACTION BUTTONS */}
             <View style={styles.buttonRow}>
               <View>
-                <ThemeTextSecondary style={{ color: "#efefef" }}>Salon Status</ThemeTextSecondary>
-                <ThemeTextPrimary style={{ color: "#fff", fontFamily: "AirbnbCereal_W_Bd" }}>Open</ThemeTextPrimary>
+                <ThemeTextSecondary style={{ color: "#efefef" }}>
+                  Salon Status
+                </ThemeTextSecondary>
+                <ThemeTextPrimary
+                  style={{ color: "#fff", fontFamily: "AirbnbCereal_W_Bd" }}
+                >
+                  Open
+                </ThemeTextPrimary>
               </View>
 
               <Switch
@@ -160,27 +191,39 @@ const index = () => {
                 thumbColor={isOnline ? "#fff" : "#fff"}
                 trackColor={{
                   false: "#ef4444", // Tailwind red-500
-                  true: "#14b8a6"   // Tailwind teal-500
+                  true: "#14b8a6", // Tailwind teal-500
                 }}
               />
-
             </View>
           </LinearGradient>
-
         </View>
 
         {/* Section 2 */}
         <View style={styles.liveStatusSection}>
-          <ThemeTextPrimary style={[styles.sectionTitle, {
-            fontSize: scale(18),
-            fontFamily: "AirbnbCereal_W_Bd"
-          }]}>Live Status</ThemeTextPrimary>
+          <ThemeTextPrimary
+            style={[
+              styles.sectionTitle,
+              {
+                fontSize: scale(18),
+                fontFamily: "AirbnbCereal_W_Bd",
+              },
+            ]}
+          >
+            Live Status
+          </ThemeTextPrimary>
 
           <View style={styles.statusGrid}>
             {statusData.map((item) => (
-              <View key={item.id} style={[styles.statusCard, {
-                backgroundColor: colors.background, borderColor: colors.borderColor1
-              }]}>
+              <View
+                key={item.id}
+                style={[
+                  styles.statusCard,
+                  {
+                    backgroundColor: colors.background,
+                    borderColor: colors.borderColor1,
+                  },
+                ]}
+              >
                 <View
                   style={[
                     styles.statusIconContainer,
@@ -191,12 +234,8 @@ const index = () => {
                 </View>
 
                 <View>
-                  <ThemeTextSecondary>
-                    {item.label}
-                  </ThemeTextSecondary>
-                  <ThemeTextPrimary>
-                    {item.value}
-                  </ThemeTextPrimary>
+                  <ThemeTextSecondary>{item.label}</ThemeTextSecondary>
+                  <ThemeTextPrimary>{item.value}</ThemeTextPrimary>
                 </View>
               </View>
             ))}
@@ -204,20 +243,31 @@ const index = () => {
         </View>
 
         {/* Section 3 */}
-        <View style={styles.
-          weeklyReportsSection}>
-          <ThemeTextPrimary style={[styles.sectionTitle, {
-            fontSize: scale(18),
-            fontFamily: "AirbnbCereal_W_Bd"
-          }]}>Weekly Reports</ThemeTextPrimary>
-
+        <View style={styles.weeklyReportsSection}>
+          <ThemeTextPrimary
+            style={[
+              styles.sectionTitle,
+              {
+                fontSize: scale(18),
+                fontFamily: "AirbnbCereal_W_Bd",
+              },
+            ]}
+          >
+            Weekly Reports
+          </ThemeTextPrimary>
 
           <View style={{ gap: verticalScale(12) }}>
             {reports.map((item, index) => (
-              <View key={index} style={[styles.weeklyReportCard, {
-                backgroundColor: colors.background,
-                borderColor: colors.borderColor1
-              }]}>
+              <View
+                key={index}
+                style={[
+                  styles.weeklyReportCard,
+                  {
+                    backgroundColor: colors.background,
+                    borderColor: colors.borderColor1,
+                  },
+                ]}
+              >
                 {/* Header Row */}
                 <View style={styles.weeklyReportHeader}>
                   <View
@@ -229,9 +279,14 @@ const index = () => {
                     {item.icon}
                   </View>
 
-                  <ThemeTextPrimary style={[styles.weeklyReportHeaderTitle, {
-                    // color: colors.textColor3
-                  }]}>
+                  <ThemeTextPrimary
+                    style={[
+                      styles.weeklyReportHeaderTitle,
+                      {
+                        // color: colors.textColor3
+                      },
+                    ]}
+                  >
                     {item.title}
                   </ThemeTextPrimary>
 
@@ -246,24 +301,40 @@ const index = () => {
                     <View key={i}>
                       <View style={styles.weeklyReportProgressTop}>
                         <ThemeTextPrimary
-                          style={[styles.weeklyReportProgressLabel, { color: progress.color }]}
+                          style={[
+                            styles.weeklyReportProgressLabel,
+                            { color: progress.color },
+                          ]}
                         >
                           {progress.label}
                         </ThemeTextPrimary>
-                        <ThemeTextSecondary style={[styles.weeklyReportProgressCount, {
-                          color: colors.textColor2
-                        }]}>
+                        <ThemeTextSecondary
+                          style={[
+                            styles.weeklyReportProgressCount,
+                            {
+                              color: colors.textColor2,
+                            },
+                          ]}
+                        >
                           {progress.count}
                         </ThemeTextSecondary>
                       </View>
 
-                      <View style={[styles.weeklyReportProgressBarBackground, {
-                        backgroundColor: colors.progressBgColor
-                      }]}>
+                      <View
+                        style={[
+                          styles.weeklyReportProgressBarBackground,
+                          {
+                            backgroundColor: colors.progressBgColor,
+                          },
+                        ]}
+                      >
                         <View
                           style={[
                             styles.weeklyReportProgressBarFill,
-                            { width: `${progress.value}%`, backgroundColor: progress.color },
+                            {
+                              width: `${progress.value}%`,
+                              backgroundColor: progress.color,
+                            },
                           ]}
                         />
                       </View>
@@ -274,27 +345,25 @@ const index = () => {
             ))}
           </View>
         </View>
+      </ScrollView>
+    </ThemeSafeAreaView>
+  );
+};
 
-      </ScrollView >
-
-    </ThemeSafeAreaView >
-  )
-}
-
-export default index
+export default index;
 
 const styles = StyleSheet.create({
   image: {
     width: scale(40),
     height: scale(40),
-    backgroundColor: '#0553',
+    backgroundColor: "#0553",
     borderRadius: scale(20),
   },
 
   scrollContainer: {
     paddingHorizontal: scale(15),
     paddingVertical: verticalScale(15),
-    gap: verticalScale(15)
+    gap: verticalScale(15),
   },
 
   card: {
@@ -304,7 +373,7 @@ const styles = StyleSheet.create({
     marginRight: scale(12),
   },
   topRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     alignItems: "center",
     gap: scale(12),
     paddingBottom: verticalScale(10),
@@ -313,22 +382,22 @@ const styles = StyleSheet.create({
   iconBox: {
     width: scale(50),
     height: scale(50),
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.25)',
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.25)",
     borderRadius: scale(10),
   },
 
   clientName: {
-    color: '#fff',
+    color: "#fff",
     fontSize: scale(18),
-    fontFamily: "AirbnbCereal_W_Bd"
+    fontFamily: "AirbnbCereal_W_Bd",
   },
   clientDetails: {
-    color: '#fff',
+    color: "#fff",
   },
   buttonRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     justifyContent: "space-between",
     marginTop: verticalScale(15),
     gap: scale(12),
@@ -337,30 +406,30 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: scale(10),
     paddingVertical: scale(10),
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
+    backgroundColor: "rgba(255,255,255,0.2)",
+    alignItems: "center",
   },
   serveBtn: {
     flex: 1,
     borderRadius: scale(10),
     paddingVertical: scale(10),
-    backgroundColor: '#fff',
-    alignItems: 'center',
+    backgroundColor: "#fff",
+    alignItems: "center",
   },
   cancelText: {
-    color: '#fff',
+    color: "#fff",
   },
 
   liveStatusSection: {
     flexDirection: "column",
-    gap: verticalScale(10)
+    gap: verticalScale(10),
   },
 
   statusGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    gap: verticalScale(16)
+    gap: verticalScale(16),
   },
   statusCard: {
     borderWidth: scale(1),
@@ -379,10 +448,9 @@ const styles = StyleSheet.create({
     borderRadius: scale(12),
   },
 
-
   weeklyReportsSection: {
     flexDirection: "column",
-    gap: verticalScale(10)
+    gap: verticalScale(10),
   },
 
   weeklyReportCard: {
@@ -430,9 +498,4 @@ const styles = StyleSheet.create({
     height: "100%",
     borderRadius: moderateScale(8),
   },
-
-})
-
-
-
-
+});

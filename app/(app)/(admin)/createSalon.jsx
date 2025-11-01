@@ -6,8 +6,13 @@ import ThemeSafeAreaView from '../../../components/ThemeSafeAreaView'
 import ThemeTextPrimary from '../../../components/ThemeTextPrimary'
 import ThemeTextSecondary from '../../../components/ThemeTextSecondary'
 import { SalonIcon } from '../../../constants/icons'
+import { useAdminGlobal } from '../../../context/admin/GlobalContext'
 
 const createSalon = () => {
+
+  const { global } = useAdminGlobal();
+
+  console.log("Global ", global);
 
   const { colors } = useTheme()
   const router = useRouter()
