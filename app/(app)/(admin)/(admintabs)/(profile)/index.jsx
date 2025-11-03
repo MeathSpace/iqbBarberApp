@@ -1,4 +1,5 @@
 import { Feather } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTheme } from "@react-navigation/native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -15,10 +16,9 @@ import {
   SalonIcon,
 } from "../../../../../constants/icons";
 import { useAdminAuth } from "../../../../../context/admin/AuthContext";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const index = () => {
-  const { setUserSalonId, setUserEmail } = useAdminAuth();
+  const { setUserSalonId, setUserEmail, user } = useAdminAuth();
 
   const { colors } = useTheme();
 
@@ -67,11 +67,10 @@ const index = () => {
 
   const router = useRouter();
 
-  const logoutPressed = async() => {
+  const logoutPressed = async () => {
     await AsyncStorage.removeItem("adminEmail");
     await AsyncStorage.removeItem("adminSalonId");
-    setUserEmail("")
-    // router.push("/(adminauth)/signin");
+    setUserEmail("");
   };
 
   return (
@@ -115,13 +114,13 @@ const index = () => {
           />
           <View>
             <ThemeTextPrimary style={styles.cardTitle}>
-              Sagnik Nandy
+              {user?.name ?? ""}
             </ThemeTextPrimary>
             <ThemeTextPrimary
               style={[styles.cardSubtitle, { width: "100%" }]}
               numberOfLines={2}
             >
-              sagniknandy@example.com
+              {user?.email ?? ""}
             </ThemeTextPrimary>
           </View>
           <TouchableOpacity

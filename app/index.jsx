@@ -20,10 +20,9 @@ const initialScreen = () => {
         (await AsyncStorage.getItem("barberEmail")) || "";
 
       if (savedAdminEmail) {
-        console.log("Hello Admin");
         router.replace("/(admin)/(admintabs)/(home)")
       } else if (savedBarberEmail) {
-        console.log("Hello Barber");
+        router.push("/(barber)/(barbertabs)/(home)");
       } else {
         setShowWelcome(true);
       }

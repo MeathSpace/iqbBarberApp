@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTheme } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Keyboard,
@@ -16,18 +16,38 @@ import { Toast } from "toastify-react-native";
 import ThemeSafeAreaView from "../../../components/ThemeSafeAreaView";
 import ThemeTextPrimary from "../../../components/ThemeTextPrimary";
 import ThemeTextSecondary from "../../../components/ThemeTextSecondary";
-import { EyeIcon, EyeOffIcon } from "../../../constants/icons";
+import {
+  CheckIcon,
+  EyeIcon,
+  EyeOffIcon,
+  HomeIcon,
+} from "../../../constants/icons";
 import { errorColor } from "../../../constants/theme";
 import api from "../../../utils/api";
 import { isValidEmail } from "../../../utils/emailValidation";
 
 const SignIn = () => {
+
+  useEffect(() => {
+    const fetch_admin_remember_me_email = async() => {
+      const admin_remember_me_email = await AsyncStorage.getItem("admin_remember_me_email")
+
+      if(admin_remember_me_email){
+        setEmail(admin_remember_me_email)
+        setRememberMe(true)
+      }
+    }
+
+    fetch_admin_remember_me_email()
+  }, [])
+
   const router = useRouter();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [signinLoader, setSigninLoader] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   // Error state
   const [emailError, setEmailError] = useState("");
@@ -68,6 +88,11 @@ const SignIn = () => {
         "adminSalonId",
         JSON.stringify(data?.foundUser?.salonId)
       );
+      if(rememberMe){
+        await AsyncStorage.setItem("admin_remember_me_email", email)
+      }else{
+        await AsyncStorage.setItem("admin_remember_me_email", "")
+      }
       router.push("/(admin)/(admintabs)/(home)");
     } catch (error) {
       Toast.error(error?.response?.data?.message);
@@ -84,6 +109,7 @@ const SignIn = () => {
         style={{
           justifyContent: "center",
           alignItems: "center",
+          position: "relative",
         }}
       >
         <View
@@ -197,6 +223,47 @@ const SignIn = () => {
             )}
           </View>
 
+          {/* Remember Me */}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: scale(8),
+              justifyContent: "space-between",
+            }}
+          >
+            {rememberMe ? (
+              <TouchableOpacity
+                onPress={async() => {
+                  setRememberMe(false)
+                }}
+                style={[
+                  styles.checkbox,
+                  {
+                    backgroundColor: colors.progressBgColor,
+                    borderColor: colors.borderColor1,
+                  },
+                ]}
+              >
+                <CheckIcon size={scale(16)} />
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                onPress={async() => {
+                  setRememberMe(true)
+                }}
+                style={[
+                  styles.checkbox,
+                  {
+                    backgroundColor: colors.progressBgColor,
+                    borderColor: colors.borderColor1,
+                  },
+                ]}
+              />
+            )}
+            <ThemeTextSecondary>Remember me</ThemeTextSecondary>
+          </View>
+
           {/* Dummy Sign In Button */}
           <TouchableOpacity onPress={handleSignIn} style={styles.signInButton}>
             {signinLoader ? (
@@ -259,6 +326,21 @@ const SignIn = () => {
             </ThemeTextSecondary>
           </TouchableOpacity>
         </View>
+
+        <TouchableOpacity
+          onPress={() => {
+            router.push("/");
+          }}
+          style={[
+            styles.homeIcon,
+            {
+              backgroundColor: colors.background2,
+              borderColor: colors.borderColor1,
+            },
+          ]}
+        >
+          <HomeIcon color={colors.textColor1} size={scale(20)} />
+        </TouchableOpacity>
       </ThemeSafeAreaView>
     </TouchableWithoutFeedback>
   );
@@ -267,6 +349,18 @@ const SignIn = () => {
 export default SignIn;
 
 const styles = StyleSheet.create({
+  homeIcon: {
+    position: "absolute",
+    top: verticalScale(50),
+    left: scale(15),
+    width: scale(35),
+    height: scale(35),
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: scale(6),
+    borderWidth: scale(1),
+  },
+
   inputField: {
     borderWidth: scale(1),
     borderRadius: scale(8),
@@ -302,5 +396,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+  },
+  checkbox: {
+    width: scale(22),
+    height: scale(22),
+    borderWidth: scale(1),
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: scale(6),
   },
 });

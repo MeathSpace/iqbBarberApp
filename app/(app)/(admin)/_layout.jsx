@@ -8,20 +8,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const AdminLayout = () => {
 
-  // const router = useRouter()
-
-  // useEffect(() => {
-  //   const is_user_not_authenticated = async () => {
-  //     const savedAdminEmail = (await AsyncStorage.getItem("adminEmail")) || "";
-
-  //     if(!savedAdminEmail){
-  //       router.replace("/")
-  //     }
-  //   };
-
-  //   is_user_not_authenticated();
-  // }, []);
-
   return (
     <AdminGlobalProvider>
       <AdminAuthProvider>

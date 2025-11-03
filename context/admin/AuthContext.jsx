@@ -56,7 +56,6 @@ export const AuthProvider = ({ children }) => {
     }
   }, [userEmail, userSalonId]);
 
-  console.log("userEmail ", userEmail);
 
   //   ✅ Why removing setUser made it log once
 
@@ -79,7 +78,8 @@ export const AuthProvider = ({ children }) => {
     <AuthContext.Provider
       value={{
         setUserSalonId,
-        setUserEmail
+        setUserEmail,
+        user
       }}
     >
       {children}

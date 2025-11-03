@@ -1,29 +1,109 @@
-import { useTheme } from '@react-navigation/native'
-import { useRouter } from 'expo-router'
-import { useState } from 'react'
-import { Keyboard, Pressable, StyleSheet, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native'
-import { scale, verticalScale } from 'react-native-size-matters'
-import ThemeSafeAreaView from '../../../components/ThemeSafeAreaView'
-import ThemeTextPrimary from '../../../components/ThemeTextPrimary'
-import ThemeTextSecondary from '../../../components/ThemeTextSecondary'
-import { EyeIcon, EyeOffIcon } from '../../../constants/icons'
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useTheme } from "@react-navigation/native";
+import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Keyboard,
+  Pressable,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
+} from "react-native";
+import { scale, verticalScale } from "react-native-size-matters";
+import { Toast } from "toastify-react-native";
+import ThemeSafeAreaView from "../../../components/ThemeSafeAreaView";
+import ThemeTextPrimary from "../../../components/ThemeTextPrimary";
+import ThemeTextSecondary from "../../../components/ThemeTextSecondary";
+import {
+  CheckIcon,
+  EyeIcon,
+  EyeOffIcon,
+  HomeIcon,
+} from "../../../constants/icons";
+import { errorColor } from "../../../constants/theme";
+import api from "../../../utils/api";
+import { isValidEmail } from "../../../utils/emailValidation";
 
 const SignIn = () => {
+  useEffect(() => {
+    const fetch_barber_remember_me_email = async () => {
+      const admin_remember_me_email = await AsyncStorage.getItem(
+        "barber_remember_me_email"
+      );
 
-  const router = useRouter()
+      if (admin_remember_me_email) {
+        setEmail(admin_remember_me_email);
+        setRememberMe(true);
+      }
+    };
 
-  const [email, setEmail] = useState('demo@email.com')
-  const [password, setPassword] = useState('123456')
-  const [showPassword, setShowPassword] = useState(false)
+    fetch_barber_remember_me_email();
+  }, []);
 
-  const handleSignIn = () => {
-    console.log("Email:", email)
-    console.log("Password:", password)
+  const router = useRouter();
 
-    router.push("/(barber)/(barbertabs)/(home)")
-  }
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [signinLoader, setSigninLoader] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
-  const { colors } = useTheme()
+  // Error state
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+
+  const handleSignIn = async () => {
+    let hasError = false;
+
+    if (!email) {
+      setEmailError("Email is required");
+      hasError = true;
+    } else if (!isValidEmail(email)) {
+      setEmailError("Invalid email address");
+      hasError = true;
+    }
+
+    if (!password) {
+      setPasswordError("Password is required");
+      hasError = true;
+    } else if (password.length < 8) {
+      setPasswordError("Password must be 8 charecters");
+      hasError = true;
+    }
+
+    if (hasError) return;
+
+    try {
+      setSigninLoader(true);
+
+      const payload = {
+        email,
+        password,
+      };
+
+      const { data } = await api.post("/web-app/barber/login", payload);
+      AsyncStorage.setItem("barberEmail", data?.foundUser?.email);
+      AsyncStorage.setItem(
+        "barberSalonId",
+        JSON.stringify(data?.foundUser?.salonId)
+      );
+      if (rememberMe) {
+        await AsyncStorage.setItem("barber_remember_me_email", email);
+      } else {
+        await AsyncStorage.setItem("barber_remember_me_email", "");
+      }
+      router.push("/(barber)/(barbertabs)/(home)");
+    } catch (error) {
+      Toast.error(error?.response?.data?.message);
+    } finally {
+      setSigninLoader(false);
+    }
+  };
+
+  const { colors } = useTheme();
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -31,22 +111,33 @@ const SignIn = () => {
         style={{
           justifyContent: "center",
           alignItems: "center",
+          position: "relative",
         }}
       >
-        <View style={{
-          width: "90%",
-          flexDirection: "column",
-          gap: verticalScale(20)
-        }}>
+        <View
+          style={{
+            width: "90%",
+            flexDirection: "column",
+            gap: verticalScale(20),
+          }}
+        >
           {/* Header Text */}
           <View>
-            <ThemeTextPrimary style={{
-              fontSize: scale(28),
-              fontFamily: 'AirbnbCereal_W_Bd',
-            }}>Barber Login</ThemeTextPrimary>
-            <ThemeTextSecondary style={{
-              marginTop: verticalScale(5),
-            }}>Welcome back! Please enter your details.</ThemeTextSecondary>
+            <ThemeTextPrimary
+              style={{
+                fontSize: scale(28),
+                fontFamily: "AirbnbCereal_W_Bd",
+              }}
+            >
+              Barber Login
+            </ThemeTextPrimary>
+            <ThemeTextSecondary
+              style={{
+                marginTop: verticalScale(5),
+              }}
+            >
+              Welcome back! Please enter your details.
+            </ThemeTextSecondary>
           </View>
 
           {/* Email Input */}
@@ -56,35 +147,62 @@ const SignIn = () => {
               editable
               placeholder="Enter your email"
               value={email}
-              onChangeText={setEmail}
+              onChangeText={(text) => {
+                setEmail(text);
+                setEmailError("");
+              }}
               placeholderTextColor={colors.textColor2}
-              style={[styles.inputField, {
-                backgroundColor: colors.inputColor,
-                borderColor: colors.borderColor1,
-                color: colors.textColor1
-              }]}
+              style={[
+                styles.inputField,
+                {
+                  backgroundColor: colors.inputColor,
+                  borderColor: colors.borderColor1,
+                  color: colors.textColor1,
+                },
+              ]}
             />
+
+            {emailError && (
+              <ThemeTextSecondary
+                style={{
+                  color: errorColor,
+                }}
+              >
+                {emailError}
+              </ThemeTextSecondary>
+            )}
           </View>
 
           {/* Password Input */}
           <View style={{ gap: verticalScale(10) }}>
             <ThemeTextPrimary>Password</ThemeTextPrimary>
-            <View style={[styles.passwordInputContainer, {
-              backgroundColor: colors.inputColor,
-              borderColor: colors.borderColor1
-            }]}>
+            <View
+              style={[
+                styles.passwordInputContainer,
+                {
+                  backgroundColor: colors.inputColor,
+                  borderColor: colors.borderColor1,
+                },
+              ]}
+            >
               <TextInput
                 editable
                 placeholder="Enter your password"
                 value={password}
-                onChangeText={setPassword}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  setPasswordError("");
+                }}
                 placeholderTextColor={colors.textColor2}
                 secureTextEntry={!showPassword}
-                style={[styles.inputField, {
-                  flex: 1,
-                  borderWidth: scale(0),
-                  color: colors.textColor1
-                }]}
+                style={[
+                  styles.inputField,
+                  {
+                    flex: 1,
+                    borderWidth: scale(0),
+                    color: colors.textColor1,
+                  },
+                ]}
               />
               <Pressable
                 onPress={() => setShowPassword(!showPassword)}
@@ -97,34 +215,102 @@ const SignIn = () => {
                 )}
               </Pressable>
             </View>
+            {passwordError && (
+              <ThemeTextSecondary
+                style={{
+                  color: errorColor,
+                }}
+              >
+                {passwordError}
+              </ThemeTextSecondary>
+            )}
+          </View>
+
+          {/* Remember Me */}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: scale(8),
+              justifyContent: "space-between",
+            }}
+          >
+            {rememberMe ? (
+              <TouchableOpacity
+                onPress={async () => {
+                  setRememberMe(false);
+                }}
+                style={[
+                  styles.checkbox,
+                  {
+                    backgroundColor: colors.progressBgColor,
+                    borderColor: colors.borderColor1,
+                  },
+                ]}
+              >
+                <CheckIcon size={scale(16)} />
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                onPress={async () => {
+                  setRememberMe(true);
+                }}
+                style={[
+                  styles.checkbox,
+                  {
+                    backgroundColor: colors.progressBgColor,
+                    borderColor: colors.borderColor1,
+                  },
+                ]}
+              />
+            )}
+            <ThemeTextSecondary>Remember me</ThemeTextSecondary>
           </View>
 
           {/* Dummy Sign In Button */}
-          <TouchableOpacity
-            onPress={handleSignIn}
-            style={styles.signInButton}
-          >
-            <ThemeTextPrimary style={{ color: "white", textAlign: "center" }}>
-              Sign In
-            </ThemeTextPrimary>
+          <TouchableOpacity onPress={handleSignIn} style={styles.signInButton}>
+            {signinLoader ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <ThemeTextPrimary style={{ color: "white", textAlign: "center" }}>
+                Sign In
+              </ThemeTextPrimary>
+            )}
           </TouchableOpacity>
 
           <View style={styles.divider}>
-            <View style={{ flex: 1, height: verticalScale(0.5), backgroundColor: colors.textColor2 }} />
+            <View
+              style={{
+                flex: 1,
+                height: verticalScale(0.5),
+                backgroundColor: colors.textColor2,
+              }}
+            />
 
             <View style={{ paddingHorizontal: scale(10) }}>
-              <ThemeTextPrimary style={{ color: colors.text }}>or</ThemeTextPrimary>
+              <ThemeTextPrimary style={{ color: colors.text }}>
+                or
+              </ThemeTextPrimary>
             </View>
 
-            <View style={{ flex: 1, height: verticalScale(0.5), backgroundColor: colors.textColor2 }} />
+            <View
+              style={{
+                flex: 1,
+                height: verticalScale(0.5),
+                backgroundColor: colors.textColor2,
+              }}
+            />
           </View>
 
           <TouchableOpacity
             onPress={handleSignIn}
-            style={[styles.googleSignInButton, {
-              backgroundColor: colors.inputColor,
-              borderColor: colors.borderColor1,
-            }]}
+            style={[
+              styles.googleSignInButton,
+              {
+                backgroundColor: colors.inputColor,
+                borderColor: colors.borderColor1,
+              },
+            ]}
           >
             <ThemeTextPrimary style={{ textAlign: "center" }}>
               Google Sign In
@@ -132,24 +318,59 @@ const SignIn = () => {
           </TouchableOpacity>
 
           <TouchableOpacity onPress={() => router.push("/signup")}>
-            <ThemeTextSecondary style={{ textAlign: "center", fontSize: scale(16) }}>Don't have an account ?<ThemeTextPrimary style={{ color: '#14b8a6' }}> Sign up</ThemeTextPrimary></ThemeTextSecondary>
+            <ThemeTextSecondary
+              style={{ textAlign: "center", fontSize: scale(16) }}
+            >
+              Don't have an account ?
+              <ThemeTextPrimary style={{ color: "#14b8a6" }}>
+                {" "}
+                Sign up
+              </ThemeTextPrimary>
+            </ThemeTextSecondary>
           </TouchableOpacity>
         </View>
+
+        <TouchableOpacity
+          onPress={() => {
+            router.push("/");
+          }}
+          style={[
+            styles.homeIcon,
+            {
+              backgroundColor: colors.background2,
+              borderColor: colors.borderColor1,
+            },
+          ]}
+        >
+          <HomeIcon color={colors.textColor1} size={scale(20)} />
+        </TouchableOpacity>
       </ThemeSafeAreaView>
     </TouchableWithoutFeedback>
-  )
-}
+  );
+};
 
-export default SignIn
+export default SignIn;
 
 const styles = StyleSheet.create({
+  homeIcon: {
+    position: "absolute",
+    top: verticalScale(50),
+    left: scale(15),
+    width: scale(35),
+    height: scale(35),
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: scale(6),
+    borderWidth: scale(1),
+  },
+
   inputField: {
     borderWidth: scale(1),
     borderRadius: scale(8),
     paddingVertical: verticalScale(10),
     paddingHorizontal: scale(12),
     fontSize: scale(14),
-    fontFamily: 'AirbnbCereal_W_Md',
+    fontFamily: "AirbnbCereal_W_Md",
   },
   passwordInputContainer: {
     flexDirection: "row",
@@ -171,7 +392,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
     paddingVertical: verticalScale(12),
     borderRadius: scale(8),
-    borderWidth: scale(1)
+    borderWidth: scale(1),
   },
 
   divider: {
@@ -179,4 +400,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-})
+
+  checkbox: {
+    width: scale(22),
+    height: scale(22),
+    borderWidth: scale(1),
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: scale(6),
+  },
+});
