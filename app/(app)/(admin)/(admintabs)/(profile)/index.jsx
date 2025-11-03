@@ -18,7 +18,7 @@ import { useAdminAuth } from "../../../../../context/admin/AuthContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const index = () => {
-  const { setUserSalonId } = useAdminAuth();
+  const { setUserSalonId, setUserEmail } = useAdminAuth();
 
   const { colors } = useTheme();
 
@@ -70,7 +70,8 @@ const index = () => {
   const logoutPressed = async() => {
     await AsyncStorage.removeItem("adminEmail");
     await AsyncStorage.removeItem("adminSalonId");
-    router.replace("/(adminauth)/signin");
+    setUserEmail("")
+    // router.push("/(adminauth)/signin");
   };
 
   return (

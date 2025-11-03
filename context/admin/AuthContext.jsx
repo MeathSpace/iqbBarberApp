@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
 import { createContext, useContext, useEffect, useState } from "react";
 import api from "../../utils/api";
 
@@ -11,13 +12,20 @@ export const AuthProvider = ({ children }) => {
   const [userSalonId, setUserSalonId] = useState(0);
   const [user, setUser] = useState(null);
 
+  const router = useRouter();
+
   const fetch_user_email_from_storage = async () => {
     try {
       const savedUserEmail = (await AsyncStorage.getItem("adminEmail")) || "";
       const savedUserSalonId =
         (await AsyncStorage.getItem("adminSalonId")) || 0;
-      setUserEmail(savedUserEmail);
-      setUserSalonId(Number(savedUserSalonId));
+
+      if (savedUserEmail) {
+        setUserEmail(savedUserEmail);
+        setUserSalonId(Number(savedUserSalonId));
+      } else {
+        router.replace("/(adminauth)/signin");
+      }
     } catch (error) {
       console.log("Failed to fetch user email ", error);
     }
@@ -27,7 +35,7 @@ export const AuthProvider = ({ children }) => {
   // I am writing because without async i cannot use async-storage
   useEffect(() => {
     fetch_user_email_from_storage();
-  }, []);
+  }, [userEmail]);
 
   const fetch_loggedin_admin_data = async () => {
     try {
@@ -48,7 +56,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, [userEmail, userSalonId]);
 
-  console.log(user);
+  console.log("userEmail ", userEmail);
 
   //   ✅ Why removing setUser made it log once
 
@@ -71,6 +79,7 @@ export const AuthProvider = ({ children }) => {
     <AuthContext.Provider
       value={{
         setUserSalonId,
+        setUserEmail
       }}
     >
       {children}

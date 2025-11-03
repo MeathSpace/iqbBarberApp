@@ -17,11 +17,11 @@ import ThemeSafeAreaView from "../../../components/ThemeSafeAreaView";
 import ThemeTextPrimary from "../../../components/ThemeTextPrimary";
 import ThemeTextSecondary from "../../../components/ThemeTextSecondary";
 import { EyeIcon, EyeOffIcon } from "../../../constants/icons";
+import { errorColor } from "../../../constants/theme";
 import api from "../../../utils/api";
 import { isValidEmail } from "../../../utils/emailValidation";
 
 const SignIn = () => {
-  
   const router = useRouter();
 
   const [email, setEmail] = useState("");
@@ -64,7 +64,10 @@ const SignIn = () => {
 
       const { data } = await api.post("/web-app/admin/login", payload);
       AsyncStorage.setItem("adminEmail", data?.foundUser?.email);
-      AsyncStorage.setItem("adminSalonId", JSON.stringify(data?.foundUser?.salonId));
+      AsyncStorage.setItem(
+        "adminSalonId",
+        JSON.stringify(data?.foundUser?.salonId)
+      );
       router.push("/(admin)/(admintabs)/(home)");
     } catch (error) {
       Toast.error(error?.response?.data?.message);
@@ -131,7 +134,13 @@ const SignIn = () => {
               ]}
             />
             {emailError && (
-              <ThemeTextSecondary>{emailError}</ThemeTextSecondary>
+              <ThemeTextSecondary
+                style={{
+                  color: errorColor,
+                }}
+              >
+                {emailError}
+              </ThemeTextSecondary>
             )}
           </View>
 
@@ -178,7 +187,13 @@ const SignIn = () => {
               </TouchableOpacity>
             </View>
             {passwordError && (
-              <ThemeTextSecondary>{passwordError}</ThemeTextSecondary>
+              <ThemeTextSecondary
+                style={{
+                  color: errorColor,
+                }}
+              >
+                {passwordError}
+              </ThemeTextSecondary>
             )}
           </View>
 
