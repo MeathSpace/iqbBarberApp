@@ -43,8 +43,8 @@ const SignIn = () => {
 
   const router = useRouter();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("bikki@yopmail.com");
+  const [password, setPassword] = useState("12345678");
   const [showPassword, setShowPassword] = useState(false);
   const [signinLoader, setSigninLoader] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -83,8 +83,8 @@ const SignIn = () => {
       };
 
       const { data } = await api.post("/web-app/admin/login", payload);
-      AsyncStorage.setItem("adminEmail", data?.foundUser?.email);
-      AsyncStorage.setItem(
+      await AsyncStorage.setItem("adminEmail", data?.foundUser?.email);
+      await AsyncStorage.setItem(
         "adminSalonId",
         JSON.stringify(data?.foundUser?.salonId)
       );

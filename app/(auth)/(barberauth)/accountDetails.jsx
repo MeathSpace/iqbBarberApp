@@ -32,7 +32,6 @@ const accountDetails = () => {
     const [tempDate, setTempDate] = useState(new Date());
 
     const onChange = (event, selectedDate) => {
-        // setCalenderModal(false);
         if (Platform.OS === "android") {
             if (event.type === "set" && selectedDate) {
                 setDate(new Date(selectedDate));
@@ -88,7 +87,6 @@ const accountDetails = () => {
 
     return (
         <TouchableWithoutFeedback
-            // style={{ flex: 1 }}
             onPress={() => {
                 Keyboard.dismiss()
                 setGenderDropdown(false)
@@ -457,7 +455,6 @@ const styles = StyleSheet.create({
     inputDateField: {
         height: verticalScale(40),
         borderRadius: scale(8),
-        // borderWidth: moderateScale(1.5),
         paddingHorizontal: scale(10),
         fontSize: moderateScale(14),
         position: "relative"
