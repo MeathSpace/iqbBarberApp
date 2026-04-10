@@ -14,40 +14,41 @@ import {
   QueueIcon,
   ScissorIcon,
 } from "../../../../../constants/icons";
-import { useAdminGlobal } from "../../../../../context/admin/GlobalContext";
-import { useAdminAuth } from "../../../../../context/admin/AuthContext";
+import i18n from "../../../../src/localization/i18n";
 
 const index = () => {
+  const baseContent = i18n.t("app.admin.admintabs.home");
+
   const { colors } = useTheme();
   const [isOnline, setIsOnline] = useState(true);
 
   const statusData = [
     {
       id: 1,
-      label: "In Queue",
+      label: baseContent.status.inQueue,
       value: 53,
-      iconBg: "#f3e8ff", // purple-100
+      iconBg: "#f3e8ff",
       icon: <QueueIcon size={scale(20)} color="#9333ea" />,
     },
     {
       id: 2,
-      label: "Appointment",
+      label: baseContent.status.appointment,
       value: 1,
-      iconBg: "#dbeafe", // blue-100
+      iconBg: "#dbeafe",
       icon: <CalendarIcon size={scale(20)} color="#2563eb" />,
     },
     {
       id: 3,
-      label: "On Duty",
+      label: baseContent.status.onDuty,
       value: 5,
-      iconBg: "#ffedd5", // orange-100
+      iconBg: "#ffedd5",
       icon: <ProfileIcon size={scale(20)} color="#ea580c" />,
     },
     {
       id: 4,
-      label: "Customer",
+      label: baseContent.status.customer,
       value: 12,
-      iconBg: "#dcfce7", // green-100
+      iconBg: "#dcfce7",
       icon: <ProfileIcon size={scale(20)} color="#16a34a" />,
     },
   ];
@@ -55,24 +56,44 @@ const index = () => {
   const reports = [
     {
       icon: <CalendarIcon color="#9333ea" size={scale(16)} />,
-      iconBg: "#f3e8ff", // purple-100
-      iconColor: "#9333ea", // purple-600
-      title: "Appointments",
-      total: "32 Total",
+      iconBg: "#f3e8ff",
+      iconColor: "#9333ea",
+      title: baseContent.reports.appointments.title,
+      total: baseContent.reports.appointments.total.replace("{{count}}", 32),
       data: [
-        { label: "Completed", color: "#22c55e", value: 87.5, count: "28 / 32" },
-        { label: "No-Shows", color: "#ef4444", value: 12.5, count: "4 / 32" },
+        {
+          label: baseContent.reports.appointments.completed,
+          color: "#22c55e",
+          value: 87.5,
+          count: "28 / 32",
+        },
+        {
+          label: baseContent.reports.appointments.noShows,
+          color: "#ef4444",
+          value: 12.5,
+          count: "4 / 32",
+        },
       ],
     },
     {
       icon: <QueueIcon color="#2563eb" size={scale(16)} />,
-      iconBg: "#dbeafe", // blue-100
-      iconColor: "#2563eb", // blue-600
-      title: "Queue Bookings",
-      total: "48 Total",
+      iconBg: "#dbeafe",
+      iconColor: "#2563eb",
+      title: baseContent.reports.queueBookings.title,
+      total: baseContent.reports.queueBookings.total.replace("{{count}}", 48),
       data: [
-        { label: "Served", color: "#22c55e", value: 87.5, count: "42 / 48" },
-        { label: "Cancelled", color: "#ef4444", value: 12.5, count: "6 / 48" },
+        {
+          label: baseContent.reports.queueBookings.served,
+          color: "#22c55e",
+          value: 87.5,
+          count: "42 / 48",
+        },
+        {
+          label: baseContent.reports.queueBookings.cancelled,
+          color: "#ef4444",
+          value: 12.5,
+          count: "6 / 48",
+        },
       ],
     },
   ];
@@ -112,7 +133,9 @@ const index = () => {
           />
           <View>
             <ThemeTextPrimary>Jessica</ThemeTextPrimary>
-            <ThemeTextSecondary>Modern Stylist Salon</ThemeTextSecondary>
+            <ThemeTextSecondary>
+              {baseContent.header.salonName}
+            </ThemeTextSecondary>
           </View>
         </View>
 
@@ -129,11 +152,6 @@ const index = () => {
       >
         {/* Section 1 */}
         <View style={styles.upcommingAppointmentSection}>
-          {/* <ThemeTextPrimary style={[styles.sectionTitle, {
-            fontSize: scale(18),
-            fontFamily: "AirbnbCereal_W_Bd"
-          }]}>Upcoming Appointments</ThemeTextPrimary> */}
-
           <LinearGradient
             colors={["#14b8a6", "#0d9488"]}
             start={{ x: 0, y: 0 }}
@@ -156,10 +174,11 @@ const index = () => {
               {/* SALON INFO */}
               <View style={{ flex: 1 }}>
                 <ThemeTextPrimary style={styles.clientName}>
-                  Modern Stylist Salon
+                  {baseContent.salonCard.title}
                 </ThemeTextPrimary>
+
                 <ThemeTextSecondary style={styles.clientDetails}>
-                  Your destination for modern hair care.
+                  {baseContent.salonCard.subtitle}
                 </ThemeTextSecondary>
               </View>
             </View>
@@ -168,12 +187,13 @@ const index = () => {
             <View style={styles.buttonRow}>
               <View>
                 <ThemeTextSecondary style={{ color: "#efefef" }}>
-                  Salon Status
+                  {baseContent.salonCard.statusLabel}
                 </ThemeTextSecondary>
+
                 <ThemeTextPrimary
                   style={{ color: "#fff", fontFamily: "AirbnbCereal_W_Bd" }}
                 >
-                  Open
+                  {baseContent.salonCard.open}
                 </ThemeTextPrimary>
               </View>
 
@@ -201,7 +221,7 @@ const index = () => {
               },
             ]}
           >
-            Live Status
+            {baseContent.sections.liveStatus}
           </ThemeTextPrimary>
 
           <View style={styles.statusGrid}>
@@ -245,7 +265,7 @@ const index = () => {
               },
             ]}
           >
-            Weekly Reports
+            {baseContent.sections.weeklyReports}
           </ThemeTextPrimary>
 
           <View style={{ gap: verticalScale(12) }}>

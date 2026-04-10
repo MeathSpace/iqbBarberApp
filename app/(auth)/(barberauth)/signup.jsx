@@ -15,8 +15,10 @@ import ThemeSafeAreaView from "../../../components/ThemeSafeAreaView";
 import ThemeTextPrimary from "../../../components/ThemeTextPrimary";
 import ThemeTextSecondary from "../../../components/ThemeTextSecondary";
 import { EyeIcon, EyeOffIcon, HomeIcon } from "../../../constants/icons";
+import i18n from "../../src/localization/i18n"
 
 const SignUp = () => {
+  const baseContent = i18n.t("auth.barberauth.signup")
   const router = useRouter();
 
   const [email, setEmail] = useState("demo@email.com");
@@ -55,23 +57,23 @@ const SignUp = () => {
                 fontFamily: "AirbnbCereal_W_Bd",
               }}
             >
-              Create an Account
+              {baseContent.header}
             </ThemeTextPrimary>
             <ThemeTextSecondary
               style={{
                 marginTop: verticalScale(5),
               }}
             >
-              Let's get you started with iQBook.
+              {baseContent.subHeader}
             </ThemeTextSecondary>
           </View>
 
           {/* Email Input */}
           <View style={{ gap: verticalScale(10) }}>
-            <ThemeTextPrimary>Email</ThemeTextPrimary>
+            <ThemeTextPrimary>{baseContent.emailInput.header}</ThemeTextPrimary>
             <TextInput
               editable
-              placeholder="Enter your email"
+              placeholder={baseContent.emailInput.placeholder}
               value={email}
               onChangeText={setEmail}
               placeholderTextColor={colors.textColor2}
@@ -88,7 +90,7 @@ const SignUp = () => {
 
           {/* Password Input */}
           <View style={{ gap: verticalScale(10) }}>
-            <ThemeTextPrimary>Password</ThemeTextPrimary>
+            <ThemeTextPrimary>{baseContent.passwordInput.header}</ThemeTextPrimary>
             <View
               style={[
                 styles.passwordInputContainer,
@@ -100,7 +102,7 @@ const SignUp = () => {
             >
               <TextInput
                 editable
-                placeholder="Enter your password"
+                placeholder={baseContent.passwordInput.placeholder}
                 value={password}
                 onChangeText={setPassword}
                 placeholderTextColor={colors.textColor2}
@@ -130,7 +132,7 @@ const SignUp = () => {
           {/* Dummy Sign In Button */}
           <TouchableOpacity onPress={handleSignUp} style={styles.signInButton}>
             <ThemeTextPrimary style={{ color: "white", textAlign: "center" }}>
-              Sign Up
+              {baseContent.signUp}
             </ThemeTextPrimary>
           </TouchableOpacity>
 
@@ -145,7 +147,7 @@ const SignUp = () => {
 
             <View style={{ paddingHorizontal: scale(10) }}>
               <ThemeTextPrimary style={{ color: colors.text }}>
-                or
+                {baseContent.or}
               </ThemeTextPrimary>
             </View>
 
@@ -177,10 +179,10 @@ const SignUp = () => {
             <ThemeTextSecondary
               style={{ textAlign: "center", fontSize: scale(16) }}
             >
-              Don't have an account ?
+              {baseContent.alreadyHaveAccount}
               <ThemeTextPrimary style={{ color: "#14b8a6" }}>
                 {" "}
-                Sign in
+                {baseContent.signIn}
               </ThemeTextPrimary>
             </ThemeTextSecondary>
           </TouchableOpacity>

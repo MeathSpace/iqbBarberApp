@@ -9,8 +9,11 @@ import ThemeSafeAreaView from '../../../components/ThemeSafeAreaView'
 import ThemeTextPrimary from '../../../components/ThemeTextPrimary'
 import ThemeTextSecondary from '../../../components/ThemeTextSecondary'
 import { CalendarIcon, CheckIcon, DownIcon } from '../../../constants/icons'
+import i18n from "../../src/localization/i18n"
 
 const accountDetails = () => {
+
+    const baseContent = i18n.t("auth.adminauth.accountDetails")
 
     const router = useRouter()
     const { colors } = useTheme()
@@ -111,10 +114,10 @@ const accountDetails = () => {
                         <ThemeTextPrimary style={{
                             fontSize: scale(28),
                             fontFamily: 'AirbnbCereal_W_Bd',
-                        }}>Account Details</ThemeTextPrimary>
+                        }}>{baseContent.header}</ThemeTextPrimary>
                         <ThemeTextSecondary style={{
                             marginTop: verticalScale(5),
-                        }}>Filling this helps us serve you better. You can also skip and update anytime!</ThemeTextSecondary>
+                        }}>{baseContent.subHeader}</ThemeTextSecondary>
 
                         <TouchableOpacity
                             style={{
@@ -123,16 +126,16 @@ const accountDetails = () => {
                                 top: verticalScale(10)
                             }}
                         >
-                            <ThemeTextSecondary>Skip</ThemeTextSecondary>
+                            <ThemeTextSecondary>{baseContent.skip}</ThemeTextSecondary>
                         </TouchableOpacity>
                     </View>
 
                     {/* Email Input */}
                     <View style={{ gap: verticalScale(10) }}>
-                        <ThemeTextPrimary>Name</ThemeTextPrimary>
+                        <ThemeTextPrimary>{baseContent.nameInput.header}</ThemeTextPrimary>
                         <TextInput
                             editable
-                            placeholder="Enter your name"
+                            placeholder={baseContent.nameInput.placeholder}
                             value={name}
                             onChangeText={setName}
                             placeholderTextColor={colors.textColor2}
@@ -145,7 +148,7 @@ const accountDetails = () => {
                     </View>
 
                     <View style={{ gap: verticalScale(10), position: "relative" }}>
-                        <ThemeTextPrimary>Gender</ThemeTextPrimary>
+                        <ThemeTextPrimary>{baseContent.genderDropdown.header}</ThemeTextPrimary>
 
                         <TouchableOpacity
                             onPress={() => setGenderDropdown((prev) => !prev)}
@@ -155,7 +158,7 @@ const accountDetails = () => {
                             }]}>
                             <TextInput
                                 editable
-                                placeholder="Select your gender"
+                                placeholder={baseContent.genderDropdown.placeholder}
                                 value={gender}
                                 placeholderTextColor={colors.textColor2}
                                 style={[styles.inputField, {
@@ -186,7 +189,7 @@ const accountDetails = () => {
                                         alignItems: "center",
                                         justifyContent: "space-between"
                                     }}>
-                                            <ThemeTextPrimary>Male</ThemeTextPrimary>
+                                            <ThemeTextPrimary>{baseContent.genderDropdown.male}</ThemeTextPrimary>
                                             {
                                                 gender === "Male" && <CheckIcon color="#14b8a6" />
                                             }
@@ -201,7 +204,7 @@ const accountDetails = () => {
                                         alignItems: "center",
                                         justifyContent: "space-between"
                                     }}>
-                                            <ThemeTextPrimary>Female</ThemeTextPrimary>
+                                            <ThemeTextPrimary>{baseContent.genderDropdown.female}</ThemeTextPrimary>
                                             {
                                                 gender === "Female" && <CheckIcon color="#14b8a6" />
                                             }
@@ -216,7 +219,7 @@ const accountDetails = () => {
                                         alignItems: "center",
                                         justifyContent: "space-between"
                                     }}>
-                                            <ThemeTextPrimary>Other</ThemeTextPrimary>
+                                            <ThemeTextPrimary>{baseContent.genderDropdown.other}</ThemeTextPrimary>
                                             {
                                                 gender === "Other" && <CheckIcon color="#14b8a6" />
                                             }
@@ -229,7 +232,7 @@ const accountDetails = () => {
 
 
                     <View style={{ gap: verticalScale(10), position: "relative" }}>
-                        <ThemeTextPrimary>Date of Birth (Optional)</ThemeTextPrimary>
+                        <ThemeTextPrimary>{baseContent.dateOfBirth.header}</ThemeTextPrimary>
 
                         <TouchableOpacity
                             style={[
@@ -249,7 +252,7 @@ const accountDetails = () => {
                                 setCalenderModal(true)
                             }}
                         >
-                            {!calenderModal && !selectedDate && <ThemeTextPrimary style={{ fontSize: scale(14), color: colors.textColor2 }}>DD/MM/YYYY</ThemeTextPrimary>}
+                            {!calenderModal && !selectedDate && <ThemeTextPrimary style={{ fontSize: scale(14), color: colors.textColor2 }}>{baseContent.dateOfBirth.placeholder}</ThemeTextPrimary>}
                             {!calenderModal && selectedDate && <ThemeTextPrimary>{ddmmformatDate(selectedDate)}</ThemeTextPrimary>}
                             <CalendarIcon style={[styles.dateIcon, { color: colors.text }]} size={scale(22)} />
                         </TouchableOpacity>
@@ -335,7 +338,7 @@ const accountDetails = () => {
                                                         alignItems: "center"
                                                     }}
                                                 >
-                                                    <ThemeTextPrimary style={{ color: "#fff" }}>Close</ThemeTextPrimary>
+                                                    <ThemeTextPrimary style={{ color: "#fff" }}>{baseContent.dateOfBirth.close}</ThemeTextPrimary>
                                                 </TouchableOpacity>
 
                                                 <TouchableOpacity
@@ -349,7 +352,7 @@ const accountDetails = () => {
                                                         justifyContent: "center",
                                                         alignItems: "center"
                                                     }}
-                                                ><ThemeTextPrimary style={{ color: "#fff" }}>Done</ThemeTextPrimary>
+                                                ><ThemeTextPrimary style={{ color: "#fff" }}>{baseContent.dateOfBirth.done}</ThemeTextPrimary>
                                                 </TouchableOpacity>
                                             </View>
                                         </View>
@@ -363,7 +366,7 @@ const accountDetails = () => {
                     </View>
 
                     <View style={{ gap: verticalScale(10) }}>
-                        <ThemeTextPrimary>Mobile Number</ThemeTextPrimary>
+                        <ThemeTextPrimary>{baseContent.mobileNumber.header}</ThemeTextPrimary>
                         <PhoneInput
                             defaultValue={value}
                             defaultCode="GB"
@@ -408,7 +411,7 @@ const accountDetails = () => {
                         style={styles.accountButton}
                     >
                         <ThemeTextPrimary style={{ color: "white", textAlign: "center" }}>
-                            Update
+                            {baseContent.mobileNumber.update}
                         </ThemeTextPrimary>
                     </TouchableOpacity>
 

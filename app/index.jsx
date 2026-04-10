@@ -7,8 +7,11 @@ import { scale, verticalScale } from "react-native-size-matters";
 import ThemeSafeAreaView from "../components/ThemeSafeAreaView";
 import ThemeTextPrimary from "../components/ThemeTextPrimary";
 import ThemeTextSecondary from "../components/ThemeTextSecondary";
+import i18n from "../app/src/localization/i18n"
 
 const initialScreen = () => {
+  const baseContent = i18n.t("index")
+
   const [showWelcome, setShowWelcome] = useState(false);
 
   const router = useRouter();
@@ -63,7 +66,7 @@ const initialScreen = () => {
             textAlign: "center",
           }}
         >
-          Welcome to iQBook
+          {baseContent.header}
         </ThemeTextPrimary>
 
         <ThemeTextSecondary
@@ -72,8 +75,7 @@ const initialScreen = () => {
             fontSize: scale(16),
           }}
         >
-          Made for Admins and Barbers — manage your queues and appointments
-          smoothly, all in one place!
+          {baseContent.subHeader}
         </ThemeTextSecondary>
 
         <View
@@ -94,7 +96,7 @@ const initialScreen = () => {
                 fontFamily: "AirbnbCereal_W_Bd",
               }}
             >
-              Admin
+              {baseContent.admin}
             </ThemeTextPrimary>
           </TouchableOpacity>
           <TouchableOpacity
@@ -108,7 +110,7 @@ const initialScreen = () => {
                 fontFamily: "AirbnbCereal_W_Bd",
               }}
             >
-              Barber
+              {baseContent.barber}
             </ThemeTextPrimary>
           </TouchableOpacity>
         </View>

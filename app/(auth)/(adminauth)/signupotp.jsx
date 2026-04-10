@@ -6,9 +6,10 @@ import { scale, verticalScale } from 'react-native-size-matters'
 import ThemeSafeAreaView from '../../../components/ThemeSafeAreaView'
 import ThemeTextPrimary from '../../../components/ThemeTextPrimary'
 import ThemeTextSecondary from '../../../components/ThemeTextSecondary'
+import i18n from "../../src/localization/i18n"
 
 const signupotp = () => {
-
+    const baseContent = i18n.t("auth.auth.signupotp")
     const [otp, setOtp] = useState("")
 
     const router = useRouter()
@@ -36,18 +37,18 @@ const signupotp = () => {
                         <ThemeTextPrimary style={{
                             fontSize: scale(28),
                             fontFamily: 'AirbnbCereal_W_Bd',
-                        }}>Enter OTP</ThemeTextPrimary>
+                        }}>{baseContent.header}</ThemeTextPrimary>
                         <ThemeTextSecondary style={{
                             marginTop: verticalScale(5),
-                        }}>We've sent a 4-digit code to your email to verify your account.</ThemeTextSecondary>
+                        }}>{baseContent.subHeader}</ThemeTextSecondary>
                     </View>
 
                     {/* Email Input */}
                     <View style={{ gap: verticalScale(10) }}>
-                        <ThemeTextPrimary>Verification Code</ThemeTextPrimary>
+                        <ThemeTextPrimary>{baseContent.verificationInput.header}</ThemeTextPrimary>
                         <TextInput
                             editable
-                            placeholder="Enter your otp"
+                            placeholder={baseContent.verificationInput.placeholder}
                             value={otp}
                             onChangeText={setOtp}
                             placeholderTextColor={colors.textColor2}
@@ -64,12 +65,12 @@ const signupotp = () => {
                         style={styles.signUpOtpButton}
                     >
                         <ThemeTextPrimary style={{ color: "white", textAlign: "center" }}>
-                            Verify
+                            {baseContent.verify}
                         </ThemeTextPrimary>
                     </TouchableOpacity>
 
                     <TouchableOpacity onPress={() => { }}>
-                        <ThemeTextSecondary style={{ textAlign: "center", fontSize: scale(16) }}>Didn't receive the code? <ThemeTextPrimary style={{ color: '#14b8a6' }}>Resend</ThemeTextPrimary></ThemeTextSecondary>
+                        <ThemeTextSecondary style={{ textAlign: "center", fontSize: scale(16) }}>{baseContent.didntReceiveCode} <ThemeTextPrimary style={{ color: '#14b8a6' }}>{baseContent.resend}</ThemeTextPrimary></ThemeTextSecondary>
                     </TouchableOpacity>
 
                 </View>

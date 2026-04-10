@@ -9,6 +9,7 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { StyleSheet, useColorScheme } from "react-native";
 import ToastManager from "toastify-react-native";
+import { LanguageProvider } from "../context/LanguageContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -63,13 +64,17 @@ const RootLayout = () => {
   };
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? MyDarkTheme : MyLightTheme}>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
-      </Stack>
-      <StatusBar style="auto" />
-     <ToastManager/>
-    </ThemeProvider>
+    <LanguageProvider>
+      <ThemeProvider
+        value={colorScheme === "dark" ? MyDarkTheme : MyLightTheme}
+      >
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="index" />
+        </Stack>
+        <StatusBar style="auto" />
+        <ToastManager />
+      </ThemeProvider>
+    </LanguageProvider>
   );
 };
 

@@ -25,8 +25,11 @@ import {
 import { errorColor } from "../../../constants/theme";
 import api from "../../../utils/api";
 import { isValidEmail } from "../../../utils/emailValidation";
+import i18n from "../../src/localization/i18n";
 
 const SignIn = () => {
+
+  const baseContent = i18n.t("auth.adminauth.signin")
 
   useEffect(() => {
     const fetch_admin_remember_me_email = async() => {
@@ -57,18 +60,18 @@ const SignIn = () => {
     let hasError = false;
 
     if (!email) {
-      setEmailError("Email is required");
+      setEmailError(baseContent.errorStatesAndApi.emailRequired);
       hasError = true;
     } else if (!isValidEmail(email)) {
-      setEmailError("Invalid email address");
+      setEmailError(baseContent.errorStatesAndApi.InvalidEmailFormat);
       hasError = true;
     }
 
     if (!password) {
-      setPasswordError("Password is required");
+      setPasswordError(baseContent.errorStatesAndApi.passwordRequired);
       hasError = true;
     } else if (password.length < 8) {
-      setPasswordError("Password must be 8 charecters");
+      setPasswordError(baseContent.errorStatesAndApi.passwordMostCharecters);
       hasError = true;
     }
 
@@ -127,23 +130,23 @@ const SignIn = () => {
                 fontFamily: "AirbnbCereal_W_Bd",
               }}
             >
-              Admin Login
+              {baseContent.header}
             </ThemeTextPrimary>
             <ThemeTextSecondary
               style={{
                 marginTop: verticalScale(5),
               }}
             >
-              Welcome back! Please enter your details.
+              {baseContent.subHeader}
             </ThemeTextSecondary>
           </View>
 
           {/* Email Input */}
           <View style={{ gap: verticalScale(10) }}>
-            <ThemeTextPrimary>Email</ThemeTextPrimary>
+            <ThemeTextPrimary>{baseContent.emailInput.header}</ThemeTextPrimary>
             <TextInput
               editable
-              placeholder="Enter your email"
+              placeholder={baseContent.emailInput.placeholder}
               value={email}
               onChangeText={(text) => {
                 setEmail(text);
@@ -172,7 +175,7 @@ const SignIn = () => {
 
           {/* Password Input */}
           <View style={{ gap: verticalScale(10) }}>
-            <ThemeTextPrimary>Password</ThemeTextPrimary>
+            <ThemeTextPrimary>{baseContent.passwordInput.header}</ThemeTextPrimary>
             <View
               style={[
                 styles.passwordInputContainer,
@@ -184,7 +187,7 @@ const SignIn = () => {
             >
               <TextInput
                 editable
-                placeholder="Enter your password"
+                placeholder={baseContent.passwordInput.placeholder}
                 value={password}
                 onChangeText={(text) => {
                   setPassword(text);
@@ -261,7 +264,7 @@ const SignIn = () => {
                 ]}
               />
             )}
-            <ThemeTextSecondary>Remember me</ThemeTextSecondary>
+            <ThemeTextSecondary>{baseContent.rememberMe}</ThemeTextSecondary>
           </View>
 
           {/* Dummy Sign In Button */}
@@ -270,7 +273,7 @@ const SignIn = () => {
               <ActivityIndicator color="white" />
             ) : (
               <ThemeTextPrimary style={{ color: "white", textAlign: "center" }}>
-                Sign In
+                {baseContent.signIn}
               </ThemeTextPrimary>
             )}
           </TouchableOpacity>
@@ -286,7 +289,7 @@ const SignIn = () => {
 
             <View style={{ paddingHorizontal: scale(10) }}>
               <ThemeTextPrimary style={{ color: colors.text }}>
-                or
+                {baseContent.or}
               </ThemeTextPrimary>
             </View>
 
@@ -318,10 +321,10 @@ const SignIn = () => {
             <ThemeTextSecondary
               style={{ textAlign: "center", fontSize: scale(16) }}
             >
-              Don't have an account ?
+              {baseContent.dontHaveAccount}
               <ThemeTextPrimary style={{ color: "#14b8a6" }}>
                 {" "}
-                Sign up
+                {baseContent.signUp}
               </ThemeTextPrimary>
             </ThemeTextSecondary>
           </TouchableOpacity>
