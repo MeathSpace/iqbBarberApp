@@ -10,24 +10,26 @@ import {
   QueueIcon,
   RightIcon,
 } from "../../../../../../constants/icons";
+import i18n from "../../../../../src/localization/i18n";
 
 const index = () => {
+  const baseContent = i18n.t("app.admin.admintabs.profile.reports.index");
   const { colors } = useTheme();
   const router = useRouter();
 
   const reportOptions = [
     {
-      label: "Appointment Reports",
+      label: baseContent.options.appointmentReports,
       icon: <CalendarIcon color="#2563eb" />,
-      lightBg: "#dbeafe", 
+      lightBg: "#dbeafe",
       darkBg: "#1e3a8a33",
-      lightColor: "#2563eb", 
-      darkColor: "#93c5fd", 
+      lightColor: "#2563eb",
+      darkColor: "#93c5fd",
       route: "/appointmentReport",
       display: true,
     },
     {
-      label: "Queue Reports",
+      label: baseContent.options.queueReports,
       icon: <QueueIcon color="#059669" />,
       lightBg: "#d1fae5",
       darkBg: "#065f4633",
@@ -68,7 +70,7 @@ const index = () => {
             fontFamily: "AirbnbCereal_W_XBd",
           }}
         >
-          Reports
+          {baseContent.header}
         </ThemeTextPrimary>
       </View>
 

@@ -18,9 +18,10 @@ import {
   CrossCircleIcon,
   LeftIcon,
 } from "../../../../../../constants/icons";
-import { useAdminAuth } from "../../../../../../context/admin/AuthContext";
+import i18n from "../../../../../src/localization/i18n";
 
 const queueReport = () => {
+  const baseContent = i18n.t("app.admin.admintabs.profile.reports.queueReport");
   const router = useRouter();
   const { colors } = useTheme();
 
@@ -79,7 +80,7 @@ const queueReport = () => {
             fontFamily: "AirbnbCereal_W_XBd",
           }}
         >
-          Queue Report
+          {baseContent.header}
         </ThemeTextPrimary>
       </View>
       <View
@@ -102,8 +103,8 @@ const queueReport = () => {
                     selectedTab === item
                       ? "#14b8a6"
                       : colorScheme === "dark"
-                      ? "#3f3f46"
-                      : "#e4e4e7",
+                        ? "#3f3f46"
+                        : "#e4e4e7",
                 },
               ]}
               onPress={() => {
@@ -117,11 +118,15 @@ const queueReport = () => {
                     selectedTab === item
                       ? "#fff"
                       : colorScheme === "dark"
-                      ? "#fff"
-                      : "#000",
+                        ? "#fff"
+                        : "#000",
                 }}
               >
-                {item}
+                {item === "Daily"
+                  ? baseContent.tabs.daily
+                  : item === "Weekly"
+                    ? baseContent.tabs.weekly
+                    : baseContent.tabs.monthly}
               </ThemeTextPrimary>
             </TouchableOpacity>
           );

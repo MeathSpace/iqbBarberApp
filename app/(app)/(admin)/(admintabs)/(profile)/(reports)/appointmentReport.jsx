@@ -18,8 +18,12 @@ import {
   CrossCircleIcon,
   LeftIcon,
 } from "../../../../../../constants/icons";
+import i18n from "../../../../../src/localization/i18n";
 
 const appointmentReport = () => {
+  const baseContent = i18n.t(
+    "app.admin.admintabs.profile.reports.appointmentReport",
+  );
   const router = useRouter();
   const { colors } = useTheme();
 
@@ -78,7 +82,7 @@ const appointmentReport = () => {
             fontFamily: "AirbnbCereal_W_XBd",
           }}
         >
-          Appointment Report
+          {baseContent.header}
         </ThemeTextPrimary>
       </View>
       <View
@@ -101,8 +105,8 @@ const appointmentReport = () => {
                     selectedTab === item
                       ? "#14b8a6"
                       : colorScheme === "dark"
-                      ? "#3f3f46"
-                      : "#e4e4e7",
+                        ? "#3f3f46"
+                        : "#e4e4e7",
                 },
               ]}
               onPress={() => {
@@ -116,11 +120,15 @@ const appointmentReport = () => {
                     selectedTab === item
                       ? "#fff"
                       : colorScheme === "dark"
-                      ? "#fff"
-                      : "#000",
+                        ? "#fff"
+                        : "#000",
                 }}
               >
-                {item}
+                {item === "Daily"
+                  ? baseContent.tabs.daily
+                  : item === "Weekly"
+                    ? baseContent.tabs.weekly
+                    : baseContent.tabs.monthly}
               </ThemeTextPrimary>
             </TouchableOpacity>
           );

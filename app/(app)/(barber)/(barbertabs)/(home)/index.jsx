@@ -19,10 +19,10 @@ import {
   QueueIcon,
   WifiIcon,
 } from "../../../../../constants/icons";
-import { useBarberGlobal } from "../../../../../context/barber/GlobalContext";
-import { useBarberAuth } from "../../../../../context/barber/AuthContext";
+import i18n from "../../../../src/localization/i18n";
 
 const index = () => {
+  const baseContent = i18n.t("app.barber.barbertabs.home");
   const { colors } = useTheme();
   const [isOnline, setIsOnline] = useState(true);
 
@@ -31,22 +31,42 @@ const index = () => {
       icon: <CalendarIcon color="#9333ea" size={scale(16)} />,
       iconBg: "#f3e8ff", // purple-100
       iconColor: "#9333ea", // purple-600
-      title: "Appointments",
-      total: "32 Total",
+      title: baseContent.reports.appointment,
+      total: `32 ${baseContent.reports.total}`,
       data: [
-        { label: "Completed", color: "#22c55e", value: 87.5, count: "28 / 32" },
-        { label: "No-Shows", color: "#ef4444", value: 12.5, count: "4 / 32" },
+        {
+          label: baseContent.reports.completed,
+          color: "#22c55e",
+          value: 87.5,
+          count: "28 / 32",
+        },
+        {
+          label: baseContent.reports.noShow,
+          color: "#ef4444",
+          value: 12.5,
+          count: "4 / 32",
+        },
       ],
     },
     {
       icon: <QueueIcon color="#2563eb" size={scale(16)} />,
       iconBg: "#dbeafe", // blue-100
       iconColor: "#2563eb", // blue-600
-      title: "Queue Bookings",
-      total: "48 Total",
+      title: baseContent.reports.queueBookings,
+      total: `48 ${baseContent.reports.total}`,
       data: [
-        { label: "Served", color: "#22c55e", value: 87.5, count: "42 / 48" },
-        { label: "Cancelled", color: "#ef4444", value: 12.5, count: "6 / 48" },
+        {
+          label: baseContent.reports.served,
+          color: "#22c55e",
+          value: 87.5,
+          count: "42 / 48",
+        },
+        {
+          label: baseContent.reports.cancelled,
+          color: "#ef4444",
+          value: 12.5,
+          count: "6 / 48",
+        },
       ],
     },
   ];
@@ -112,7 +132,7 @@ const index = () => {
               },
             ]}
           >
-            Upcoming Appointments
+            {baseContent.upComingAppointments}
           </ThemeTextPrimary>
 
           <LinearGradient
@@ -139,7 +159,7 @@ const index = () => {
                   Michael Swath
                 </ThemeTextPrimary>
                 <ThemeTextSecondary style={styles.clientDetails}>
-                  3 Services | $79.00
+                  3 {baseContent.card.services} | $79.00
                 </ThemeTextSecondary>
                 <ThemeTextSecondary style={styles.clientDetails}>
                   Approx. 25 mins
@@ -159,13 +179,13 @@ const index = () => {
                 ]}
               >
                 <ThemeTextPrimary style={styles.cancelText}>
-                  Cancel
+                  {baseContent.card.cancel}
                 </ThemeTextPrimary>
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.serveBtn}>
                 <ThemeTextPrimary style={styles.serveText}>
-                  Serve
+                  {baseContent.card.serve}
                 </ThemeTextPrimary>
               </TouchableOpacity>
             </View>
@@ -184,7 +204,7 @@ const index = () => {
               },
             ]}
           >
-            Live Status
+            {baseContent.liveStatus}
           </ThemeTextPrimary>
 
           <View
@@ -213,7 +233,7 @@ const index = () => {
 
                 <View>
                   <ThemeTextPrimary style={styles.liveQueueActiveTitle}>
-                    Active Station
+                    {baseContent.activeStation}
                   </ThemeTextPrimary>
                   <ThemeTextPrimary
                     style={[
@@ -246,10 +266,18 @@ const index = () => {
             {/* Stats Row */}
             <View style={styles.liveQueueGrid}>
               {[
-                { label: "System", value: "On", color: "#22c55e" },
-                { label: "Booking", value: "4", color: "#a855f7" },
-                { label: "In Queue", value: "0", color: "#3b82f6" },
-                { label: "Clock", value: "In", color: "#eab308" },
+                {
+                  label: baseContent.system,
+                  value: baseContent.on,
+                  color: "#22c55e",
+                },
+                { label: baseContent.booking, value: "4", color: "#a855f7" },
+                { label: baseContent.inQueue, value: "0", color: "#3b82f6" },
+                {
+                  label: baseContent.clock,
+                  value: baseContent.in,
+                  color: "#eab308",
+                },
               ].map((item, index) => (
                 <View
                   key={index}
@@ -283,7 +311,7 @@ const index = () => {
               },
             ]}
           >
-            Weekly Reports
+            {baseContent.reports.header}
           </ThemeTextPrimary>
 
           <View style={{ gap: verticalScale(12) }}>

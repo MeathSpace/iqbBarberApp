@@ -23,8 +23,10 @@ import ThemeTextPrimary from "../../../../../components/ThemeTextPrimary";
 import ThemeTextSecondary from "../../../../../components/ThemeTextSecondary";
 import { RightIcon } from "../../../../../constants/icons";
 import { formatMinutesToHrMin } from "../../../../../utils/formatedServiceDate";
+import i18n from "../../../../src/localization/i18n";
 
 const index = () => {
+  const baseContent = i18n.t("app.admin.admintabs.salon");
   const { colors } = useTheme();
   const flatlistRef = useRef();
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -242,116 +244,6 @@ const index = () => {
       image:
         "https://images.unsplash.com/photo-1557862921-37829c790f19?q=80&w=2671&auto=format&fit=crop",
     },
-    {
-      id: 6,
-      name: "Ethan Davis",
-      service: "Buzz Cut",
-      price: "$25.00",
-      duration: "20 min",
-      date: "Tomorrow",
-      time: "01:15 PM",
-      image:
-        "https://images.unsplash.com/photo-1557862921-37829c790f19?q=80&w=2671&auto=format&fit=crop",
-    },
-    {
-      id: 7,
-      name: "William Martinez",
-      service: "Hair Wash + Style",
-      price: "$40.00",
-      duration: "30 min",
-      date: "Tomorrow",
-      time: "02:00 PM",
-      image:
-        "https://images.unsplash.com/photo-1557862921-37829c790f19?q=80&w=2671&auto=format&fit=crop",
-    },
-    {
-      id: 8,
-      name: "Matthew Garcia",
-      service: "Long Hair Trim",
-      price: "$45.00",
-      duration: "40 min",
-      date: "Tomorrow",
-      time: "02:45 PM",
-      image:
-        "https://images.unsplash.com/photo-1557862921-37829c790f19?q=80&w=2671&auto=format&fit=crop",
-    },
-    {
-      id: 9,
-      name: "Christopher Lee",
-      service: "Haircut + Beard Lineup",
-      price: "$65.00",
-      duration: "50 min",
-      date: "Tomorrow",
-      time: "03:30 PM",
-      image:
-        "https://images.unsplash.com/photo-1557862921-37829c790f19?q=80&w=2671&auto=format&fit=crop",
-    },
-    {
-      id: 10,
-      name: "Anthony Clark",
-      service: "Razor Shave",
-      price: "$35.00",
-      duration: "30 min",
-      date: "Tomorrow",
-      time: "04:15 PM",
-      image:
-        "https://images.unsplash.com/photo-1557862921-37829c790f19?q=80&w=2671&auto=format&fit=crop",
-    },
-    {
-      id: 11,
-      name: "Joshua Lewis",
-      service: "Beard Styling",
-      price: "$28.00",
-      duration: "25 min",
-      date: "Tomorrow",
-      time: "05:00 PM",
-      image:
-        "https://images.unsplash.com/photo-1557862921-37829c790f19?q=80&w=2671&auto=format&fit=crop",
-    },
-    {
-      id: 12,
-      name: "Andrew Walker",
-      service: "Head Massage + Haircut",
-      price: "$70.00",
-      duration: "60 min",
-      date: "Tomorrow",
-      time: "05:45 PM",
-      image:
-        "https://images.unsplash.com/photo-1557862921-37829c790f19?q=80&w=2671&auto=format&fit=crop",
-    },
-    {
-      id: 13,
-      name: "Ryan Hall",
-      service: "Trim + Beard Cleanup",
-      price: "$35.00",
-      duration: "30 min",
-      date: "Tomorrow",
-      time: "06:30 PM",
-      image:
-        "https://images.unsplash.com/photo-1557862921-37829c790f19?q=80&w=2671&auto=format&fit=crop",
-    },
-    {
-      id: 14,
-      name: "Nathan Allen",
-      service: "Premium Haircut",
-      price: "$80.00",
-      duration: "70 min",
-      date: "Tomorrow",
-      time: "07:15 PM",
-      image:
-        "https://images.unsplash.com/photo-1557862921-37829c790f19?q=80&w=2671&auto=format&fit=crop",
-    },
-    {
-      id: 15,
-      name: "Samuel Young",
-      service: "Hair Wash + Trim",
-      price: "$45.00",
-      duration: "35 min",
-      date: "Tomorrow",
-      time: "08:00 PM",
-      image:
-        "https://images.unsplash.com/photo-1557862921-37829c790f19?q=80&w=2671&auto=format&fit=crop",
-    },
   ];
 
   return (
@@ -513,8 +405,8 @@ const index = () => {
                           selectedTab === item
                             ? "#14b8a6"
                             : colorScheme === "dark"
-                            ? "#3f3f46"
-                            : "#e4e4e7",
+                              ? "#3f3f46"
+                              : "#e4e4e7",
                       },
                     ]}
                     onPress={() => {
@@ -528,11 +420,15 @@ const index = () => {
                           selectedTab === item
                             ? "#fff"
                             : colorScheme === "dark"
-                            ? "#fff"
-                            : "#000",
+                              ? "#fff"
+                              : "#000",
                       }}
                     >
-                      {item}
+                      {item === "Services"
+                        ? baseContent.tabs.services
+                        : item === "Appointment"
+                          ? baseContent.tabs.appointment
+                          : baseContent.tabs.customers}
                     </ThemeTextPrimary>
                   </TouchableOpacity>
                 );
@@ -625,10 +521,10 @@ const index = () => {
                           fontFamily: "AirbnbCereal_W_Bd",
                         }}
                       >
-                        Set Your Availability
+                        {baseContent.appointment.availability.title}
                       </ThemeTextPrimary>
                       <ThemeTextSecondary style={{ width: "96%" }}>
-                        Choose your recurring weekly appointment days
+                        {baseContent.appointment.availability.desc}
                       </ThemeTextSecondary>
                     </View>
 
@@ -659,10 +555,10 @@ const index = () => {
                           fontFamily: "AirbnbCereal_W_Bd",
                         }}
                       >
-                        Manage Your Off Days
+                        {baseContent.appointment.offDays.title}
                       </ThemeTextPrimary>
                       <ThemeTextSecondary style={{ width: "96%" }}>
-                        Select specific dates from a calender to block off
+                        {baseContent.appointment.offDays.desc}
                       </ThemeTextSecondary>
                     </View>
 

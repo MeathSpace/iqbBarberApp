@@ -216,7 +216,6 @@ export default {
             },
           },
         },
-
         queue: {
           tabs: {
             liveQueue: "Live-Warteschlange",
@@ -245,6 +244,240 @@ export default {
               cancelled: "Storniert",
             },
           },
+        },
+        salon: {
+          tabs: {
+            services: "Dienstleistungen",
+            appointment: "Termine",
+            customers: "Kunden",
+          },
+          appointment: {
+            availability: {
+              title: "Verfügbarkeit festlegen",
+              desc: "Wähle deine wiederkehrenden wöchentlichen Termine",
+            },
+            offDays: {
+              title: "Freie Tage verwalten",
+              desc: "Wähle bestimmte Daten im Kalender aus, um sie zu blockieren",
+            },
+          },
+        },
+        appointment: {
+          tabs: {
+            upcoming: "Bevorstehend",
+            history: "Verlauf",
+          },
+          appointmentCard: {
+            msg: "Nachricht",
+            notify: "Benachrichtigen",
+            serve: "Bedienen",
+            cancel: "Abbrechen",
+          },
+          cancelled: "Storniert",
+        },
+        profile: {
+          header: "Profil",
+          options: {
+            report: "Berichte",
+            changeSalon: "Salon wechseln",
+            helpAndSupport: "Hilfe & Support",
+            about: "Über",
+          },
+          logout: "Abmelden",
+
+          reports: {
+            index: {
+              header: "Berichte",
+              options: {
+                appointmentReports: "Terminberichte",
+                queueReports: "Warteschlangenberichte",
+              },
+            },
+            appointmentReport: {
+              header: "Terminbericht",
+              tabs: {
+                daily: "Täglich",
+                weekly: "Wöchentlich",
+                monthly: "Monatlich",
+              },
+            },
+            queueReport: {
+              header: "Warteschlangenbericht",
+              tabs: {
+                daily: "Täglich",
+                weekly: "Wöchentlich",
+                monthly: "Monatlich",
+              },
+            },
+            changeSalon: {
+              header: "Salon wechseln",
+              subHeader:
+                "Wechsle deine aktive Verbindung, indem du einen Salon aus der Liste unten auswählst.",
+              chooseSalon: "Wähle deinen Salon",
+              confirm: "Bestätigen",
+              cancel: "Abbrechen",
+            },
+          },
+        },
+        manageProfile: {
+          header: "Konto verwalten",
+          nameInput: {
+            header: "Name",
+            placeholder: "Gib deinen Namen ein",
+          },
+          genderDropdown: {
+            header: "Geschlecht",
+            placeholder: "Wähle dein Geschlecht",
+            male: "Männlich",
+            femaile: "Weiblich",
+            other: "Andere",
+          },
+          dateOfBirth: {
+            header: "Geburtsdatum (Optional)",
+            placeholder: "TT/MM/JJJJ",
+            close: "Schließen",
+            done: "Fertig",
+          },
+          mobileNumber: {
+            header: "Handynummer",
+            update: "Aktualisieren",
+          },
+          editAndSave: "Bearbeiten & Speichern",
+        },
+      },
+    },
+    barber: {
+      barbertabs: {
+        home: {
+          upComingAppointments: "Bevorstehende Termine",
+          liveStatus: "Live-Status",
+          activeStation: "Aktive Station",
+          online: "Online",
+          offline: "Offline",
+          system: "System",
+          on: "Ein",
+          in: "In",
+          booking: "Buchung",
+          inQueue: "In Warteschlange",
+          clock: "Uhr",
+
+          card: {
+            services: "Dienstleistungen",
+            cancel: "Abbrechen",
+            serve: "Bedienen",
+          },
+
+          reports: {
+            header: "Wöchentliche Berichte",
+            appointment: "Termine",
+            completed: "Abgeschlossen",
+            noShow: "Nicht erschienen",
+            queueBookings: "Warteschlangen-Buchungen",
+            served: "Bedient",
+            cancelled: "Storniert",
+            total: "Gesamt",
+          },
+        },
+        queue: {
+          tabs: {
+            liveQueue: "Live-Warteschlange",
+            history: "Verlauf",
+          },
+
+          liveQueue: {
+            header: {
+              barber: "Friseur",
+              customer: "Kunde",
+              posWait: "Pos / Wartezeit",
+            },
+          },
+
+          history: {
+            header: {
+              barber: "Friseur",
+              customer: "Kunde",
+              wait: "Wartezeit",
+              status: "Status",
+            },
+
+            status: {
+              served: "Bedient",
+              waiting: "Wartend",
+              cancelled: "Storniert",
+            },
+          },
+        },
+        salon: {
+          tabs: {
+            services: "Dienstleistungen",
+            appointment: "Termine",
+            customers: "Kunden",
+          },
+          description: "Beschreibung",
+          contactUs: "Kontaktiere uns",
+          ifYouHaveQues: "Wenn du Fragen hast",
+          location: "Standort",
+          followUsOn: "Folge uns auf",
+          socialLinks: "Soziale Links",
+
+          appointment: {
+            availability: {
+              title: "Verfügbarkeit festlegen",
+              desc: "Wähle deine wiederkehrenden wöchentlichen Termine",
+            },
+            offDays: {
+              title: "Freie Tage verwalten",
+              desc: "Wähle bestimmte Daten im Kalender aus, um sie zu blockieren",
+            },
+          },
+        },
+        appointment: {
+          tabs: {
+            upcoming: "Bevorstehend",
+            history: "Verlauf",
+          },
+          appointmentCard: {
+            msg: "Nachricht",
+            notify: "Benachrichtigen",
+            serve: "Bedienen",
+            cancel: "Abbrechen",
+          },
+          cancelled: "Storniert",
+        },
+        profile: {
+          header: "Profil",
+          options: {
+            report: "Berichte",
+            changeSalon: "Salon wechseln",
+            helpAndSupport: "Hilfe & Support",
+            about: "Über",
+          },
+          logout: "Abmelden",
+        },
+        manageProfile: {
+          header: "Konto verwalten",
+          nameInput: {
+            header: "Name",
+            placeholder: "Gib deinen Namen ein",
+          },
+          genderDropdown: {
+            header: "Geschlecht",
+            placeholder: "Wähle dein Geschlecht",
+            male: "Männlich",
+            femaile: "Weiblich",
+            other: "Andere",
+          },
+          dateOfBirth: {
+            header: "Geburtsdatum (Optional)",
+            placeholder: "TT/MM/JJJJ",
+            close: "Schließen",
+            done: "Fertig",
+          },
+          mobileNumber: {
+            header: "Handynummer",
+            update: "Aktualisieren",
+          },
+          editAndSave: "Bearbeiten & Speichern",
         },
       },
     },

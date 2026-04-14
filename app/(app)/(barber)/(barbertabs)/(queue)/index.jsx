@@ -1,26 +1,27 @@
-import { useTheme } from '@react-navigation/native'
-import { Image } from 'expo-image'
-import { useState } from 'react'
-import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native'
-import { scale, verticalScale } from 'react-native-size-matters'
-import ThemeSafeAreaView from '../../../../../components/ThemeSafeAreaView'
-import ThemeTextPrimary from '../../../../../components/ThemeTextPrimary'
+import { useTheme } from "@react-navigation/native";
+import { Image } from "expo-image";
+import { useState } from "react";
+import { FlatList, StyleSheet, TouchableOpacity, View } from "react-native";
+import { scale, verticalScale } from "react-native-size-matters";
+import ThemeSafeAreaView from "../../../../../components/ThemeSafeAreaView";
+import ThemeTextPrimary from "../../../../../components/ThemeTextPrimary";
+import i18n from "../../../../src/localization/i18n";
 
 const index = () => {
-
+  const baseContent = i18n.t("app.barber.barbertabs.queue");
   const { colors } = useTheme();
 
   const [tabs, setTabs] = useState([
     {
       id: 1,
-      name: "Live Queue"
+      name: "Live Queue",
     },
     {
       id: 2,
-      name: "History"
+      name: "History",
     },
-  ])
-  const [selectedTab, setSelectedTab] = useState("Live Queue")
+  ]);
+  const [selectedTab, setSelectedTab] = useState("Live Queue");
 
   const data = [
     { id: "1", barber: "John Doe", customer: "Michael", posWait: "5 / 10" },
@@ -55,235 +56,523 @@ const index = () => {
     { id: "30", barber: "Lydia Scott", customer: "Stella", posWait: "3 / 6" },
   ];
 
-
   const dataHistory = [
-    { id: "1", barber: "John Doe", customer: "Michael", wait: "#1 / ~25m", status: "served" },
-    { id: "2", barber: "Emma Smith", customer: "Sarah", wait: "#2 / ~15m", status: "waiting" },
-    { id: "3", barber: "Liam Brown", customer: "David", wait: "#3 / ~20m", status: "served" },
-    { id: "4", barber: "Olivia Johnson", customer: "Emily", wait: "#4 / ~18m", status: "cancelled" },
-    { id: "5", barber: "Noah Davis", customer: "Chloe", wait: "#5 / ~22m", status: "served" },
-    { id: "6", barber: "Sophia Miller", customer: "Matthew", wait: "#6 / ~30m", status: "waiting" },
-    { id: "7", barber: "James Wilson", customer: "Grace", wait: "#7 / ~12m", status: "served" },
-    { id: "8", barber: "Ava Martinez", customer: "Jacob", wait: "#8 / ~28m", status: "no-show" },
-    { id: "9", barber: "Ethan Anderson", customer: "Lily", wait: "#9 / ~10m", status: "waiting" },
-    { id: "10", barber: "Mia Taylor", customer: "Ryan", wait: "#10 / ~27m", status: "served" },
-    { id: "11", barber: "Emma Smith", customer: "Ella", wait: "#1 / ~14m", status: "waiting" },
-    { id: "12", barber: "Liam Brown", customer: "Nathan", wait: "#2 / ~26m", status: "served" },
-    { id: "13", barber: "Olivia Johnson", customer: "Zoe", wait: "#3 / ~23m", status: "cancelled" },
-    { id: "14", barber: "Noah Davis", customer: "Lucas", wait: "#4 / ~19m", status: "served" },
-    { id: "15", barber: "Sophia Miller", customer: "Hannah", wait: "#5 / ~21m", status: "no-show" },
-    { id: "16", barber: "James Wilson", customer: "Sofia", wait: "#6 / ~16m", status: "waiting" },
-    { id: "17", barber: "Ava Martinez", customer: "Aiden", wait: "#7 / ~24m", status: "served" },
-    { id: "18", barber: "Ethan Anderson", customer: "Aria", wait: "#8 / ~29m", status: "waiting" },
-    { id: "19", barber: "Mia Taylor", customer: "Ethan", wait: "#9 / ~17m", status: "cancelled" },
-    { id: "20", barber: "John Doe", customer: "Olivia", wait: "#10 / ~20m", status: "served" },
-    { id: "21", barber: "Emma Smith", customer: "Jack", wait: "#1 / ~13m", status: "waiting" },
-    { id: "22", barber: "Liam Brown", customer: "Sophie", wait: "#2 / ~15m", status: "served" },
-    { id: "23", barber: "Olivia Johnson", customer: "Logan", wait: "#3 / ~18m", status: "waiting" },
-    { id: "24", barber: "Noah Davis", customer: "Isabella", wait: "#4 / ~22m", status: "served" },
-    { id: "25", barber: "Sophia Miller", customer: "Daniel", wait: "#5 / ~19m", status: "no-show" },
-    { id: "26", barber: "James Wilson", customer: "Ella", wait: "#6 / ~27m", status: "served" },
-    { id: "27", barber: "Ava Martinez", customer: "Nathan", wait: "#7 / ~11m", status: "waiting" },
-    { id: "28", barber: "Ethan Anderson", customer: "Grace", wait: "#8 / ~26m", status: "served" },
-    { id: "29", barber: "Mia Taylor", customer: "Chloe", wait: "#9 / ~30m", status: "cancelled" },
-    { id: "30", barber: "John Doe", customer: "Liam", wait: "#10 / ~25m", status: "served" },
+    {
+      id: "1",
+      barber: "John Doe",
+      customer: "Michael",
+      wait: "#1 / ~25m",
+      status: "served",
+    },
+    {
+      id: "2",
+      barber: "Emma Smith",
+      customer: "Sarah",
+      wait: "#2 / ~15m",
+      status: "waiting",
+    },
+    {
+      id: "3",
+      barber: "Liam Brown",
+      customer: "David",
+      wait: "#3 / ~20m",
+      status: "served",
+    },
+    {
+      id: "4",
+      barber: "Olivia Johnson",
+      customer: "Emily",
+      wait: "#4 / ~18m",
+      status: "cancelled",
+    },
+    {
+      id: "5",
+      barber: "Noah Davis",
+      customer: "Chloe",
+      wait: "#5 / ~22m",
+      status: "served",
+    },
+    {
+      id: "6",
+      barber: "Sophia Miller",
+      customer: "Matthew",
+      wait: "#6 / ~30m",
+      status: "waiting",
+    },
+    {
+      id: "7",
+      barber: "James Wilson",
+      customer: "Grace",
+      wait: "#7 / ~12m",
+      status: "served",
+    },
+    {
+      id: "8",
+      barber: "Ava Martinez",
+      customer: "Jacob",
+      wait: "#8 / ~28m",
+      status: "no-show",
+    },
+    {
+      id: "9",
+      barber: "Ethan Anderson",
+      customer: "Lily",
+      wait: "#9 / ~10m",
+      status: "waiting",
+    },
+    {
+      id: "10",
+      barber: "Mia Taylor",
+      customer: "Ryan",
+      wait: "#10 / ~27m",
+      status: "served",
+    },
+    {
+      id: "11",
+      barber: "Emma Smith",
+      customer: "Ella",
+      wait: "#1 / ~14m",
+      status: "waiting",
+    },
+    {
+      id: "12",
+      barber: "Liam Brown",
+      customer: "Nathan",
+      wait: "#2 / ~26m",
+      status: "served",
+    },
+    {
+      id: "13",
+      barber: "Olivia Johnson",
+      customer: "Zoe",
+      wait: "#3 / ~23m",
+      status: "cancelled",
+    },
+    {
+      id: "14",
+      barber: "Noah Davis",
+      customer: "Lucas",
+      wait: "#4 / ~19m",
+      status: "served",
+    },
+    {
+      id: "15",
+      barber: "Sophia Miller",
+      customer: "Hannah",
+      wait: "#5 / ~21m",
+      status: "no-show",
+    },
+    {
+      id: "16",
+      barber: "James Wilson",
+      customer: "Sofia",
+      wait: "#6 / ~16m",
+      status: "waiting",
+    },
+    {
+      id: "17",
+      barber: "Ava Martinez",
+      customer: "Aiden",
+      wait: "#7 / ~24m",
+      status: "served",
+    },
+    {
+      id: "18",
+      barber: "Ethan Anderson",
+      customer: "Aria",
+      wait: "#8 / ~29m",
+      status: "waiting",
+    },
+    {
+      id: "19",
+      barber: "Mia Taylor",
+      customer: "Ethan",
+      wait: "#9 / ~17m",
+      status: "cancelled",
+    },
+    {
+      id: "20",
+      barber: "John Doe",
+      customer: "Olivia",
+      wait: "#10 / ~20m",
+      status: "served",
+    },
+    {
+      id: "21",
+      barber: "Emma Smith",
+      customer: "Jack",
+      wait: "#1 / ~13m",
+      status: "waiting",
+    },
+    {
+      id: "22",
+      barber: "Liam Brown",
+      customer: "Sophie",
+      wait: "#2 / ~15m",
+      status: "served",
+    },
+    {
+      id: "23",
+      barber: "Olivia Johnson",
+      customer: "Logan",
+      wait: "#3 / ~18m",
+      status: "waiting",
+    },
+    {
+      id: "24",
+      barber: "Noah Davis",
+      customer: "Isabella",
+      wait: "#4 / ~22m",
+      status: "served",
+    },
+    {
+      id: "25",
+      barber: "Sophia Miller",
+      customer: "Daniel",
+      wait: "#5 / ~19m",
+      status: "no-show",
+    },
+    {
+      id: "26",
+      barber: "James Wilson",
+      customer: "Ella",
+      wait: "#6 / ~27m",
+      status: "served",
+    },
+    {
+      id: "27",
+      barber: "Ava Martinez",
+      customer: "Nathan",
+      wait: "#7 / ~11m",
+      status: "waiting",
+    },
+    {
+      id: "28",
+      barber: "Ethan Anderson",
+      customer: "Grace",
+      wait: "#8 / ~26m",
+      status: "served",
+    },
+    {
+      id: "29",
+      barber: "Mia Taylor",
+      customer: "Chloe",
+      wait: "#9 / ~30m",
+      status: "cancelled",
+    },
+    {
+      id: "30",
+      barber: "John Doe",
+      customer: "Liam",
+      wait: "#10 / ~25m",
+      status: "served",
+    },
   ];
-
 
   return (
     <ThemeSafeAreaView
-      edges={['top', 'left', 'right']}
+      edges={["top", "left", "right"]}
       style={{
         padding: scale(15),
       }}
     >
-      <View style={[styles.queueHeader, {
-        backgroundColor: colors.progressBgColor
-      }]}>
-        {
-          tabs.map((item) => {
-            return (
-              <TouchableOpacity
-                onPress={() => {
-                  setSelectedTab(item.name)
-                }}
-                key={item.id}
-                style={[styles.tabButton, {
+      <View
+        style={[
+          styles.queueHeader,
+          {
+            backgroundColor: colors.progressBgColor,
+          },
+        ]}
+      >
+        {tabs.map((item) => {
+          return (
+            <TouchableOpacity
+              onPress={() => {
+                setSelectedTab(item.name);
+              }}
+              key={item.id}
+              style={[
+                styles.tabButton,
+                {
                   backgroundColor:
                     selectedTab === item.name
                       ? colors.background2
-                      : 'transparent'
-                }]}><ThemeTextPrimary
-                  style={{
-                    color: selectedTab === item.name ? "#14b8a6" : colors.textColor1,
-                    fontFamily: "AirbnbCereal_W_Bd"
-                  }}
-                >{item.name}</ThemeTextPrimary></TouchableOpacity>
-            )
-          })
-        }
+                      : "transparent",
+                },
+              ]}
+            >
+              <ThemeTextPrimary
+                style={{
+                  color:
+                    selectedTab === item.name ? "#14b8a6" : colors.textColor1,
+                  fontFamily: "AirbnbCereal_W_Bd",
+                }}
+              >
+                {item.name === "Live Queue"
+                  ? baseContent.tabs.liveQueue
+                  : baseContent.tabs.history}
+              </ThemeTextPrimary>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
-      {
-        selectedTab === "Live Queue" && (
-          <View style={{
+      {selectedTab === "Live Queue" && (
+        <View
+          style={{
             backgroundColor: colors.background2,
             borderWidth: scale(0.5),
             borderColor: colors.borderColor1,
             borderRadius: scale(8),
             marginTop: verticalScale(10),
-            flex: 1
-          }}>
-            {/* Header */}
-            <View style={[styles.liveQueueHeader, {
-              borderColor: colors.borderColor1
-            }]}>
-              <ThemeTextPrimary style={[styles.liveQueueHeaderCell, styles.barberCol, { color: colors.textColor2 }]}>Barber</ThemeTextPrimary>
-              <ThemeTextPrimary style={[styles.liveQueueHeaderCell, styles.customerCol, { color: colors.textColor2 }]}>Customer</ThemeTextPrimary>
-              <ThemeTextPrimary style={[styles.liveQueueHeaderCell, styles.posCol, styles.right, { color: colors.textColor2 }]}>Pos / Wait</ThemeTextPrimary>
-            </View>
+            flex: 1,
+          }}
+        >
+          {/* Header */}
+          <View
+            style={[
+              styles.liveQueueHeader,
+              {
+                borderColor: colors.borderColor1,
+              },
+            ]}
+          >
+            <ThemeTextPrimary
+              style={[
+                styles.liveQueueHeaderCell,
+                styles.barberCol,
+                { color: colors.textColor2 },
+              ]}
+            >
+              {baseContent.liveQueue.header.barber}
+            </ThemeTextPrimary>
+            <ThemeTextPrimary
+              style={[
+                styles.liveQueueHeaderCell,
+                styles.customerCol,
+                { color: colors.textColor2 },
+              ]}
+            >
+              {baseContent.liveQueue.header.customer}
+            </ThemeTextPrimary>
+            <ThemeTextPrimary
+              style={[
+                styles.liveQueueHeaderCell,
+                styles.posCol,
+                styles.right,
+                { color: colors.textColor2 },
+              ]}
+            >
+              {baseContent.liveQueue.header.posWait}
+            </ThemeTextPrimary>
+          </View>
 
-            {/* FlatList */}
-            <FlatList
-              data={data}
-              keyExtractor={(item) => item.id}
-              style={{ flex: 1 }}
-              renderItem={({ item }) => (
-                <View style={[styles.liveQueueRow, {
-                  borderBottomColor: colors.borderColor1
-                }]}>
-                  {/* Barber column with image + name */}
-                  <View style={[styles.barberCol, styles.barberCell]}>
-                    <Image
-                      style={styles.image}
-                      source={{ uri: "https://i.pinimg.com/736x/0f/5d/ac/0f5dac39ba6687e95f08623a9c9faca9.jpg" }}
-                      contentFit="cover"
-                      transition={1000}
-                    />
-                    <ThemeTextPrimary
-                      numberOfLines={1}
-                      ellipsizeMode="tail"
-                      style={[
-                        styles.liveQueueCell,
-                        styles.left,
-                        { flexShrink: 1, minWidth: 0, color: colors.textColor1 } // 👈 This line fixes it
-                      ]}
-                    >
-                      {item.barber}
-                    </ThemeTextPrimary>
-                  </View>
-
-                  {/* Customer */}
+          {/* FlatList */}
+          <FlatList
+            data={data}
+            keyExtractor={(item) => item.id}
+            style={{ flex: 1 }}
+            renderItem={({ item }) => (
+              <View
+                style={[
+                  styles.liveQueueRow,
+                  {
+                    borderBottomColor: colors.borderColor1,
+                  },
+                ]}
+              >
+                {/* Barber column with image + name */}
+                <View style={[styles.barberCol, styles.barberCell]}>
+                  <Image
+                    style={styles.image}
+                    source={{
+                      uri: "https://i.pinimg.com/736x/0f/5d/ac/0f5dac39ba6687e95f08623a9c9faca9.jpg",
+                    }}
+                    contentFit="cover"
+                    transition={1000}
+                  />
                   <ThemeTextPrimary
                     numberOfLines={1}
                     ellipsizeMode="tail"
-                    style={[styles.liveQueueCell, styles.customerCol, styles.left]}
+                    style={[
+                      styles.liveQueueCell,
+                      styles.left,
+                      { flexShrink: 1, minWidth: 0, color: colors.textColor1 }, // 👈 This line fixes it
+                    ]}
                   >
-                    {item.customer}
-                  </ThemeTextPrimary>
-
-                  {/* Pos / Wait */}
-                  <ThemeTextPrimary
-                    style={[styles.liveQueueCell, styles.posCol, styles.right]}
-                  >
-                    {item.posWait}
+                    {item.barber}
                   </ThemeTextPrimary>
                 </View>
-              )}
-              contentContainerStyle={{}}
-            />
-          </View>
-        )
-      }
 
-      {
-        selectedTab === "History" && (
-          <View style={{
+                {/* Customer */}
+                <ThemeTextPrimary
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                  style={[
+                    styles.liveQueueCell,
+                    styles.customerCol,
+                    styles.left,
+                  ]}
+                >
+                  {item.customer}
+                </ThemeTextPrimary>
+
+                {/* Pos / Wait */}
+                <ThemeTextPrimary
+                  style={[styles.liveQueueCell, styles.posCol, styles.right]}
+                >
+                  {item.posWait}
+                </ThemeTextPrimary>
+              </View>
+            )}
+            contentContainerStyle={{}}
+          />
+        </View>
+      )}
+
+      {selectedTab === "History" && (
+        <View
+          style={{
             backgroundColor: colors.background2,
             borderWidth: scale(0.5),
             borderColor: colors.borderColor1,
             borderRadius: scale(8),
             marginTop: verticalScale(10),
-            flex: 1
-          }}>
-            {/* Header */}
-            <View style={[styles.liveQueueHeader, {
-              borderColor: colors.borderColor1
-            }]}>
-              <ThemeTextPrimary style={[styles.liveQueueHeaderCell, styles.historyBarberCol, { color: colors.textColor2 }]}>Barber</ThemeTextPrimary>
-              <ThemeTextPrimary style={[styles.liveQueueHeaderCell, styles.historyCustomerCol, { color: colors.textColor2 }]}>Customer</ThemeTextPrimary>
-              <ThemeTextPrimary style={[styles.liveQueueHeaderCell, styles.historyWaitCol, styles.right, { color: colors.textColor2 }]}>Wait</ThemeTextPrimary>
-              <ThemeTextPrimary style={[styles.liveQueueHeaderCell, styles.historyStatusCol, styles.right, { color: colors.textColor2 }]}>Status</ThemeTextPrimary>
-            </View>
+            flex: 1,
+          }}
+        >
+          {/* Header */}
+          <View
+            style={[
+              styles.liveQueueHeader,
+              {
+                borderColor: colors.borderColor1,
+              },
+            ]}
+          >
+            <ThemeTextPrimary
+              style={[
+                styles.liveQueueHeaderCell,
+                styles.historyBarberCol,
+                { color: colors.textColor2 },
+              ]}
+            >
+              {baseContent.history.header.barber}
+            </ThemeTextPrimary>
+            <ThemeTextPrimary
+              style={[
+                styles.liveQueueHeaderCell,
+                styles.historyCustomerCol,
+                { color: colors.textColor2 },
+              ]}
+            >
+              {baseContent.history.header.customer}
+            </ThemeTextPrimary>
+            <ThemeTextPrimary
+              style={[
+                styles.liveQueueHeaderCell,
+                styles.historyWaitCol,
+                styles.right,
+                { color: colors.textColor2 },
+              ]}
+            >
+              {baseContent.history.header.wait}
+            </ThemeTextPrimary>
+            <ThemeTextPrimary
+              style={[
+                styles.liveQueueHeaderCell,
+                styles.historyStatusCol,
+                styles.right,
+                { color: colors.textColor2 },
+              ]}
+            >
+              {baseContent.history.header.status}
+            </ThemeTextPrimary>
+          </View>
 
-            {/* FlatList */}
-            <FlatList
-              data={dataHistory}
-              keyExtractor={(item) => item.id}
-              style={{ flex: 1 }}
-              renderItem={({ item }) => (
-                <View style={[styles.liveQueueRow, {
-                  borderBottomColor: colors.borderColor1
-                }]}>
-                  {/* Barber column with image + name */}
-                  <View style={[styles.historyBarberCol, styles.barberCell]}>
-                    <Image
-                      style={styles.image}
-                      source={{ uri: "https://i.pinimg.com/736x/0f/5d/ac/0f5dac39ba6687e95f08623a9c9faca9.jpg" }}
-                      contentFit="cover"
-                      transition={1000}
-                    />
-                    <ThemeTextPrimary
-                      numberOfLines={1}
-                      ellipsizeMode="tail"
-                      style={[
-                        styles.liveQueueCell,
-                        styles.left,
-                        { flexShrink: 1, minWidth: 0, color: colors.textColor1 } // 👈 This line fixes it
-                      ]}
-                    >
-                      {item.barber}
-                    </ThemeTextPrimary>
-                  </View>
-
-                  {/* Customer */}
+          {/* FlatList */}
+          <FlatList
+            data={dataHistory}
+            keyExtractor={(item) => item.id}
+            style={{ flex: 1 }}
+            renderItem={({ item }) => (
+              <View
+                style={[
+                  styles.liveQueueRow,
+                  {
+                    borderBottomColor: colors.borderColor1,
+                  },
+                ]}
+              >
+                {/* Barber column with image + name */}
+                <View style={[styles.historyBarberCol, styles.barberCell]}>
+                  <Image
+                    style={styles.image}
+                    source={{
+                      uri: "https://i.pinimg.com/736x/0f/5d/ac/0f5dac39ba6687e95f08623a9c9faca9.jpg",
+                    }}
+                    contentFit="cover"
+                    transition={1000}
+                  />
                   <ThemeTextPrimary
                     numberOfLines={1}
                     ellipsizeMode="tail"
-                    style={[styles.liveQueueCell, styles.historyCustomerCol, styles.left]}
+                    style={[
+                      styles.liveQueueCell,
+                      styles.left,
+                      { flexShrink: 1, minWidth: 0, color: colors.textColor1 }, // 👈 This line fixes it
+                    ]}
                   >
-                    {item.customer}
-                  </ThemeTextPrimary>
-
-                  {/* Wait */}
-                  <ThemeTextPrimary
-                    style={[styles.liveQueueCell, styles.historyWaitCol, styles.right]}
-                  >
-                    {item.wait}
-                  </ThemeTextPrimary>
-
-                  {/* Status */}
-                  <ThemeTextPrimary
-                    style={[styles.liveQueueCell, styles.historyStatusCol, styles.right, { color: "green" }]}
-                  >
-                    {item.status}
+                    {item.barber}
                   </ThemeTextPrimary>
                 </View>
-              )}
-              contentContainerStyle={{}}
-            />
-          </View>
-        )
-      }
 
+                {/* Customer */}
+                <ThemeTextPrimary
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                  style={[
+                    styles.liveQueueCell,
+                    styles.historyCustomerCol,
+                    styles.left,
+                  ]}
+                >
+                  {item.customer}
+                </ThemeTextPrimary>
 
+                {/* Wait */}
+                <ThemeTextPrimary
+                  style={[
+                    styles.liveQueueCell,
+                    styles.historyWaitCol,
+                    styles.right,
+                  ]}
+                >
+                  {item.wait}
+                </ThemeTextPrimary>
 
+                {/* Status */}
+                <ThemeTextPrimary
+                  style={[
+                    styles.liveQueueCell,
+                    styles.historyStatusCol,
+                    styles.right,
+                    { color: "green" },
+                  ]}
+                >
+                  {item.status}
+                </ThemeTextPrimary>
+              </View>
+            )}
+            contentContainerStyle={{}}
+          />
+        </View>
+      )}
+    </ThemeSafeAreaView>
+  );
+};
 
-    </ThemeSafeAreaView >
-  )
-}
-
-export default index
+export default index;
 
 const styles = StyleSheet.create({
   queueHeader: {
@@ -293,14 +582,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: scale(10),
-    borderRadius: scale(8)
+    borderRadius: scale(8),
   },
   tabButton: {
     height: verticalScale(28),
     flex: 1,
     borderRadius: scale(8),
     justifyContent: "center",
-    alignItems: "center"
+    alignItems: "center",
   },
 
   liveQueueHeader: {
@@ -332,11 +621,10 @@ const styles = StyleSheet.create({
   customerCol: { flex: 0.35, minWidth: 90 },
   posCol: { flex: 0.2, minWidth: 70 },
 
-  historyBarberCol: { flex: 0.4, minWidth: 10 },   // Barber names are usually longer
+  historyBarberCol: { flex: 0.4, minWidth: 10 }, // Barber names are usually longer
   historyCustomerCol: { flex: 0.25, minWidth: 10 }, // Customer names moderately long
-  historyWaitCol: { flex: 0.2, minWidth: 10 },      // Short numeric value
-  historyStatusCol: { flex: 0.2, minWidth: 10 },     // Small text like “Done” or “Waiting”
-
+  historyWaitCol: { flex: 0.2, minWidth: 10 }, // Short numeric value
+  historyStatusCol: { flex: 0.2, minWidth: 10 }, // Small text like “Done” or “Waiting”
 
   // --- Barber cell with image ---
   barberCell: {
@@ -352,4 +640,4 @@ const styles = StyleSheet.create({
     borderRadius: scale(15),
     backgroundColor: "#E2E8F0",
   },
-})
+});

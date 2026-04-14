@@ -12,8 +12,10 @@ import {
 import { scale, verticalScale } from "react-native-size-matters";
 import ThemeTextPrimary from "../../../../../components/ThemeTextPrimary";
 import ThemeTextSecondary from "../../../../../components/ThemeTextSecondary";
+import i18n from "../../../../src/localization/i18n";
 
 const ChangeSalon = () => {
+  const baseContent = i18n.t("app.admin.admintabs.profile.reports.changeSalon");
   const router = useRouter();
   const { colors } = useTheme();
   const [selectedSalon, setSelectedSalon] = useState("");
@@ -48,12 +50,11 @@ const ChangeSalon = () => {
         style={[styles.modalContainer, { backgroundColor: colors.background }]}
       >
         {/* Title */}
-        <ThemeTextPrimary style={styles.title}>Change Salon</ThemeTextPrimary>
+        <ThemeTextPrimary style={styles.title}>{baseContent.header}</ThemeTextPrimary>
 
         {/* Description */}
         <ThemeTextSecondary style={styles.description}>
-          Switch your active connection by selecting a salon from the list
-          below.
+          {baseContent.subHeader}
         </ThemeTextSecondary>
 
         {/* Selected salon field */}
@@ -69,7 +70,7 @@ const ChangeSalon = () => {
           {selectedSalon ? (
             <ThemeTextPrimary>{selectedSalon}</ThemeTextPrimary>
           ) : (
-            <ThemeTextSecondary>Choose your salon</ThemeTextSecondary>
+            <ThemeTextSecondary>{baseContent.chooseSalon}</ThemeTextSecondary>
           )}
         </View>
 
@@ -110,7 +111,7 @@ const ChangeSalon = () => {
             }}
             activeOpacity={0.8}
           >
-            <Text style={styles.buttonText}>Confirm</Text>
+            <Text style={styles.buttonText}>{baseContent.confirm}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -119,7 +120,7 @@ const ChangeSalon = () => {
             activeOpacity={0.8}
           >
             <Text style={[styles.buttonText, { color: colors.textColor1 }]}>
-              Cancel
+              {baseContent.cancel}
             </Text>
           </TouchableOpacity>
         </View>

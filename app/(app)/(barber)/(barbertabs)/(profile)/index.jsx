@@ -15,15 +15,17 @@ import {
   RightIcon,
 } from "../../../../../constants/icons";
 import { useBarberAuth } from "../../../../../context/barber/AuthContext";
+import i18n from "../../../../src/localization/i18n";
 
 const index = () => {
+  const baseContent = i18n.t("app.barber.barbertabs.profile");
   const { setUserSalonId, setUserEmail, user } = useBarberAuth();
-  
+
   const { colors } = useTheme();
 
   const profileOptions = [
     {
-      label: "Report",
+      label: baseContent.options.report,
       icon: <ReportIcon color="#2563eb" />,
       lightBg: "#ede9fe",
       darkBg: "#5b21b633",
@@ -33,7 +35,7 @@ const index = () => {
       display: true,
     },
     {
-      label: "Help & Support",
+      label: baseContent.options.helpAndSupport,
       icon: <HelpSupportIcon color="#059669" />,
       lightBg: "#d1fae5",
       darkBg: "#065f4633",
@@ -43,7 +45,7 @@ const index = () => {
       display: true,
     },
     {
-      label: "About",
+      label: baseContent.options.about,
       icon: <AboutIcon color="#0284c7" />,
       lightBg: "#e0f2fe",
       darkBg: "#1e3a8a33",
@@ -59,7 +61,7 @@ const index = () => {
   const logoutPressed = async () => {
     await AsyncStorage.removeItem("barberEmail");
     await AsyncStorage.removeItem("barberSalonId");
-    setUserEmail("")
+    setUserEmail("");
   };
 
   return (
@@ -74,7 +76,7 @@ const index = () => {
         <ThemeTextPrimary
           style={{ fontSize: scale(18), fontFamily: "AirbnbCereal_W_XBd" }}
         >
-          Profile
+          {baseContent.header}
         </ThemeTextPrimary>
       </View>
 
@@ -179,7 +181,7 @@ const index = () => {
         >
           <Feather name="log-out" size={moderateScale(16)} color={"#dc2626"} />
           <ThemeTextPrimary style={[styles.logoutText, { color: "#dc2626" }]}>
-            Log Out
+            {baseContent.logout}
           </ThemeTextPrimary>
         </TouchableOpacity>
       </ScrollView>

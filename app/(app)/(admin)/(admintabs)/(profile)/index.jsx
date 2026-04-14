@@ -16,15 +16,17 @@ import {
   SalonIcon,
 } from "../../../../../constants/icons";
 import { useAdminAuth } from "../../../../../context/admin/AuthContext";
+import i18n from "../../../../src/localization/i18n";
 
 const index = () => {
+  const baseContent = i18n.t("app.admin.admintabs.profile");
   const { setUserSalonId, setUserEmail, user } = useAdminAuth();
 
   const { colors } = useTheme();
 
   const profileOptions = [
     {
-      label: "Report",
+      label: baseContent.options.report,
       icon: <ReportIcon color="#2563eb" />,
       lightBg: "#dbeafe",
       darkBg: "#1e3a8a33",
@@ -34,7 +36,7 @@ const index = () => {
       display: true,
     },
     {
-      label: "Change Salon",
+      label: baseContent.options.changeSalon,
       icon: <SalonIcon color="#7c3aed" />,
       lightBg: "#f3e8ff",
       darkBg: "#6d28d933",
@@ -44,7 +46,7 @@ const index = () => {
       display: true,
     },
     {
-      label: "Help & Support",
+      label: baseContent.options.helpAndSupport,
       icon: <HelpSupportIcon color="#059669" />,
       lightBg: "#d1fae5",
       darkBg: "#065f4633",
@@ -54,7 +56,7 @@ const index = () => {
       display: true,
     },
     {
-      label: "About",
+      label: baseContent.options.about,
       icon: <AboutIcon color="#0284c7" />,
       lightBg: "#e0f2fe",
       darkBg: "#1e3a8a33",
@@ -85,7 +87,7 @@ const index = () => {
         <ThemeTextPrimary
           style={{ fontSize: scale(18), fontFamily: "AirbnbCereal_W_XBd" }}
         >
-          Profile
+          {baseContent.header}
         </ThemeTextPrimary>
       </View>
 
@@ -192,7 +194,7 @@ const index = () => {
         >
           <Feather name="log-out" size={moderateScale(16)} color={"#dc2626"} />
           <ThemeTextPrimary style={[styles.logoutText, { color: "#dc2626" }]}>
-            Log Out
+            {baseContent.logout}
           </ThemeTextPrimary>
         </TouchableOpacity>
 

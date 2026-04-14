@@ -243,6 +243,212 @@ export default {
             },
           },
         },
+        salon: {
+          tabs: {
+            services: "Services",
+            appointment: "Appointment",
+            customers: "Customers",
+          },
+          appointment: {
+            availability: {
+              title: "Set Your Availability",
+              desc: "Choose your recurring weekly appointment days",
+            },
+            offDays: {
+              title: "Manage Your Off Days",
+              desc: "Select specific dates from a calendar to block off",
+            },
+          },
+        },
+        appointment: {
+          tabs: {
+            upcoming: "Upcoming",
+            history: "History",
+          },
+          appointmentCard: {
+            msg: "Msg",
+            notify: "Notify",
+            serve: "Serve",
+            cancel: "Cancel",
+          },
+          cancelled: "cancelled",
+        },
+        profile: {
+          header: "Profile",
+          options: {
+            report: "Report",
+            changeSalon: "Change Salon",
+            helpAndSupport: "Help & Support",
+            about: "About",
+          },
+          logout: "Log Out",
+
+          reports: {
+            index: {
+              header: "Reports",
+              options: {
+                appointmentReports: "Appointment Reports",
+                queueReports: "Queue Reports",
+              },
+            },
+            appointmentReport: {
+              header: "Appointment Report",
+              tabs: {
+                daily: "Daily",
+                weekly: "Weekly",
+                monthly: "Monthly",
+              },
+            },
+            queueReport: {
+              header: "Queue Report",
+              tabs: {
+                daily: "Daily",
+                weekly: "Weekly",
+                monthly: "Monthly",
+              },
+            },
+            changeSalon: {
+              header: "Change Salon",
+              subHeader:
+                "Switch your active connection by selecting a salon from the list below.",
+              chooseSalon: "Choose your salon",
+              confirm: "Confirm",
+              cancel: "Cancel",
+            },
+          },
+        },
+        manageProfile: {
+          header: "Manage Account",
+          nameInput: {
+            header: "Name",
+            placeholder: "Enter your name",
+          },
+          genderDropdown: {
+            header: "Gender",
+            placeholder: "Select your gender",
+            male: "Male",
+            femaile: "Female",
+            other: "Other",
+          },
+          dateOfBirth: {
+            header: "Date of Birth (Optional)",
+            placeholder: "DD/MM/YYYY",
+            close: "Close",
+            done: "Done",
+          },
+          mobileNumber: {
+            header: "Mobile Number",
+            update: "Update",
+          },
+          editAndSave: "Edit & Save",
+        },
+      },
+    },
+    barber: {
+      barbertabs: {
+        home: {
+          upComingAppointments: "Upcoming Appointments",
+          liveStatus: "Live Status",
+          activeStation: "Active Station",
+          online: "Online",
+          offline: "Offline",
+          system: "System",
+          on: "On",
+          in: "In",
+          booking: "Booking",
+          inQueue: "In Queue",
+          clock: "Clock",
+
+          card: {
+            services: "Services",
+            cancel: "Cancel",
+            serve: "Serve",
+          },
+          reports: {
+            header: "Weekly Reports",
+            appointment: "Appointments",
+            completed: "Completed",
+            noShow: "No-Shows",
+            queueBookings: "Queue Bookings",
+            served: "Served",
+            cancelled: "Cancelled",
+            total: "Total",
+          },
+        },
+        queue: {
+          tabs: {
+            liveQueue: "Live Queue",
+            history: "History",
+          },
+
+          liveQueue: {
+            header: {
+              barber: "Barber",
+              customer: "Customer",
+              posWait: "Pos / Wait",
+            },
+          },
+
+          history: {
+            header: {
+              barber: "Barber",
+              customer: "Customer",
+              wait: "Wait",
+              status: "Status",
+            },
+
+            status: {
+              served: "Served",
+              waiting: "Waiting",
+              cancelled: "Cancelled",
+            },
+          },
+        },
+        salon: {
+          tabs: {
+            services: "Services",
+            appointment: "Appointment",
+            customers: "Customers",
+          },
+          description:"Description",
+          contactUs: "Contact Us",
+          ifYouHaveQues: "If you have any questions",
+          location: "Location",
+          followUsOn: "Follow Us On",
+          socialLinks: "Social links",
+          appointment: {
+            availability: {
+              title: "Set Your Availability",
+              desc: "Choose your recurring weekly appointment days",
+            },
+            offDays: {
+              title: "Manage Your Off Days",
+              desc: "Select specific dates from a calendar to block off",
+            },
+          },
+        },
+        appointment: {
+          tabs: {
+            upcoming: "Upcoming",
+            history: "History",
+          },
+          appointmentCard: {
+            msg: "Msg",
+            notify: "Notify",
+            serve: "Serve",
+            cancel: "Cancel",
+          },
+          cancelled: "cancelled",
+        },
+        profile: {
+          header: "Profile",
+          options: {
+            report: "Report",
+            helpAndSupport: "Help & Support",
+            about: "About",
+          },
+          logout: "Log Out",
+        },
       },
     },
   },
