@@ -9,7 +9,7 @@ const ThemeSafeAreaView = ({ children, style, edges, ...props }) => {
     return (
         <SafeAreaView
             edges={edges || ['top', 'bottom', 'left', 'right']}
-            style={[styles.container, { backgroundColor: colors.background }, style]} {...props}>
+            style={[styles.container, { backgroundColor: colors.background.color1 }, style]} {...props}>
             {children}
         </SafeAreaView>
     );

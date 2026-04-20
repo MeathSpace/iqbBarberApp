@@ -39,13 +39,40 @@ const RootLayout = () => {
     ...DefaultTheme,
     colors: {
       ...DefaultTheme.colors,
-      background: "#f8fafc",
-      background2: "#ffffff",
-      textColor1: "#111827",
-      textColor2: "#808080",
-      borderColor1: "#e5e7eb",
-      inputColor: "#ffffff",
-      progressBgColor: "#e2e8f0",
+
+      background: {
+        color1: "#FFF8F6",
+        color2: "#FBEAE5",
+        color3: "#ffffff",
+        color4: "#FFF1ED",
+        color5: "#ddd",
+      },
+
+      borderColor: {
+        color1: "#F3B6A9",
+      },
+
+      textColor: {
+        color1: "#111827",
+        color2: "#808080",
+        color3: "#FF5722",
+        color4: "#ffffff",
+        color5: "#999",
+        color6: "#777",
+        color7: "#FF3B30",
+      },
+
+      button: {
+        typeOne: {
+          linearOne: "#FFB5A0",
+          linearTwo: "#FF5722",
+        },
+        typeTwo: {
+          linearOne: "#FFF1ED",
+          linearTwo: "#FFDDD3",
+          linearThree: "#FFF1ED",
+        },
+      },
     },
   };
 

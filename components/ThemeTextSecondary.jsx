@@ -1,24 +1,26 @@
-import { useTheme } from '@react-navigation/native'
-import { StyleSheet, Text } from 'react-native'
-import { moderateScale, scale } from 'react-native-size-matters'
+import { useTheme } from "@react-navigation/native";
+import { StyleSheet, Text } from "react-native";
+import { scale } from "react-native-size-matters";
 
 const ThemeTextSecondary = ({ style, children, ...props }) => {
+  const { colors } = useTheme();
 
-    const { colors } = useTheme()
+  return (
+    <Text
+      style={[styles.defaultText, { color: colors.textColor.color2 }, style]}
+      {...props}
+    >
+      {children}
+    </Text>
+  );
+};
 
-    return (
-        <Text style={[styles.defaultText, { color: colors.textColor2 }, style]} {...props}>
-            {children}
-        </Text>
-    )
-}
-
-export default ThemeTextSecondary
+export default ThemeTextSecondary;
 
 const styles = StyleSheet.create({
-    defaultText: {
-        fontSize: scale(14),
-        fontFamily: 'AirbnbCereal_W_Md',
-        textDecorationLine: 'none',
-    },
-})
+  defaultText: {
+    fontSize: scale(14),
+    fontFamily: "AirbnbCereal_W_Md",
+    textDecorationLine: "none",
+  },
+});
