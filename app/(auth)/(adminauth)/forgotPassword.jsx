@@ -15,17 +15,16 @@ import ThemeSafeAreaView from "../../../components/ThemeSafeAreaView";
 import ThemeTextPrimary from "../../../components/ThemeTextPrimary";
 import ThemeTextSecondary from "../../../components/ThemeTextSecondary";
 import { LeftArrowIcon } from "../../../constants/icons";
-import i18n from "../../src/localization/i18n";
 
-const SignupOtp = () => {
-  const baseContent = i18n.t("auth.barberauth.signupotp");
-  const [otp, setOtp] = useState("");
+const ForgotPassword = () => {
+  const [email, setEmail] = useState("");
 
   const router = useRouter();
   const { colors } = useTheme();
 
-  const handleSignOtp = () => {
-    router.push("/accountDetails");
+  const handleSendOtp = () => {
+    // navigate to OTP screen
+    router.push("/resetPassword");
   };
 
   return (
@@ -35,28 +34,28 @@ const SignupOtp = () => {
           {/* Header */}
           <View style={{ gap: verticalScale(10) }}>
             <ThemeTextPrimary style={styles.title}>
-              {baseContent.header}
+              Forgot Password Admin
             </ThemeTextPrimary>
             <ThemeTextSecondary
               style={[styles.subtitle, { color: colors.textColor.color2 }]}
             >
-              {baseContent.subHeader}
+              Enter your email and we'll send you a verification code
             </ThemeTextSecondary>
           </View>
 
-          {/* OTP Input */}
+          {/* Email Input */}
           <View style={styles.inputGroup}>
             <ThemeTextPrimary
               style={[styles.label, { color: colors.textColor.color3 }]}
             >
-              {baseContent.verificationInput.header}
+              Email Address
             </ThemeTextPrimary>
 
             <TextInput
-              placeholder={baseContent.verificationInput.placeholder}
-              value={otp}
-              onChangeText={setOtp}
-              keyboardType="numeric"
+              placeholder="Enter your email"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
               style={[
                 styles.input,
                 {
@@ -69,39 +68,27 @@ const SignupOtp = () => {
             />
           </View>
 
-          {/* Verify Button */}
-          <TouchableOpacity onPress={handleSignOtp}>
+          <TouchableOpacity onPress={handleSendOtp}>
             <LinearGradient
               colors={[
                 colors.button.typeOne.linearOne,
                 colors.button.typeOne.linearTwo,
               ]}
-              style={styles.verifyBtn}
+              style={styles.button}
             >
               <ThemeTextPrimary
-                style={[styles.verifyText, { color: colors.textColor.color4 }]}
+                style={[styles.buttonText, { color: colors.textColor.color4 }]}
               >
-                {baseContent.verify}
+                Verify Email
               </ThemeTextPrimary>
             </LinearGradient>
-          </TouchableOpacity>
-
-          {/* Resend */}
-          <TouchableOpacity>
-            <ThemeTextSecondary style={styles.resendText}>
-              {baseContent.didntReceive || "Didn't receive the code?"}
-              <ThemeTextPrimary style={{ color: colors.textColor.color3 }}>
-                {" "}
-                {baseContent.resend || "Resend"}
-              </ThemeTextPrimary>
-            </ThemeTextSecondary>
           </TouchableOpacity>
         </View>
 
         {/* Back */}
         <View style={styles.backRow}>
           <TouchableOpacity
-            onPress={() => router.push("/")}
+            onPress={() => router.back()}
             style={[
               styles.homeIcon,
               { backgroundColor: colors.background.color2 },
@@ -109,14 +96,14 @@ const SignupOtp = () => {
           >
             <LeftArrowIcon size={20} color={colors.textColor.color3} />
           </TouchableOpacity>
-          <ThemeTextSecondary>Back to home</ThemeTextSecondary>
+          <ThemeTextSecondary>Back to login</ThemeTextSecondary>
         </View>
       </ThemeSafeAreaView>
     </TouchableWithoutFeedback>
   );
 };
 
-export default SignupOtp;
+export default ForgotPassword;
 
 const styles = StyleSheet.create({
   container: {
@@ -155,22 +142,16 @@ const styles = StyleSheet.create({
     fontFamily: "AirbnbCereal_W_Md",
   },
 
-  verifyBtn: {
+  button: {
     paddingVertical: verticalScale(14),
     borderRadius: scale(12),
     alignItems: "center",
     marginTop: verticalScale(10),
   },
 
-  verifyText: {
+  buttonText: {
     fontSize: scale(16),
     fontFamily: "AirbnbCereal_W_Bd",
-  },
-
-  resendText: {
-    textAlign: "center",
-    fontSize: scale(15),
-    marginTop: verticalScale(10),
   },
 
   backRow: {

@@ -1,17 +1,19 @@
-import { Stack } from 'expo-router'
-import { StyleSheet } from 'react-native'
+import { Stack } from "expo-router";
+import { StyleSheet } from "react-native";
 
 const BarberAuthLayout = () => {
-    return (
-        <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="signin" />
-            <Stack.Screen name="signup" />
-            <Stack.Screen name="signupotp" />
-            <Stack.Screen name="accountDetails" />
-        </Stack>
-    )
-}
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="signin" />
+      <Stack.Screen name="signup" />
+      <Stack.Screen name="signupotp" />
+      <Stack.Screen name="accountDetails" />
+      <Stack.Screen name="forgotPassword" />
+      <Stack.Screen name="resetPassword" />
+    </Stack>
+  );
+};
 
-export default BarberAuthLayout
+export default BarberAuthLayout;
 
-const styles = StyleSheet.create({})
+const styles = StyleSheet.create({});

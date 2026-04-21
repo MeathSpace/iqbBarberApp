@@ -14,18 +14,21 @@ import { scale, verticalScale } from "react-native-size-matters";
 import ThemeSafeAreaView from "../../../components/ThemeSafeAreaView";
 import ThemeTextPrimary from "../../../components/ThemeTextPrimary";
 import ThemeTextSecondary from "../../../components/ThemeTextSecondary";
-import { LeftArrowIcon } from "../../../constants/icons";
-import i18n from "../../src/localization/i18n";
+import { EyeIcon, EyeOffIcon, LeftArrowIcon } from "../../../constants/icons";
 
-const SignupOtp = () => {
-  const baseContent = i18n.t("auth.barberauth.signupotp");
-  const [otp, setOtp] = useState("");
-
+const ResetPassword = () => {
   const router = useRouter();
   const { colors } = useTheme();
 
-  const handleSignOtp = () => {
-    router.push("/accountDetails");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const handleResetPassword = () => {
+    // handle validation + API
+    router.push("/signin");
   };
 
   return (
@@ -35,73 +38,115 @@ const SignupOtp = () => {
           {/* Header */}
           <View style={{ gap: verticalScale(10) }}>
             <ThemeTextPrimary style={styles.title}>
-              {baseContent.header}
-            </ThemeTextPrimary>
+              Reset Password Barber
+            </ThemeTextPrimary> 
             <ThemeTextSecondary
               style={[styles.subtitle, { color: colors.textColor.color2 }]}
             >
-              {baseContent.subHeader}
+              Enter your new password and confirm it below
             </ThemeTextSecondary>
           </View>
 
-          {/* OTP Input */}
+          {/* New Password */}
           <View style={styles.inputGroup}>
             <ThemeTextPrimary
               style={[styles.label, { color: colors.textColor.color3 }]}
             >
-              {baseContent.verificationInput.header}
+              New Password
             </ThemeTextPrimary>
 
-            <TextInput
-              placeholder={baseContent.verificationInput.placeholder}
-              value={otp}
-              onChangeText={setOtp}
-              keyboardType="numeric"
+            <View
               style={[
-                styles.input,
+                styles.passwordContainer,
                 {
                   borderColor: colors.borderColor.color1,
                   backgroundColor: colors.background.color3,
-                  color: colors.textColor.color1,
                 },
               ]}
-              placeholderTextColor={colors.textColor.color5}
-            />
+            >
+              <TextInput
+                placeholder="Enter new password"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                style={[
+                  styles.passwordInput,
+                  { color: colors.textColor.color1 },
+                ]}
+                placeholderTextColor={colors.textColor.color5}
+              />
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                {showPassword ? (
+                  <EyeOffIcon size={20} color={colors.textColor.color6} />
+                ) : (
+                  <EyeIcon size={20} color={colors.textColor.color6} />
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
 
-          {/* Verify Button */}
-          <TouchableOpacity onPress={handleSignOtp}>
+          {/* Confirm Password */}
+          <View style={styles.inputGroup}>
+            <ThemeTextPrimary
+              style={[styles.label, { color: colors.textColor.color3 }]}
+            >
+              Confirm Password
+            </ThemeTextPrimary>
+
+            <View
+              style={[
+                styles.passwordContainer,
+                {
+                  borderColor: colors.borderColor.color1,
+                  backgroundColor: colors.background.color3,
+                },
+              ]}
+            >
+              <TextInput
+                placeholder="Confirm password"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry={!showConfirmPassword}
+                style={[
+                  styles.passwordInput,
+                  { color: colors.textColor.color1 },
+                ]}
+                placeholderTextColor={colors.textColor.color5}
+              />
+              <TouchableOpacity
+                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                {showConfirmPassword ? (
+                  <EyeOffIcon size={20} color={colors.textColor.color6} />
+                ) : (
+                  <EyeIcon size={20} color={colors.textColor.color6} />
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Reset Button */}
+          <TouchableOpacity onPress={handleResetPassword}>
             <LinearGradient
               colors={[
                 colors.button.typeOne.linearOne,
                 colors.button.typeOne.linearTwo,
               ]}
-              style={styles.verifyBtn}
+              style={styles.button}
             >
               <ThemeTextPrimary
-                style={[styles.verifyText, { color: colors.textColor.color4 }]}
+                style={[styles.buttonText, { color: colors.textColor.color4 }]}
               >
-                {baseContent.verify}
+                Reset Password
               </ThemeTextPrimary>
             </LinearGradient>
-          </TouchableOpacity>
-
-          {/* Resend */}
-          <TouchableOpacity>
-            <ThemeTextSecondary style={styles.resendText}>
-              {baseContent.didntReceive || "Didn't receive the code?"}
-              <ThemeTextPrimary style={{ color: colors.textColor.color3 }}>
-                {" "}
-                {baseContent.resend || "Resend"}
-              </ThemeTextPrimary>
-            </ThemeTextSecondary>
           </TouchableOpacity>
         </View>
 
         {/* Back */}
         <View style={styles.backRow}>
           <TouchableOpacity
-            onPress={() => router.push("/")}
+            onPress={() => router.back()}
             style={[
               styles.homeIcon,
               { backgroundColor: colors.background.color2 },
@@ -109,14 +154,14 @@ const SignupOtp = () => {
           >
             <LeftArrowIcon size={20} color={colors.textColor.color3} />
           </TouchableOpacity>
-          <ThemeTextSecondary>Back to home</ThemeTextSecondary>
+          <ThemeTextSecondary>Back</ThemeTextSecondary>
         </View>
       </ThemeSafeAreaView>
     </TouchableWithoutFeedback>
   );
 };
 
-export default SignupOtp;
+export default ResetPassword;
 
 const styles = StyleSheet.create({
   container: {
@@ -147,30 +192,31 @@ const styles = StyleSheet.create({
 
   label: {},
 
-  input: {
+  passwordContainer: {
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 1,
     borderRadius: scale(10),
+    paddingRight: scale(10),
+  },
+
+  passwordInput: {
+    flex: 1,
     paddingVertical: verticalScale(14),
     paddingHorizontal: scale(14),
     fontFamily: "AirbnbCereal_W_Md",
   },
 
-  verifyBtn: {
+  button: {
     paddingVertical: verticalScale(14),
     borderRadius: scale(12),
     alignItems: "center",
     marginTop: verticalScale(10),
   },
 
-  verifyText: {
+  buttonText: {
     fontSize: scale(16),
     fontFamily: "AirbnbCereal_W_Bd",
-  },
-
-  resendText: {
-    textAlign: "center",
-    fontSize: scale(15),
-    marginTop: verticalScale(10),
   },
 
   backRow: {

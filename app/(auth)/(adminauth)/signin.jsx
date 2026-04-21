@@ -161,7 +161,14 @@ const SignIn = () => {
           </View>
 
           <View style={styles.inputGroup}>
-            <ThemeTextPrimary style={styles.label}>
+            <ThemeTextPrimary
+              style={[
+                styles.label,
+                {
+                  color: colors.textColor.color3,
+                },
+              ]}
+            >
               {baseContent.passwordInput.header}
             </ThemeTextPrimary>
 
@@ -209,28 +216,43 @@ const SignIn = () => {
           </View>
 
           <View style={styles.rememberRow}>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: scale(10),
+              }}
+            >
+              <TouchableOpacity
+                onPress={() => setRememberMe(!rememberMe)}
+                style={[
+                  styles.checkbox,
+                  {
+                    borderColor: colors.borderColor.color1,
+                    backgroundColor: colors.background.color4,
+                  },
+                ]}
+              >
+                {rememberMe && <CheckIcon size={14} />}
+              </TouchableOpacity>
+              <ThemeTextSecondary
+                style={[
+                  styles.rememberText,
+                  {
+                    color: colors.textColor.color3,
+                  },
+                ]}
+              >
+                {baseContent.rememberMe}
+              </ThemeTextSecondary>
+            </View>
             <TouchableOpacity
-              onPress={() => setRememberMe(!rememberMe)}
-              style={[
-                styles.checkbox,
-                {
-                  borderColor: colors.borderColor.color1,
-                  backgroundColor: colors.background.color4,
-                },
-              ]}
+              onPress={() => {
+                router.push("/forgotPassword");
+              }}
             >
-              {rememberMe && <CheckIcon size={14} />}
+              <ThemeTextSecondary>Forgot Password ?</ThemeTextSecondary>
             </TouchableOpacity>
-            <ThemeTextSecondary
-              style={[
-                styles.rememberText,
-                {
-                  color: colors.textColor.color3,
-                },
-              ]}
-            >
-              {baseContent.rememberMe}
-            </ThemeTextSecondary>
           </View>
 
           <TouchableOpacity onPress={handleSignIn}>
@@ -376,7 +398,7 @@ const styles = StyleSheet.create({
   rememberRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: scale(10),
+    justifyContent: "space-between",
   },
 
   checkbox: {
