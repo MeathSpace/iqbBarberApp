@@ -28,182 +28,12 @@ const SignUp = () => {
   const handleSignUp = () => {
     console.log("Email:", email);
     console.log("Password:", password);
-    router.push("/signupotp");
+    router.push("/accountDetails");
   };
 
   const { colors } = useTheme();
 
   return (
-    // <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-    //   <ThemeSafeAreaView
-    //     style={{
-    //       justifyContent: "center",
-    //       alignItems: "center",
-    //       position: "relative",
-    //     }}
-    //   >
-    //     <View
-    //       style={{
-    //         width: "90%",
-    //         flexDirection: "column",
-    //         gap: verticalScale(20),
-    //       }}
-    //     >
-    //       {/* Header Text */}
-    //       <View>
-    //         <ThemeTextPrimary
-    //           style={{
-    //             fontSize: scale(28),
-    //             fontFamily: "AirbnbCereal_W_Bd",
-    //           }}
-    //         >
-    //           {baseContent.header}
-    //         </ThemeTextPrimary>
-    //         <ThemeTextSecondary
-    //           style={{
-    //             marginTop: verticalScale(5),
-    //           }}
-    //         >
-    //           {baseContent.subHeader}
-    //         </ThemeTextSecondary>
-    //       </View>
-
-    //       {/* Email Input */}
-    //       <View style={{ gap: verticalScale(10) }}>
-    //         <ThemeTextPrimary>{baseContent.emailInput.header}</ThemeTextPrimary>
-    //         <TextInput
-    //           editable
-    //           placeholder={baseContent.emailInput.placeholder}
-    //           value={email}
-    //           onChangeText={setEmail}
-    //           placeholderTextColor={colors.textColor2}
-    //           style={[
-    //             styles.inputField,
-    //             {
-    //               backgroundColor: colors.inputColor,
-    //               borderColor: colors.borderColor1,
-    //               color: colors.textColor1,
-    //             },
-    //           ]}
-    //         />
-    //       </View>
-
-    //       {/* Password Input */}
-    //       <View style={{ gap: verticalScale(10) }}>
-    //         <ThemeTextPrimary>{baseContent.passwordInput.header}</ThemeTextPrimary>
-    //         <View
-    //           style={[
-    //             styles.passwordInputContainer,
-    //             {
-    //               backgroundColor: colors.inputColor,
-    //               borderColor: colors.borderColor1,
-    //             },
-    //           ]}
-    //         >
-    //           <TextInput
-    //             editable
-    //             placeholder={baseContent.passwordInput.placeholder}
-    //             value={password}
-    //             onChangeText={setPassword}
-    //             placeholderTextColor={colors.textColor2}
-    //             secureTextEntry={!showPassword}
-    //             style={[
-    //               styles.inputField,
-    //               {
-    //                 flex: 1,
-    //                 borderWidth: scale(0),
-    //                 color: colors.textColor1,
-    //               },
-    //             ]}
-    //           />
-    //           <Pressable
-    //             onPress={() => setShowPassword(!showPassword)}
-    //             style={styles.eyeIcon}
-    //           >
-    //             {showPassword ? (
-    //               <EyeOffIcon size={20} color="#777" />
-    //             ) : (
-    //               <EyeIcon size={20} color="#777" />
-    //             )}
-    //           </Pressable>
-    //         </View>
-    //       </View>
-
-    //       {/* Dummy Sign In Button */}
-    //       <TouchableOpacity onPress={handleSignUp} style={styles.signInButton}>
-    //         <ThemeTextPrimary style={{ color: "white", textAlign: "center" }}>
-    //           {baseContent.signUp}
-    //         </ThemeTextPrimary>
-    //       </TouchableOpacity>
-
-    //       <View style={styles.divider}>
-    //         <View
-    //           style={{
-    //             flex: 1,
-    //             height: verticalScale(0.5),
-    //             backgroundColor: colors.textColor2,
-    //           }}
-    //         />
-
-    //         <View style={{ paddingHorizontal: scale(10) }}>
-    //           <ThemeTextPrimary style={{ color: colors.text }}>
-    //             {baseContent.or}
-    //           </ThemeTextPrimary>
-    //         </View>
-
-    //         <View
-    //           style={{
-    //             flex: 1,
-    //             height: verticalScale(0.5),
-    //             backgroundColor: colors.textColor2,
-    //           }}
-    //         />
-    //       </View>
-
-    //       <TouchableOpacity
-    //         onPress={handleSignUp}
-    //         style={[
-    //           styles.googleSignInButton,
-    //           {
-    //             backgroundColor: colors.inputColor,
-    //             borderColor: colors.borderColor1,
-    //           },
-    //         ]}
-    //       >
-    //         <ThemeTextPrimary style={{ textAlign: "center" }}>
-    //           Google Sign Up
-    //         </ThemeTextPrimary>
-    //       </TouchableOpacity>
-
-    //       <TouchableOpacity onPress={() => router.push("/signin")}>
-    //         <ThemeTextSecondary
-    //           style={{ textAlign: "center", fontSize: scale(16) }}
-    //         >
-    //           {baseContent.alreadyHaveAccount}
-    //           <ThemeTextPrimary style={{ color: "#14b8a6" }}>
-    //             {" "}
-    //             {baseContent.signIn}
-    //           </ThemeTextPrimary>
-    //         </ThemeTextSecondary>
-    //       </TouchableOpacity>
-    //     </View>
-
-    //     <TouchableOpacity
-    //       onPress={() => {
-    //         router.push("/");
-    //       }}
-    //       style={[
-    //         styles.homeIcon,
-    //         {
-    //           backgroundColor: colors.background2,
-    //           borderColor: colors.borderColor1,
-    //         },
-    //       ]}
-    //     >
-    //       <HomeIcon color={colors.textColor1} size={scale(20)} />
-    //     </TouchableOpacity>
-    //   </ThemeSafeAreaView>
-    // </TouchableWithoutFeedback>
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <ThemeSafeAreaView style={styles.container}>
         <View style={styles.wrapper}>
@@ -384,6 +214,7 @@ const styles = StyleSheet.create({
     borderRadius: scale(10),
     paddingVertical: verticalScale(14),
     paddingHorizontal: scale(14),
+    fontSize: scale(14)
   },
 
   passwordContainer: {

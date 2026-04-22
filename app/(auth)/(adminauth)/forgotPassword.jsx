@@ -140,6 +140,7 @@ const styles = StyleSheet.create({
     paddingVertical: verticalScale(14),
     paddingHorizontal: scale(14),
     fontFamily: "AirbnbCereal_W_Md",
+    fontSize: scale(14)
   },
 
   button: {

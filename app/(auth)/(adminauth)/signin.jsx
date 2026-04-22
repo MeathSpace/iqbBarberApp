@@ -4,6 +4,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Keyboard,
   StyleSheet,
   TextInput,
@@ -379,6 +380,7 @@ const styles = StyleSheet.create({
     borderRadius: scale(10),
     paddingVertical: verticalScale(14),
     paddingHorizontal: scale(14),
+    fontSize: scale(14),
   },
 
   passwordContainer: {

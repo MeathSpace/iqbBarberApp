@@ -60,6 +60,7 @@ const RootLayout = () => {
         color5: "#999",
         color6: "#777",
         color7: "#FF3B30",
+        color8: "#AB2D00",
       },
 
       button: {
@@ -71,6 +72,10 @@ const RootLayout = () => {
           linearOne: "#FFF1ED",
           linearTwo: "#FFDDD3",
           linearThree: "#FFF1ED",
+        },
+        typeThree: {
+          linearOne: "#AB2D00",
+          linearTwo: "#FF7851",
         },
       },
     },

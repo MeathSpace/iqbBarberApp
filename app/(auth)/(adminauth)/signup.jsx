@@ -29,7 +29,8 @@ const SignUp = () => {
   const handleSignUp = () => {
     console.log("Email:", email);
     console.log("Password:", password);
-    router.push("/signupotp");
+    // router.push("/signupotp");
+    router.push("/accountDetails")
   };
 
   const { colors } = useTheme();
@@ -216,6 +217,7 @@ const styles = StyleSheet.create({
     borderRadius: scale(10),
     paddingVertical: verticalScale(14),
     paddingHorizontal: scale(14),
+    fontSize: scale(14)
   },
 
   passwordContainer: {

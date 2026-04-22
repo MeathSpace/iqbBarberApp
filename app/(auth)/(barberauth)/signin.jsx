@@ -380,6 +380,7 @@ const styles = StyleSheet.create({
     borderRadius: scale(10),
     paddingVertical: verticalScale(14),
     paddingHorizontal: scale(14),
+    fontSize: scale(14)
   },
 
   passwordContainer: {
