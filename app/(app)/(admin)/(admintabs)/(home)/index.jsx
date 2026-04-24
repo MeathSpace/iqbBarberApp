@@ -515,7 +515,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
-import { Image, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import {
+  Image,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { scale, verticalScale } from "react-native-size-matters";
 import ThemeSafeAreaView from "../../../../../components/ThemeSafeAreaView";
 import ThemeTextPrimary from "../../../../../components/ThemeTextPrimary";
@@ -615,6 +622,8 @@ const SalonDashboard = () => {
     </View>
   );
 
+  const insets = useSafeAreaInsets();
+
   return (
     <ThemeSafeAreaView
       edges={["left", "right"]}
@@ -631,24 +640,37 @@ const SalonDashboard = () => {
           end={{ x: 0, y: 1 }}
           style={styles.headerContainer}
         >
-          <View style={styles.topRow}>
-            <View style={styles.userInfo}>
+          <View
+            style={[
+              styles.header,
+              {
+                marginTop: insets.top,
+              },
+            ]}
+          >
+            <View style={styles.headerTop}>
               <Image
                 source={{ uri: "https://i.pravatar.cc/100?u=jessica" }}
-                style={styles.avatar}
+                style={styles.profileAvatar}
               />
               <ThemeTextPrimary
-                style={[styles.userName, { color: colors.textColor.color8 }]}
+                style={{ fontSize: scale(16), color: colors.textColor.color8 }}
               >
                 Jessica
               </ThemeTextPrimary>
             </View>
-
-            <Ionicons
-              name="notifications-outline"
-              size={26}
-              color={colors.textColor.color8}
-            />
+            <TouchableOpacity
+              style={[
+                styles.notifBtn,
+                { backgroundColor: colors.background.color2 },
+              ]}
+            >
+              <Ionicons
+                name="notifications-outline"
+                size={20}
+                color={colors.textColor.color8}
+              />
+            </TouchableOpacity>
           </View>
 
           <View
@@ -827,32 +849,54 @@ export default SalonDashboard;
 const styles = StyleSheet.create({
   headerContainer: {
     paddingBottom: verticalScale(20),
-    paddingHorizontal: scale(15),
+    paddingHorizontal: scale(20),
   },
 
-  topRow: {
+  // topRow: {
+  //   flexDirection: "row",
+  //   justifyContent: "space-between",
+  //   alignItems: "center",
+  //   marginTop: verticalScale(40),
+  //   marginBottom: verticalScale(15),
+  // },
+
+  // userInfo: {
+  //   flexDirection: "row",
+  //   alignItems: "center",
+  //   gap: scale(10),
+  // },
+
+  // avatar: {
+  //   width: scale(38),
+  //   height: scale(38),
+  //   borderRadius: scale(19),
+  // },
+
+  // userName: {
+  //   fontSize: scale(16),
+  //   fontFamily: "AirbnbCereal_W_Bd",
+  // },
+
+  header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: verticalScale(40),
+    // paddingHorizontal: scale(20),
+    // marginTop: verticalScale(40),
     marginBottom: verticalScale(15),
   },
-
-  userInfo: {
-    flexDirection: "row",
+  headerTop: { flexDirection: "row", alignItems: "center", gap: scale(10) },
+  profileAvatar: {
+    width: scale(36),
+    height: scale(36),
+    borderRadius: scale(18),
+  },
+  notifBtn: {
+    width: scale(36),
+    height: scale(36),
+    borderRadius: scale(18),
+    justifyContent: "center",
     alignItems: "center",
-    gap: scale(10),
-  },
-
-  avatar: {
-    width: scale(38),
-    height: scale(38),
-    borderRadius: scale(19),
-  },
-
-  userName: {
-    fontSize: scale(16),
-    fontFamily: "AirbnbCereal_W_Bd",
   },
 
   mainCard: {
@@ -953,7 +997,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: scale(8),
-    paddingHorizontal: scale(15),
+    paddingHorizontal: scale(20),
     marginTop: verticalScale(25),
     marginBottom: verticalScale(12),
   },
@@ -970,12 +1014,12 @@ const styles = StyleSheet.create({
   },
 
   statusList: {
-    paddingHorizontal: scale(15),
+    paddingHorizontal: scale(20),
     gap: scale(12),
   },
 
   statusCard: {
-    width: scale(70),
+    width: scale(69),
     borderRadius: scale(18),
     padding: scale(10),
     gap: scale(6),
