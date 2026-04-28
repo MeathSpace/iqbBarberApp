@@ -259,3 +259,16 @@ export const DeleteIcon = ({
     style={style}
   />
 );
+
+export const HistoryIcon = ({
+  size = moderateScale(24),
+  color = "black",
+  style,
+}) => (
+  <MaterialIcons
+    name="history"
+    size={size}
+    color={color}
+    style={style}
+  />
+);
