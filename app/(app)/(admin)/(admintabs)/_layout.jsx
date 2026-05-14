@@ -76,7 +76,6 @@
 
 // export default AdminTabLayout;
 
-import { useTheme } from "@react-navigation/native";
 import { Tabs } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { scale, verticalScale } from "react-native-size-matters";
@@ -87,10 +86,11 @@ import {
   QueueIcon,
   SalonIcon,
 } from "../../../../constants/icons";
+import appTheme from "../../../../constants/appTheme";
 
 const AdminTabLayout = () => {
   const insets = useSafeAreaInsets();
-  const { colors } = useTheme();
+  const colors = appTheme?.colors;
 
   return (
     <Tabs

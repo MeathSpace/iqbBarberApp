@@ -1,5 +1,4 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useTheme } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -26,6 +25,7 @@ import {
 import api from "../../../utils/api";
 import { isValidEmail } from "../../../utils/emailValidation";
 import i18n from "../../src/localization/i18n";
+import appTheme from "../../../constants/appTheme";
 
 const SignIn = () => {
   const baseContent = i18n.t("auth.adminauth.signin");
@@ -105,7 +105,7 @@ const SignIn = () => {
     }
   };
 
-  const { colors } = useTheme();
+  const colors = appTheme?.colors;
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>

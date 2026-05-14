@@ -1,10 +1,10 @@
-import { useTheme } from '@react-navigation/native';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import appTheme from "../constants/appTheme";
 
 const ThemeSafeAreaView = ({ children, style, edges, ...props }) => {
 
-    const { colors } = useTheme()
+    const colors = appTheme?.colors;
 
     return (
         <SafeAreaView

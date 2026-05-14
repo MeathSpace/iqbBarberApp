@@ -1,6 +1,5 @@
 import { Feather } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useTheme } from "@react-navigation/native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -17,12 +16,13 @@ import {
 } from "../../../../../constants/icons";
 import { useAdminAuth } from "../../../../../context/admin/AuthContext";
 import i18n from "../../../../src/localization/i18n";
+import appTheme from "../../../../../constants/appTheme"
 
 const index = () => {
   const baseContent = i18n.t("app.admin.admintabs.profile");
   const { setUserSalonId, setUserEmail, user } = useAdminAuth();
 
-  const { colors } = useTheme();
+  const colors = appTheme?.colors;
 
   const profileOptions = [
     {
@@ -285,3 +285,5 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 });
+
+

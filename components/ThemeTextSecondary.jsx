@@ -1,9 +1,9 @@
-import { useTheme } from "@react-navigation/native";
 import { StyleSheet, Text } from "react-native";
 import { scale } from "react-native-size-matters";
+import appTheme from "../constants/appTheme";
 
 const ThemeTextSecondary = ({ style, children, ...props }) => {
-  const { colors } = useTheme();
+  const colors = appTheme?.colors;
 
   return (
     <Text

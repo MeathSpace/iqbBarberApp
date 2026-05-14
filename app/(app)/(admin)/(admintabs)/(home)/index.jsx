@@ -527,9 +527,10 @@ import { scale, verticalScale } from "react-native-size-matters";
 import ThemeSafeAreaView from "../../../../../components/ThemeSafeAreaView";
 import ThemeTextPrimary from "../../../../../components/ThemeTextPrimary";
 import ThemeTextSecondary from "../../../../../components/ThemeTextSecondary";
+import appTheme from "../../../../../constants/appTheme"
 
 const SalonDashboard = () => {
-  const { colors } = useTheme();
+  const colors = appTheme?.colors;
 
   const StatusCard = ({ label, value }) => (
     <View
