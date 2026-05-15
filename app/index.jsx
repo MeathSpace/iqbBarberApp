@@ -42,7 +42,7 @@ const InitialScreen = () => {
     <ThemeSafeAreaView style={styles.container}>
       {/* Upper Section: Branding */}
       <View style={styles.topSection}>
-        <View style={[styles.imageWrapper, { borderColor: colors.border }]}>
+        <View style={[styles.imageWrapper, { borderColor: colors.borderColor.color1 }]}>
           <Image
             style={styles.image}
             source="https://i.pinimg.com/736x/0f/5d/ac/0f5dac39ba6687e95f08623a9c9faca9.jpg"
@@ -87,9 +87,9 @@ const InitialScreen = () => {
         <TouchableOpacity
           activeOpacity={0.7}
           onPress={() => router.push("/(barberauth)/signin")}
-          style={[styles.secondaryBtn, { borderColor: colors.border }]}
+          style={[styles.secondaryBtn, { borderColor: colors.borderColor.color1 }]}
         >
-          <ThemeTextPrimary style={[styles.btnText, { color: colors.text }]}>
+          <ThemeTextPrimary style={[styles.btnText, { color: colors.textColor.color3 }]}>
             {baseContent.barber}
           </ThemeTextPrimary>
         </TouchableOpacity>
