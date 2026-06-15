@@ -1,168 +1,79 @@
-// import { Tabs } from "expo-router";
-// import { useSafeAreaInsets } from "react-native-safe-area-context";
-// import { scale, verticalScale } from "react-native-size-matters";
-// import {
-//   CalendarIcon,
-//   HomeIcon,
-//   ProfileIcon,
-//   QueueIcon,
-//   SalonIcon,
-// } from "../../../../constants/icons";
-// import { useTheme } from "@react-navigation/native";
-
-// const AdminTabLayout = () => {
-//   const insets = useSafeAreaInsets();
-//   const { colors } = useTheme();
-
-//   return (
-//     <Tabs
-//       screenOptions={{
-//         headerShown: false,
-//         tabBarStyle: {
-//           paddingBottom: insets.bottom + verticalScale(8), // dynamically adjust for system nav
-//           paddingTop: verticalScale(8),
-//           height: verticalScale(65) + insets.bottom,
-//         },
-//         tabBarLabelStyle: {
-//           fontSize: scale(9),
-//           fontFamily: "AirbnbCereal_W_Md",
-//           marginBottom: verticalScale(5),
-//         },
-//         tabBarActiveTintColor: colors.textColor.color3,
-//       }}
-//     >
-//       <Tabs.Screen
-//         name="(home)"
-//         options={{
-//           title: "Home",
-//           tabBarIcon: ({ color }) => <HomeIcon color={color} />,
-//         }}
-//       />
-
-//       <Tabs.Screen
-//         name="(queue)"
-//         options={{
-//           title: "Queue",
-//           tabBarIcon: ({ color }) => <QueueIcon color={color} />,
-//         }}
-//       />
-
-//       <Tabs.Screen
-//         name="(salon)"
-//         options={{
-//           title: "Salon",
-//           tabBarIcon: ({ color }) => <SalonIcon color={color} />,
-//         }}
-//       />
-
-//       <Tabs.Screen
-//         name="(appointment)"
-//         options={{
-//           title: "Appointment",
-//           tabBarIcon: ({ color }) => <CalendarIcon color={color} />,
-//         }}
-//       />
-
-//       <Tabs.Screen
-//         name="(profile)"
-//         options={{
-//           title: "Profile",
-//           tabBarIcon: ({ color }) => <ProfileIcon color={color} />,
-//         }}
-//       />
-//     </Tabs>
-//   );
-// };
-
-// export default AdminTabLayout;
-
 import { Tabs } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { scale, verticalScale } from "react-native-size-matters";
 import {
-  CalendarIcon,
-  HomeIcon,
-  ProfileIcon,
-  QueueIcon,
-  SalonIcon,
+  CalendarIcon,   
+  HomeIcon,       
+  BarberIcon,      
+  SalonIcon,      
 } from "../../../../constants/icons";
-import appTheme from "../../../../constants/appTheme";
+import { darkTheme } from "../../../../constants/appTheme";
 
 const AdminTabLayout = () => {
   const insets = useSafeAreaInsets();
-  const colors = appTheme?.colors;
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarAllowFontScaling: false, // CRITICAL: Prevents text from growing and cutting off
+        tabBarAllowFontScaling: false, 
+        
         tabBarStyle: {
-          backgroundColor: colors.background.color1,
+          backgroundColor: darkTheme.colors.background,
           borderTopWidth: 1,
-          borderTopColor: colors.borderColor?.color1 || "#F3F4F6",
-          // Adjust height to ensure label has room
-          height:
-            verticalScale(60) +
-            (insets.bottom > 0 ? insets.bottom : verticalScale(10)),
+          borderTopColor: darkTheme.colors.border,
+          height: verticalScale(60) + (insets.bottom > 0 ? insets.bottom : verticalScale(10)),
           paddingBottom: insets.bottom > 0 ? insets.bottom : verticalScale(8),
-          paddingTop: verticalScale(8),
+          paddingTop: verticalScale(10),
           elevation: 0,
           shadowOpacity: 0,
         },
+        
         tabBarLabelStyle: {
-          // Reduce size slightly for 5-tab layouts to avoid "..."
-          fontSize: scale(8.5),
+          fontSize: scale(10), 
           fontFamily: "AirbnbCereal_W_Md",
-          marginTop: verticalScale(2),
-          paddingHorizontal: 2, // Minimum padding to allow max width for text
+          marginTop: verticalScale(4),
+          fontWeight: "500",
         },
-        tabBarActiveTintColor: colors.textColor.color3,
-        tabBarInactiveTintColor: colors.textColor.color2,
+        
+        tabBarActiveTintColor: darkTheme.colors.accent,
+        tabBarInactiveTintColor: darkTheme.colors.textMuted,
       }}
     >
       <Tabs.Screen
         name="(home)"
         options={{
           title: "Home",
-          tabBarIcon: ({ color }) => (
-            <HomeIcon color={color} size={scale(20)} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="(queue)"
-        options={{
-          title: "Queue",
-          tabBarIcon: ({ color }) => (
-            <QueueIcon color={color} size={scale(20)} />
+          tabBarIcon: ({ color, focused }) => (
+            <HomeIcon color={color} size={scale(22)} focused={focused} />
           ),
         }}
       />
       <Tabs.Screen
         name="(salon)"
         options={{
-          title: "Salon",
-          tabBarIcon: ({ color }) => (
-            <SalonIcon color={color} size={scale(20)} />
+          title: "Salons",
+          tabBarIcon: ({ color, focused }) => (
+            <SalonIcon color={color} size={scale(22)} focused={focused} />
           ),
         }}
       />
       <Tabs.Screen
-        name="(appointment)"
+        name="(barber)"
         options={{
-          title: "Appointment", // This will now fit without "..."
-          tabBarIcon: ({ color }) => (
-            <CalendarIcon color={color} size={scale(20)} />
+          title: "Barbers",
+          href: "/(barber)", 
+          tabBarIcon: ({ color, focused }) => (
+            <BarberIcon color={color} size={scale(22)} focused={focused} />
           ),
         }}
       />
       <Tabs.Screen
-        name="(profile)"
+        name="(advertisement)"
         options={{
-          title: "Profile",
-          tabBarIcon: ({ color }) => (
-            <ProfileIcon color={color} size={scale(20)} />
+          title: "Advertisements",
+          tabBarIcon: ({ color, focused }) => (
+            <CalendarIcon color={color} size={scale(22)} focused={focused} />
           ),
         }}
       />
