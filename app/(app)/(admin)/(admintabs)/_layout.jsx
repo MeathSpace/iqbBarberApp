@@ -72,6 +72,7 @@ const AdminTabLayout = () => {
         name="(advertisement)"
         options={{
           title: "Advertisements",
+          href: "/(advertisement)", 
           tabBarIcon: ({ color, focused }) => (
             <CalendarIcon color={color} size={scale(22)} focused={focused} />
           ),

@@ -12,7 +12,7 @@ import { scale, verticalScale } from "react-native-size-matters";
 import Header from "../../../../../components/Header/Header";
 import { darkTheme } from "../../../../../constants/appTheme";
 import { useRouter } from "expo-router";
-import { DownIcon, HomeIcon } from "../../../../../constants/icons";
+import { BarberIcon, DownIcon, HomeIcon } from "../../../../../constants/icons";
 
 const index = () => {
   const barbersData = [
@@ -88,7 +88,7 @@ const index = () => {
             router.push("createBarber");
           }}
         >
-          <HomeIcon
+          <BarberIcon
             size={scale(16)}
             color={darkTheme.colors.accent}
             style={styles.addIcon}

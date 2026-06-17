@@ -1,15 +1,14 @@
 import { Stack } from 'expo-router'
 import { StyleSheet } from 'react-native'
 
-const SalonLayout = () => {
+const CreateSalonSteps = () => {
     return (
         <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="index" />
-            <Stack.Screen name="createSalon" />
         </Stack>
     )
 }
 
-export default SalonLayout
+export default CreateSalonSteps
 
 const styles = StyleSheet.create({})

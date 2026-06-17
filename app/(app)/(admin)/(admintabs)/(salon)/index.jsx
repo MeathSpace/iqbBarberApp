@@ -10,6 +10,7 @@ import { scale, verticalScale } from "react-native-size-matters";
 import Header from "../../../../../components/Header/Header";
 import { darkTheme } from "../../../../../constants/appTheme";
 import { LocationIcon, HomeIcon, StarIcon } from "../../../../../constants/icons";
+import { useRouter } from "expo-router";
 
 const SalonsScreen = () => {
   const salonsData = [
@@ -39,6 +40,8 @@ const SalonsScreen = () => {
     },
   ];
 
+  const router = useRouter()
+
   return (
     <SafeAreaView
       edges={["top", "right", "left"]}
@@ -52,6 +55,9 @@ const SalonsScreen = () => {
         <TouchableOpacity
           style={[styles.addButton, { backgroundColor: darkTheme.colors.accent, height: darkTheme.layout.buttonHeight }]}
           activeOpacity={0.8}
+          onPress={() => {
+            router.push("/createSalon")
+          }}
         >
           <Text style={[darkTheme.typography.btnText, { color: "#000000" }]}>Add new Salon</Text>
         </TouchableOpacity>
