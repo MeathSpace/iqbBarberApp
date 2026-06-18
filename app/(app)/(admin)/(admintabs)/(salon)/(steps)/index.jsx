@@ -133,7 +133,7 @@ const SalonInfoStep = () => {
             ]}
             activeOpacity={0.8}
             onPress={() => {
-              // Action routing sequence to next steps screen
+              router.push("/businessInformation")
             }}
           >
             <Text style={[darkTheme.typography.btnText, { color: "#000000" }]}>
