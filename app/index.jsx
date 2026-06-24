@@ -29,6 +29,7 @@ const InitialScreen = () => {
         router.replace("/(admin)/(admintabs)/(home)");
       } else if (savedBarberEmail) {
         // router.replace("/(barber)/(barbertabs)/(home)");
+        // router.replace("/(auth)/(adminauth)/signin")
       } else {
         setShowWelcome(true);
       }

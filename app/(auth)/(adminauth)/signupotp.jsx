@@ -1,29 +1,27 @@
-import { useTheme } from "@react-navigation/native";
-import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   Keyboard,
+  Platform,
   StyleSheet,
+  Text,
   TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
 import { scale, verticalScale } from "react-native-size-matters";
-import ThemeSafeAreaView from "../../../components/ThemeSafeAreaView";
-import ThemeTextPrimary from "../../../components/ThemeTextPrimary";
-import ThemeTextSecondary from "../../../components/ThemeTextSecondary";
+import { SafeAreaView } from "react-native-safe-area-context";
+
 import { LeftArrowIcon } from "../../../constants/icons";
 import i18n from "../../src/localization/i18n";
-import appTheme from "../../../constants/appTheme"
+import { darkTheme } from "../../../constants/appTheme";
 
 const SignupOtp = () => {
   const baseContent = i18n.t("auth.barberauth.signupotp");
   const [otp, setOtp] = useState("");
-
   const router = useRouter();
-  const colors = appTheme?.colors;
 
   const handleSignOtp = () => {
     router.push("/accountDetails");
@@ -31,27 +29,41 @@ const SignupOtp = () => {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <ThemeSafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: darkTheme.colors.background }]}>
+        
+        {/* Back navigation header anchor */}
+        <View style={styles.backRow}>
+          <TouchableOpacity
+            onPress={() => router.push("/")}
+            style={[
+              styles.homeIcon,
+              {
+                backgroundColor: darkTheme.colors.card,
+                borderRadius: darkTheme.layout.borderRadiusMedium,
+              },
+            ]}
+          >
+            <LeftArrowIcon size={20} color={darkTheme.colors.textMain} />
+          </TouchableOpacity>
+          <Text style={[darkTheme.typography.bodyMuted]}>Back to home</Text>
+        </View>
+
         <View style={styles.wrapper}>
           {/* Header */}
           <View style={{ gap: verticalScale(10) }}>
-            <ThemeTextPrimary style={styles.title}>
+            <Text style={[darkTheme.typography.headerTitle, styles.title]}>
               {baseContent.header}
-            </ThemeTextPrimary>
-            <ThemeTextSecondary
-              style={[styles.subtitle, { color: colors.textColor.color2 }]}
-            >
+            </Text>
+            <Text style={[darkTheme.typography.headerSubtitle, styles.subtitle]}>
               {baseContent.subHeader}
-            </ThemeTextSecondary>
+            </Text>
           </View>
 
           {/* OTP Input */}
           <View style={styles.inputGroup}>
-            <ThemeTextPrimary
-              style={[styles.label, { color: colors.textColor.color3 }]}
-            >
+            <Text style={[darkTheme.typography.inputLabel]}>
               {baseContent.verificationInput.header}
-            </ThemeTextPrimary>
+            </Text>
 
             <TextInput
               placeholder={baseContent.verificationInput.placeholder}
@@ -59,60 +71,53 @@ const SignupOtp = () => {
               onChangeText={setOtp}
               keyboardType="numeric"
               style={[
-                styles.input,
+                styles.textInput,
+                darkTheme.typography.bodyMain,
                 {
-                  borderColor: colors.borderColor.color1,
-                  backgroundColor: colors.background.color3,
-                  color: colors.textColor.color1,
+                  backgroundColor: darkTheme.colors.card,
+                  borderColor: darkTheme.colors.border,
+                  borderRadius: darkTheme.layout.borderRadiusMedium,
+                  height: darkTheme.layout.componentHeight,
                 },
               ]}
-              placeholderTextColor={colors.textColor.color5}
+              placeholderTextColor={darkTheme.colors.textMuted}
+              selectionColor={darkTheme.colors.accent}
             />
           </View>
 
           {/* Verify Button */}
-          <TouchableOpacity onPress={handleSignOtp}>
+          <TouchableOpacity onPress={handleSignOtp} activeOpacity={0.8}>
             <LinearGradient
               colors={[
-                colors.button.typeOne.linearOne,
-                colors.button.typeOne.linearTwo,
+                darkTheme.colors.accent,
+                darkTheme.colors.accent
               ]}
-              style={styles.verifyBtn}
+              style={[
+                styles.verifyBtn,
+                {
+                  borderRadius: darkTheme.layout.borderRadiusMedium,
+                  height: darkTheme.layout.buttonHeight,
+                },
+              ]}
             >
-              <ThemeTextPrimary
-                style={[styles.verifyText, { color: colors.textColor.color4 }]}
-              >
+              <Text style={[darkTheme.typography.btnText, { color: "#000000" }]}>
                 {baseContent.verify}
-              </ThemeTextPrimary>
+              </Text>
             </LinearGradient>
           </TouchableOpacity>
 
           {/* Resend */}
-          <TouchableOpacity>
-            <ThemeTextSecondary style={styles.resendText}>
+          <TouchableOpacity activeOpacity={0.7}>
+            <Text style={[darkTheme.typography.bodyMuted, styles.resendText]}>
               {baseContent.didntReceive || "Didn't receive the code?"}
-              <ThemeTextPrimary style={{ color: colors.textColor.color3 }}>
+              <Text style={{ color: darkTheme.colors.accent, fontWeight: "600" }}>
                 {" "}
                 {baseContent.resend || "Resend"}
-              </ThemeTextPrimary>
-            </ThemeTextSecondary>
+              </Text>
+            </Text>
           </TouchableOpacity>
         </View>
-
-        {/* Back */}
-        <View style={styles.backRow}>
-          <TouchableOpacity
-            onPress={() => router.push("/")}
-            style={[
-              styles.homeIcon,
-              { backgroundColor: colors.background.color2 },
-            ]}
-          >
-            <LeftArrowIcon size={20} color={colors.textColor.color3} />
-          </TouchableOpacity>
-          <ThemeTextSecondary>Back to home</ThemeTextSecondary>
-        </View>
-      </ThemeSafeAreaView>
+      </SafeAreaView>
     </TouchableWithoutFeedback>
   );
 };
@@ -125,71 +130,49 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-
   wrapper: {
     width: "90%",
     gap: verticalScale(22),
   },
-
   title: {
-    fontSize: scale(22),
-    lineHeight: verticalScale(28),
-    fontFamily: "AirbnbCereal_W_Bd",
     textAlign: "center",
   },
-
   subtitle: {
     textAlign: "center",
   },
-
   inputGroup: {
-    gap: verticalScale(8),
+    width: "100%",
   },
-
-  label: {},
-
-  input: {
+  textInput: {
+    width: "100%",
     borderWidth: 1,
-    borderRadius: scale(10),
-    paddingVertical: verticalScale(14),
     paddingHorizontal: scale(14),
-    fontFamily: "AirbnbCereal_W_Md",
-    fontSize: scale(14)
+    marginTop: verticalScale(8),
   },
-
   verifyBtn: {
-    paddingVertical: verticalScale(14),
-    borderRadius: scale(12),
+    width: "100%",
     alignItems: "center",
+    justifyContent: "center",
     marginTop: verticalScale(10),
   },
-
-  verifyText: {
-    fontSize: scale(16),
-    fontFamily: "AirbnbCereal_W_Bd",
-  },
-
   resendText: {
     textAlign: "center",
-    fontSize: scale(15),
     marginTop: verticalScale(10),
+    fontSize: scale(13),
   },
-
   backRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: scale(10),
     position: "absolute",
-    top: verticalScale(45),
+    top: Platform.OS === "ios" ? verticalScale(50) : verticalScale(30),
     left: scale(15),
+    zIndex: 10,
   },
-
   homeIcon: {
     width: scale(40),
     height: scale(40),
-    borderRadius: scale(10),
     justifyContent: "center",
     alignItems: "center",
   },
 });
-

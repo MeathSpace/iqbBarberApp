@@ -1,25 +1,24 @@
-import { useTheme } from "@react-navigation/native";
-import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   Keyboard,
+  Platform,
   StyleSheet,
+  Text,
   TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
 import { scale, verticalScale } from "react-native-size-matters";
-import ThemeSafeAreaView from "../../../components/ThemeSafeAreaView";
-import ThemeTextPrimary from "../../../components/ThemeTextPrimary";
-import ThemeTextSecondary from "../../../components/ThemeTextSecondary";
+import { SafeAreaView } from "react-native-safe-area-context";
+
 import { EyeIcon, EyeOffIcon, LeftArrowIcon } from "../../../constants/icons";
-import appTheme from "../../../constants/appTheme";
+import { darkTheme } from "../../../constants/appTheme";
 
 const ResetPassword = () => {
   const router = useRouter();
-  const colors = appTheme?.colors;
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -34,34 +33,50 @@ const ResetPassword = () => {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <ThemeSafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: darkTheme.colors.background }]}>
+        
+        {/* Back navigation header anchor */}
+        <View style={styles.backRow}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={[
+              styles.homeIcon,
+              {
+                backgroundColor: darkTheme.colors.card,
+                borderRadius: darkTheme.layout.borderRadiusMedium,
+              },
+            ]}
+          >
+            <LeftArrowIcon size={20} color={darkTheme.colors.textMain} />
+          </TouchableOpacity>
+          <Text style={[darkTheme.typography.bodyMuted]}>Back</Text>
+        </View>
+
         <View style={styles.wrapper}>
           {/* Header */}
           <View style={{ gap: verticalScale(10) }}>
-            <ThemeTextPrimary style={styles.title}>
+            <Text style={[darkTheme.typography.headerTitle, styles.title]}>
               Reset Password Admin
-            </ThemeTextPrimary> 
-            <ThemeTextSecondary
-              style={[styles.subtitle, { color: colors.textColor.color2 }]}
-            >
+            </Text> 
+            <Text style={[darkTheme.typography.headerSubtitle, styles.subtitle]}>
               Enter your new password and confirm it below
-            </ThemeTextSecondary>
+            </Text>
           </View>
 
           {/* New Password */}
           <View style={styles.inputGroup}>
-            <ThemeTextPrimary
-              style={[styles.label, { color: colors.textColor.color3 }]}
-            >
+            <Text style={[darkTheme.typography.inputLabel]}>
               New Password
-            </ThemeTextPrimary>
+            </Text>
 
             <View
               style={[
                 styles.passwordContainer,
                 {
-                  borderColor: colors.borderColor.color1,
-                  backgroundColor: colors.background.color3,
+                  backgroundColor: darkTheme.colors.card,
+                  borderColor: darkTheme.colors.border,
+                  borderRadius: darkTheme.layout.borderRadiusMedium,
+                  height: darkTheme.layout.componentHeight,
                 },
               ]}
             >
@@ -70,17 +85,19 @@ const ResetPassword = () => {
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
-                style={[
-                  styles.passwordInput,
-                  { color: colors.textColor.color1 },
-                ]}
-                placeholderTextColor={colors.textColor.color5}
+                style={[styles.passwordInput, darkTheme.typography.bodyMain]}
+                placeholderTextColor={darkTheme.colors.textMuted}
+                autoCapitalize="none"
+                selectionColor={darkTheme.colors.accent}
               />
-              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+              <TouchableOpacity 
+                onPress={() => setShowPassword(!showPassword)}
+                style={styles.eyeIconWrapper}
+              >
                 {showPassword ? (
-                  <EyeOffIcon size={20} color={colors.textColor.color6} />
+                  <EyeOffIcon size={20} color={darkTheme.colors.textMuted} />
                 ) : (
-                  <EyeIcon size={20} color={colors.textColor.color6} />
+                  <EyeIcon size={20} color={darkTheme.colors.textMuted} />
                 )}
               </TouchableOpacity>
             </View>
@@ -88,18 +105,18 @@ const ResetPassword = () => {
 
           {/* Confirm Password */}
           <View style={styles.inputGroup}>
-            <ThemeTextPrimary
-              style={[styles.label, { color: colors.textColor.color3 }]}
-            >
+            <Text style={[darkTheme.typography.inputLabel]}>
               Confirm Password
-            </ThemeTextPrimary>
+            </Text>
 
             <View
               style={[
                 styles.passwordContainer,
                 {
-                  borderColor: colors.borderColor.color1,
-                  backgroundColor: colors.background.color3,
+                  backgroundColor: darkTheme.colors.card,
+                  borderColor: darkTheme.colors.border,
+                  borderRadius: darkTheme.layout.borderRadiusMedium,
+                  height: darkTheme.layout.componentHeight,
                 },
               ]}
             >
@@ -108,56 +125,46 @@ const ResetPassword = () => {
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 secureTextEntry={!showConfirmPassword}
-                style={[
-                  styles.passwordInput,
-                  { color: colors.textColor.color1 },
-                ]}
-                placeholderTextColor={colors.textColor.color5}
+                style={[styles.passwordInput, darkTheme.typography.bodyMain]}
+                placeholderTextColor={darkTheme.colors.textMuted}
+                autoCapitalize="none"
+                selectionColor={darkTheme.colors.accent}
               />
               <TouchableOpacity
                 onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                style={styles.eyeIconWrapper}
               >
                 {showConfirmPassword ? (
-                  <EyeOffIcon size={20} color={colors.textColor.color6} />
+                  <EyeOffIcon size={20} color={darkTheme.colors.textMuted} />
                 ) : (
-                  <EyeIcon size={20} color={colors.textColor.color6} />
+                  <EyeIcon size={20} color={darkTheme.colors.textMuted} />
                 )}
               </TouchableOpacity>
             </View>
           </View>
 
           {/* Reset Button */}
-          <TouchableOpacity onPress={handleResetPassword}>
+          <TouchableOpacity onPress={handleResetPassword} activeOpacity={0.8}>
             <LinearGradient
               colors={[
-                colors.button.typeOne.linearOne,
-                colors.button.typeOne.linearTwo,
+                darkTheme.colors.accent,
+                darkTheme.colors.accent
               ]}
-              style={styles.button}
+              style={[
+                styles.button,
+                {
+                  borderRadius: darkTheme.layout.borderRadiusMedium,
+                  height: darkTheme.layout.buttonHeight,
+                },
+              ]}
             >
-              <ThemeTextPrimary
-                style={[styles.buttonText, { color: colors.textColor.color4 }]}
-              >
+              <Text style={[darkTheme.typography.btnText, { color: "#000000" }]}>
                 Reset Password
-              </ThemeTextPrimary>
+              </Text>
             </LinearGradient>
           </TouchableOpacity>
         </View>
-
-        {/* Back */}
-        <View style={styles.backRow}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={[
-              styles.homeIcon,
-              { backgroundColor: colors.background.color2 },
-            ]}
-          >
-            <LeftArrowIcon size={20} color={colors.textColor.color3} />
-          </TouchableOpacity>
-          <ThemeTextSecondary>Back</ThemeTextSecondary>
-        </View>
-      </ThemeSafeAreaView>
+      </SafeAreaView>
     </TouchableWithoutFeedback>
   );
 };
@@ -170,71 +177,56 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-
   wrapper: {
     width: "90%",
     gap: verticalScale(22),
   },
-
   title: {
-    fontSize: scale(22),
-    lineHeight: verticalScale(28),
-    fontFamily: "AirbnbCereal_W_Bd",
     textAlign: "center",
   },
-
   subtitle: {
     textAlign: "center",
   },
-
   inputGroup: {
-    gap: verticalScale(8),
+    width: "100%",
   },
-
-  label: {},
-
   passwordContainer: {
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderRadius: scale(10),
-    paddingRight: scale(10),
+    width: "100%",
+    marginTop: verticalScale(8),
   },
-
   passwordInput: {
     flex: 1,
-    paddingVertical: verticalScale(14),
+    height: "100%",
     paddingHorizontal: scale(14),
-    fontFamily: "AirbnbCereal_W_Md",
   },
-
-  button: {
-    paddingVertical: verticalScale(14),
-    borderRadius: scale(12),
+  eyeIconWrapper: {
+    paddingHorizontal: scale(14),
+    height: "100%",
+    justifyContent: "center",
     alignItems: "center",
+  },
+  button: {
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "center",
     marginTop: verticalScale(10),
   },
-
-  buttonText: {
-    fontSize: scale(16),
-    fontFamily: "AirbnbCereal_W_Bd",
-  },
-
   backRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: scale(10),
     position: "absolute",
-    top: verticalScale(45),
+    top: Platform.OS === "ios" ? verticalScale(50) : verticalScale(30),
     left: scale(15),
+    zIndex: 10,
   },
-
   homeIcon: {
     width: scale(40),
     height: scale(40),
-    borderRadius: scale(10),
     justifyContent: "center",
     alignItems: "center",
   },
 });
-

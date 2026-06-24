@@ -1,35 +1,31 @@
-import PhoneInput from "@linhnguyen96114/react-native-phone-input";
-import DateTimePicker from "@react-native-community/datetimepicker";
-import { useTheme } from "@react-navigation/native";
-import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   Keyboard,
   Modal,
   Platform,
   Pressable,
   StyleSheet,
+  Text,
   TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
   useColorScheme,
   View,
 } from "react-native";
+import PhoneInput from "@linhnguyen96114/react-native-phone-input";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
 import { scale, verticalScale } from "react-native-size-matters";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import ThemeSafeAreaView from "../../../components/ThemeSafeAreaView";
-import ThemeTextPrimary from "../../../components/ThemeTextPrimary";
-import ThemeTextSecondary from "../../../components/ThemeTextSecondary";
 import { CalendarIcon, LeftArrowIcon } from "../../../constants/icons";
 import i18n from "../../src/localization/i18n";
-import appTheme from "../../../constants/appTheme"
+import { darkTheme } from "../../../constants/appTheme";
 
 const AccountDetails = () => {
   const baseContent = i18n.t("auth.adminauth.accountDetails");
-
   const router = useRouter();
-  const colors = appTheme?.colors;
   const colorScheme = useColorScheme();
 
   const [name, setName] = useState("");
@@ -40,8 +36,7 @@ const AccountDetails = () => {
   const [value, setValue] = useState("");
 
   const handleAccountDetail = () => {
-    // router.push("/(admin)/createSalon");
-    router.push("/signupotp")
+    router.push("/signupotp");
   };
 
   const formatDate = (d) => {
@@ -69,213 +64,232 @@ const AccountDetails = () => {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <ThemeSafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: darkTheme.colors.background }]}>
+        
+        {/* Back navigation header layout anchor */}
         <View style={styles.backRow}>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: scale(10),
-            }}
-          >
+          <View style={{ flexDirection: "row", alignItems: "center", gap: scale(10) }}>
             <TouchableOpacity
               onPress={() => router.push("/")}
               style={[
                 styles.homeIcon,
-                { backgroundColor: colors.background.color2 },
+                {
+                  backgroundColor: darkTheme.colors.card,
+                  borderRadius: darkTheme.layout.borderRadiusMedium,
+                },
               ]}
             >
-              <LeftArrowIcon size={20} color={colors.textColor.color3} />
+              <LeftArrowIcon size={20} color={darkTheme.colors.textMain} />
             </TouchableOpacity>
-            <ThemeTextSecondary>Back to home</ThemeTextSecondary>
+            <Text style={[darkTheme.typography.bodyMuted]}>Back to home</Text>
           </View>
+          
           <TouchableOpacity
             style={[
               styles.skipBtn,
-              { backgroundColor: colors.background.color4 }, 
+              { 
+                backgroundColor: darkTheme.colors.card,
+                borderRadius: darkTheme.layout.borderRadiusSmall,
+              },
             ]}
+            activeOpacity={0.8}
           >
-            <ThemeTextSecondary style={{ color: colors.textColor.color3 }}>
+            <Text style={[darkTheme.typography.bodyMuted, { color: darkTheme.colors.accent }]}>
               Skip
-            </ThemeTextSecondary>
+            </Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.wrapper}>
           <View style={{ gap: verticalScale(6) }}>
-            <ThemeTextPrimary style={styles.title}>
+            <Text style={[darkTheme.typography.headerTitle, styles.title]}>
               {baseContent.header}
-            </ThemeTextPrimary>
-            <ThemeTextSecondary style={styles.subtitle}>
+            </Text>
+            <Text style={[darkTheme.typography.headerSubtitle, styles.subtitle]}>
               {baseContent.subHeader}
-            </ThemeTextSecondary>
+            </Text>
           </View>
 
+          {/* Name Input Group */}
           <View style={styles.inputGroup}>
-            <ThemeTextPrimary style={styles.label}>
+            <Text style={[darkTheme.typography.inputLabel]}>
               {baseContent.nameInput.header}
-            </ThemeTextPrimary>
+            </Text>
             <TextInput
               placeholder={baseContent.nameInput.placeholder}
               value={name}
               onChangeText={setName}
-              placeholderTextColor={colors.textColor.color5}
+              placeholderTextColor={darkTheme.colors.textMuted}
+              selectionColor={darkTheme.colors.accent}
               style={[
-                styles.input,
+                styles.textInput,
+                darkTheme.typography.bodyMain,
                 {
-                  borderColor: colors.borderColor.color1,
-                  backgroundColor: colors.background.color3,
-                  color: colors.textColor.color1,
+                  backgroundColor: darkTheme.colors.card,
+                  borderColor: darkTheme.colors.border,
+                  borderRadius: darkTheme.layout.borderRadiusMedium,
+                  height: darkTheme.layout.componentHeight,
                 },
               ]}
             />
           </View>
 
+          {/* Phone Input Group */}
           <View style={styles.inputGroup}>
-            <ThemeTextPrimary style={styles.label}>
+            <Text style={[darkTheme.typography.inputLabel]}>
               {baseContent.mobileNumber.header}
-            </ThemeTextPrimary>
-
+            </Text>
             <PhoneInput
               defaultValue={value}
               defaultCode="GB"
               onChangeText={setValue}
               disableArrowIcon
-              withDarkTheme={colorScheme === "dark"}
+              withDarkTheme={true}
               containerStyle={[
                 styles.phoneContainer,
                 {
-                  backgroundColor: colors.background.color3,
-                  borderColor: colors.borderColor.color1,
+                  backgroundColor: darkTheme.colors.card,
+                  borderColor: darkTheme.colors.border,
+                  borderRadius: darkTheme.layout.borderRadiusMedium,
+                  height: darkTheme.layout.componentHeight,
                 },
               ]}
               textContainerStyle={{
                 backgroundColor: "transparent",
                 paddingVertical: 0,
               }}
-              textInputStyle={{
-                color: colors.textColor.color1,
-                fontFamily: "AirbnbCereal_W_Md",
-                height: verticalScale(40),
-              }}
+              textInputStyle={[
+                darkTheme.typography.bodyMain,
+                { height: "100%" }
+              ]}
               codeTextStyle={{
-                color: colors.textColor.color1,
+                color: darkTheme.colors.textMain,
               }}
             />
           </View>
 
+          {/* Gender Selector Group */}
           <View style={styles.inputGroup}>
-            <ThemeTextPrimary style={styles.label}>
+            <Text style={[darkTheme.typography.inputLabel]}>
               {baseContent.genderDropdown.header}
-            </ThemeTextPrimary>
+            </Text>
 
             <View style={styles.genderRow}>
-              {["Male", "Female", "Other"].map((item) => (
-                <TouchableOpacity
-                  key={item}
-                  onPress={() => setGender(item)}
-                  style={[
-                    styles.genderBox,
-                    {
-                      borderColor:
-                        gender === item ? colors.borderColor.color1 : "#ddd",
-                      backgroundColor:
-                        gender === item ? colors.background.color4 : "#fff",
-                    },
-                  ]}
-                >
-
-                  <ThemeTextPrimary style={{ fontSize: scale(16) }}>
-                    {item === "Male" ? "👨" : item === "Female" ? "👩" : "⚧"}
-                  </ThemeTextPrimary>
-
-                  <ThemeTextSecondary>{item}</ThemeTextSecondary>
-                </TouchableOpacity>
-              ))}
+              {["Male", "Female", "Other"].map((item) => {
+                const isSelected = gender === item;
+                return (
+                  <TouchableOpacity
+                    key={item}
+                    onPress={() => setGender(item)}
+                    activeOpacity={0.8}
+                    style={[
+                      styles.genderBox,
+                      {
+                        borderColor: isSelected ? darkTheme.colors.accent : darkTheme.colors.border,
+                        backgroundColor: darkTheme.colors.card,
+                        borderRadius: darkTheme.layout.borderRadiusMedium,
+                      },
+                    ]}
+                  >
+                    <Text style={{ fontSize: scale(16) }}>
+                      {item === "Male" ? "👨" : item === "Female" ? "👩" : "⚧"}
+                    </Text>
+                    <Text style={isSelected ? [darkTheme.typography.bodyMain, { color: darkTheme.colors.accent, fontWeight: "600" }] : [darkTheme.typography.bodyMuted]}>
+                      {item}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           </View>
 
+          {/* Date Of Birth Picker Group */}
           <View style={styles.inputGroup}>
-            <ThemeTextPrimary style={styles.label}>
+            <Text style={[darkTheme.typography.inputLabel]}>
               {baseContent.dateOfBirth.header}
-            </ThemeTextPrimary>
+            </Text>
 
             <TouchableOpacity
+              activeOpacity={0.8}
               style={[
-                styles.input,
+                styles.textInput,
                 {
                   justifyContent: "center",
-                  borderColor: colors.borderColor.color1,
-                  backgroundColor: colors.background.color3,
+                  backgroundColor: darkTheme.colors.card,
+                  borderColor: darkTheme.colors.border,
+                  borderRadius: darkTheme.layout.borderRadiusMedium,
+                  height: darkTheme.layout.componentHeight,
                 },
               ]}
               onPress={() => setCalenderModal(true)}
             >
-              <ThemeTextPrimary
-                style={{
-                  color: selectedDate
-                    ? colors.textColor.color1
-                    : colors.textColor.color5,
-                }}
+              <Text
+                style={[
+                  darkTheme.typography.bodyMain,
+                  { color: selectedDate ? darkTheme.colors.textMain : darkTheme.colors.textMuted },
+                ]}
               >
                 {selectedDate || baseContent.dateOfBirth.placeholder}
-              </ThemeTextPrimary>
+              </Text>
 
               <CalendarIcon
-                size={20}
-                style={{ position: "absolute", right: 12 }}
+                size={18}
+                color={darkTheme.colors.textMuted}
+                style={{ position: "absolute", right: scale(14) }}
               />
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity onPress={handleAccountDetail}>
+          {/* Form Action Submit Button */}
+          <TouchableOpacity onPress={handleAccountDetail} activeOpacity={0.8}>
             <LinearGradient
-              colors={[
-                colors.button.typeOne.linearOne,
-                colors.button.typeOne.linearTwo,
+              colors={[darkTheme.colors.accent, darkTheme.colors.accent]}
+              style={[
+                styles.button,
+                {
+                  borderRadius: darkTheme.layout.borderRadiusMedium,
+                  height: darkTheme.layout.buttonHeight,
+                },
               ]}
-              style={styles.button}
             >
-              <ThemeTextPrimary style={styles.buttonText}>
+              <Text style={[darkTheme.typography.btnText, { color: "#000000" }]}>
                 {baseContent.mobileNumber.update}
-              </ThemeTextPrimary>
+              </Text>
             </LinearGradient>
           </TouchableOpacity>
         </View>
 
+        {/* Calendar Picker Framework Overlay (iOS) */}
         {Platform.OS === "ios" && (
-          <Modal transparent visible={calenderModal}>
+          <Modal transparent visible={calenderModal} animationType="fade">
             <Pressable
               style={styles.modalOverlay}
               onPress={() => setCalenderModal(false)}
             >
-              <View
-                style={[
-                  styles.modalBox,
-                  {
-                    backgroundColor: colors.background.color3,
-                  },
-                ]}
-              >
+              <View style={[styles.modalBox, { backgroundColor: darkTheme.colors.card }]}>
                 <DateTimePicker
                   value={date}
                   mode="date"
                   display="inline"
                   onChange={onChange}
-                  accentColor={colors.textColor.color3}
+                  themeVariant="dark"
+                  accentColor={darkTheme.colors.accent}
                 />
 
-                <TouchableOpacity onPress={onDoneIOS}>
+                <TouchableOpacity onPress={onDoneIOS} activeOpacity={0.8}>
                   <LinearGradient
-                    colors={[
-                      colors.button.typeOne.linearOne,
-                      colors.button.typeOne.linearTwo,
+                    colors={[darkTheme.colors.accent, darkTheme.colors.accent]}
+                    style={[
+                      styles.button,
+                      {
+                        borderRadius: darkTheme.layout.borderRadiusMedium,
+                        height: darkTheme.layout.buttonHeight,
+                      },
                     ]}
-                    style={styles.button}
                   >
-                    <ThemeTextPrimary style={styles.buttonText}>
+                    <Text style={[darkTheme.typography.btnText, { color: "#000000" }]}>
                       Done
-                    </ThemeTextPrimary>
+                    </Text>
                   </LinearGradient>
                 </TouchableOpacity>
               </View>
@@ -283,6 +297,7 @@ const AccountDetails = () => {
           </Modal>
         )}
 
+        {/* Android DatePicker Instance trigger */}
         {Platform.OS === "android" && calenderModal && (
           <DateTimePicker
             value={date}
@@ -290,10 +305,9 @@ const AccountDetails = () => {
             display="default"
             maximumDate={new Date()}
             onChange={onChange}
-            accentColor={colors.textColor.color3}
           />
         )}
-      </ThemeSafeAreaView>
+      </SafeAreaView>
     </TouchableWithoutFeedback>
   );
 };
@@ -303,125 +317,82 @@ export default AccountDetails;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: scale(16),
   },
-
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: verticalScale(10),
-  },
-
   wrapper: {
     flex: 1,
     justifyContent: "center",
+    paddingHorizontal: darkTheme.layout.paddingHorizontal,
     gap: verticalScale(18),
+    marginTop: verticalScale(40),
   },
-
   title: {
-    fontSize: scale(20),
-    lineHeight: verticalScale(28),
-    fontFamily: "AirbnbCereal_W_Bd",
     textAlign: "center",
   },
-
   subtitle: {
     textAlign: "center",
   },
-
   inputGroup: {
-    gap: verticalScale(8),
+    width: "100%",
   },
-
-  label: {},
-
-  input: {
+  textInput: {
+    width: "100%",
     borderWidth: 1,
-    borderRadius: scale(10),
-    paddingVertical: verticalScale(14),
     paddingHorizontal: scale(14),
-    fontFamily: "AirbnbCereal_W_Md",
-    fontSize: scale(14),
+    marginTop: verticalScale(8),
   },
-
   phoneContainer: {
     width: "100%",
     borderWidth: 1,
-    borderRadius: scale(10),
-    height: verticalScale(48),
-    justifyContent: "center",
+    marginTop: verticalScale(8),
+    paddingLeft: scale(6),
   },
-
   genderRow: {
     flexDirection: "row",
     gap: scale(10),
+    marginTop: verticalScale(8),
   },
-
   genderBox: {
     flex: 1,
-    paddingVertical: verticalScale(12),
-    borderRadius: scale(10),
+    paddingVertical: verticalScale(10),
     borderWidth: 1,
     alignItems: "center",
     gap: verticalScale(4),
   },
-
   button: {
-    paddingVertical: verticalScale(14),
-    borderRadius: scale(12),
+    width: "100%",
     alignItems: "center",
+    justifyContent: "center",
     marginTop: verticalScale(10),
   },
-
-  buttonText: {
-    color: "#fff",
-    fontFamily: "AirbnbCereal_W_Bd",
-    fontSize: scale(16),
-  },
-
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "rgba(0,0,0,0.75)",
     justifyContent: "center",
     alignItems: "center",
   },
-
   modalBox: {
-    borderRadius: scale(12),
-    padding: scale(12),
+    padding: scale(16),
     width: "90%",
   },
-
-  doneBtn: {
-    marginTop: verticalScale(10),
-    padding: verticalScale(10),
-    borderRadius: scale(8),
-    alignItems: "center",
-  },
-
   backRow: {
-    width: "100%",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: scale(10),
     position: "absolute",
-    top: verticalScale(45),
-    left: scale(15),
+    top: Platform.OS === "ios" ? verticalScale(50) : verticalScale(30),
+    left: scale(16),
+    right: scale(16),
+    zIndex: 10,
   },
-
   homeIcon: {
     width: scale(40),
     height: scale(40),
-    borderRadius: scale(10),
     justifyContent: "center",
     alignItems: "center",
   },
-
   skipBtn: {
     paddingHorizontal: scale(14),
     paddingVertical: verticalScale(6),
-    borderRadius: scale(8),
     alignItems: "center",
     justifyContent: "center",
   },

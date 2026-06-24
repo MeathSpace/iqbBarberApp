@@ -1,104 +1,110 @@
-import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   Keyboard,
+  Platform,
   StyleSheet,
+  Text,
   TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
 import { scale, verticalScale } from "react-native-size-matters";
-import ThemeSafeAreaView from "../../../components/ThemeSafeAreaView";
-import ThemeTextPrimary from "../../../components/ThemeTextPrimary";
-import ThemeTextSecondary from "../../../components/ThemeTextSecondary";
+import { SafeAreaView } from "react-native-safe-area-context";
+
 import { LeftArrowIcon } from "../../../constants/icons";
-import appTheme from "../../../constants/appTheme";
+import { darkTheme } from "../../../constants/appTheme";
 
 const ForgotPassword = () => {
-  const colors = appTheme?.colors;
   const [email, setEmail] = useState("");
-
   const router = useRouter();
 
   const handleSendOtp = () => {
-    // navigate to OTP screen
     router.push("/resetPassword");
   };
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <ThemeSafeAreaView style={styles.container}>
-        <View style={styles.wrapper}>
-          {/* Header */}
-          <View style={{ gap: verticalScale(10) }}>
-            <ThemeTextPrimary style={styles.title}>
-              Forgot Password Admin
-            </ThemeTextPrimary>
-            <ThemeTextSecondary
-              style={[styles.subtitle, { color: colors.textColor.color2 }]}
-            >
-              Enter your email and we'll send you a verification code
-            </ThemeTextSecondary>
-          </View>
-
-          {/* Email Input */}
-          <View style={styles.inputGroup}>
-            <ThemeTextPrimary
-              style={[styles.label, { color: colors.textColor.color3 }]}
-            >
-              Email Address
-            </ThemeTextPrimary>
-
-            <TextInput
-              placeholder="Enter your email"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              style={[
-                styles.input,
-                {
-                  borderColor: colors.borderColor.color1,
-                  backgroundColor: colors.background.color3,
-                  color: colors.textColor.color1,
-                },
-              ]}
-              placeholderTextColor={colors.textColor.color5}
-            />
-          </View>
-
-          <TouchableOpacity onPress={handleSendOtp}>
-            <LinearGradient
-              colors={[
-                colors.button.typeOne.linearOne,
-                colors.button.typeOne.linearTwo,
-              ]}
-              style={styles.button}
-            >
-              <ThemeTextPrimary
-                style={[styles.buttonText, { color: colors.textColor.color4 }]}
-              >
-                Verify Email
-              </ThemeTextPrimary>
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
-
-        {/* Back */}
+      <SafeAreaView style={[styles.container, { backgroundColor: darkTheme.colors.background }]}>
+        
+        {/* Back navigation header anchor */}
         <View style={styles.backRow}>
           <TouchableOpacity
             onPress={() => router.back()}
             style={[
               styles.homeIcon,
-              { backgroundColor: colors.background.color2 },
+              {
+                backgroundColor: darkTheme.colors.card,
+                borderRadius: darkTheme.layout.borderRadiusMedium,
+              },
             ]}
           >
-            <LeftArrowIcon size={20} color={colors.textColor.color3} />
+            <LeftArrowIcon size={20} color={darkTheme.colors.textMain} />
           </TouchableOpacity>
-          <ThemeTextSecondary>Back to login</ThemeTextSecondary>
+          <Text style={[darkTheme.typography.bodyMuted]}>Back to login</Text>
         </View>
-      </ThemeSafeAreaView>
+
+        <View style={styles.wrapper}>
+          {/* Header */}
+          <View style={{ gap: verticalScale(10) }}>
+            <Text style={[darkTheme.typography.headerTitle, styles.title]}>
+              Forgot Password Admin
+            </Text>
+            <Text style={[darkTheme.typography.headerSubtitle, styles.subtitle]}>
+              Enter your email and we'll send you a verification code
+            </Text>
+          </View>
+
+          {/* Email Input */}
+          <View style={styles.inputGroup}>
+            <Text style={[darkTheme.typography.inputLabel]}>
+              Email Address
+            </Text>
+            <TextInput
+              placeholder="Enter your email"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              style={[
+                styles.textInput,
+                darkTheme.typography.bodyMain,
+                {
+                  backgroundColor: darkTheme.colors.card,
+                  borderColor: darkTheme.colors.border,
+                  borderRadius: darkTheme.layout.borderRadiusMedium,
+                  height: darkTheme.layout.componentHeight,
+                },
+              ]}
+              placeholderTextColor={darkTheme.colors.textMuted}
+              selectionColor={darkTheme.colors.accent}
+            />
+          </View>
+
+          {/* Action Trigger Button */}
+          <TouchableOpacity onPress={handleSendOtp} activeOpacity={0.8}>
+            <LinearGradient
+              colors={[
+                darkTheme.colors.accent,
+                darkTheme.colors.accent
+              ]}
+              style={[
+                styles.button,
+                {
+                  borderRadius: darkTheme.layout.borderRadiusMedium,
+                  height: darkTheme.layout.buttonHeight,
+                },
+              ]}
+            >
+              <Text style={[darkTheme.typography.btnText, { color: "#000000" }]}>
+                Verify Email
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
     </TouchableWithoutFeedback>
   );
 };
@@ -111,63 +117,43 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-
   wrapper: {
     width: "90%",
     gap: verticalScale(22),
   },
-
   title: {
-    fontSize: scale(22),
-    lineHeight: verticalScale(28),
-    fontFamily: "AirbnbCereal_W_Bd",
     textAlign: "center",
   },
-
   subtitle: {
     textAlign: "center",
   },
-
   inputGroup: {
-    gap: verticalScale(8),
+    width: "100%",
   },
-
-  label: {},
-
-  input: {
+  textInput: {
+    width: "100%",
     borderWidth: 1,
-    borderRadius: scale(10),
-    paddingVertical: verticalScale(14),
     paddingHorizontal: scale(14),
-    fontFamily: "AirbnbCereal_W_Md",
-    fontSize: scale(14)
+    marginTop: verticalScale(8),
   },
-
   button: {
-    paddingVertical: verticalScale(14),
-    borderRadius: scale(12),
+    width: "100%",
     alignItems: "center",
+    justifyContent: "center",
     marginTop: verticalScale(10),
   },
-
-  buttonText: {
-    fontSize: scale(16),
-    fontFamily: "AirbnbCereal_W_Bd",
-  },
-
   backRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: scale(10),
     position: "absolute",
-    top: verticalScale(45),
+    top: Platform.OS === "ios" ? verticalScale(50) : verticalScale(30),
     left: scale(15),
+    zIndex: 10,
   },
-
   homeIcon: {
     width: scale(40),
     height: scale(40),
-    borderRadius: scale(10),
     justifyContent: "center",
     alignItems: "center",
   },

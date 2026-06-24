@@ -15,6 +15,7 @@ import { scale, verticalScale } from "react-native-size-matters";
 import { LeftArrowIcon } from "../../constants/icons";
 import { useRouter } from "expo-router";
 import { darkTheme } from "../../constants/appTheme";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width, height } = Dimensions.get("window");
 const DRAWER_WIDTH = width * 0.65;
@@ -42,6 +43,11 @@ const Header = ({ title, subTitle, showBack = false }) => {
       setMenuVisible(false);
     });
   };
+  
+  const logoutPressed = async() => {
+    await AsyncStorage.getItem("adminEmail");
+    router.replace("/(auth)/(adminauth)/signin")
+  }
 
   return (
     <View style={styles.headerRow}>
@@ -174,6 +180,7 @@ const Header = ({ title, subTitle, showBack = false }) => {
             {/* Footer Log Out Area */}
             <View style={styles.drawerFooter}>
               <TouchableOpacity
+                onPress={logoutPressed}
                 style={[
                   styles.logoutButton,
                   { 

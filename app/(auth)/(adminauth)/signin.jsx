@@ -1,21 +1,498 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+// import AsyncStorage from "@react-native-async-storage/async-storage";
+// import { LinearGradient } from "expo-linear-gradient";
+// import { useRouter } from "expo-router";
+// import { useEffect, useState } from "react";
+// import {
+//   ActivityIndicator,
+//   Keyboard,
+//   StyleSheet,
+//   TextInput,
+//   TouchableOpacity,
+//   TouchableWithoutFeedback,
+//   View,
+// } from "react-native";
+// import { scale, verticalScale } from "react-native-size-matters";
+// import { Toast } from "toastify-react-native";
+// import ThemeSafeAreaView from "../../../components/ThemeSafeAreaView";
+// import ThemeTextPrimary from "../../../components/ThemeTextPrimary";
+// import ThemeTextSecondary from "../../../components/ThemeTextSecondary";
+// import {
+//   CheckIcon,
+//   EyeIcon,
+//   EyeOffIcon,
+//   LeftArrowIcon,
+// } from "../../../constants/icons";
+// import api from "../../../utils/api";
+// import { isValidEmail } from "../../../utils/emailValidation";
+// import i18n from "../../src/localization/i18n";
+// import darkTheme from "../../../constants/darkTheme";
+
+// const SignIn = () => {
+//   const baseContent = i18n.t("auth.adminauth.signin");
+
+//   useEffect(() => {
+//     const fetch_admin_remember_me_email = async () => {
+//       const admin_remember_me_email = await AsyncStorage.getItem(
+//         "admin_remember_me_email",
+//       );
+
+//       if (admin_remember_me_email) {
+//         setEmail(admin_remember_me_email);
+//         setRememberMe(true);
+//       }
+//     };
+
+//     fetch_admin_remember_me_email();
+//   }, []);
+
+//   const router = useRouter();
+
+//   const [email, setEmail] = useState("bikki@yopmail.com");
+//   const [password, setPassword] = useState("12345678");
+//   const [showPassword, setShowPassword] = useState(false);
+//   const [signinLoader, setSigninLoader] = useState(false);
+//   const [rememberMe, setRememberMe] = useState(false);
+
+//   // Error state
+//   const [emailError, setEmailError] = useState("");
+//   const [passwordError, setPasswordError] = useState("");
+
+//   const handleSignIn = async () => {
+//     let hasError = false;
+
+//     if (!email) {
+//       setEmailError(baseContent.errorStatesAndApi.emailRequired);
+//       hasError = true;
+//     } else if (!isValidEmail(email)) {
+//       setEmailError(baseContent.errorStatesAndApi.InvalidEmailFormat);
+//       hasError = true;
+//     }
+
+//     if (!password) {
+//       setPasswordError(baseContent.errorStatesAndApi.passwordRequired);
+//       hasError = true;
+//     } else if (password.length < 8) {
+//       setPasswordError(baseContent.errorStatesAndApi.passwordMostCharecters);
+//       hasError = true;
+//     }
+
+//     if (hasError) return;
+
+//     try {
+//       setSigninLoader(true);
+
+//       const payload = {
+//         email,
+//         password,
+//       };
+
+//       const { data } = await api.post("/web-app/admin/login", payload);
+//       await AsyncStorage.setItem("adminEmail", data?.foundUser?.email);
+//       await AsyncStorage.setItem(
+//         "adminSalonId",
+//         JSON.stringify(data?.foundUser?.salonId),
+//       );
+//       if (rememberMe) {
+//         await AsyncStorage.setItem("admin_remember_me_email", email);
+//       } else {
+//         await AsyncStorage.setItem("admin_remember_me_email", "");
+//       }
+//       router.push("/(admin)/(admintabs)/(home)");
+//     } catch (error) {
+//       Toast.error(error?.response?.data?.message);
+//     } finally {
+//       setSigninLoader(false);
+//     }
+//   };
+
+//   const colors = darkTheme?.colors;
+
+//   return (
+//     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+//       <ThemeSafeAreaView style={styles.container}>
+//         <View style={styles.wrapper}>
+//           <View style={{ gap: verticalScale(10) }}>
+//             <ThemeTextPrimary style={styles.title}>
+//               {baseContent.header}
+//             </ThemeTextPrimary>
+//             <ThemeTextSecondary style={styles.subtitle}>
+//               {baseContent.subHeader}
+//             </ThemeTextSecondary>
+//           </View>
+
+//           <View style={styles.inputGroup}>
+//             <ThemeTextPrimary
+//               style={[
+//                 styles.label,
+//                 {
+//                   color: colors.textColor.color3,
+//                 },
+//               ]}
+//             >
+//               {baseContent.emailInput.header}
+//             </ThemeTextPrimary>
+//             <TextInput
+//               placeholder={baseContent.emailInput.placeholder}
+//               value={email}
+//               onChangeText={(t) => {
+//                 setEmail(t);
+//                 setEmailError("");
+//               }}
+//               style={[
+//                 styles.input,
+//                 {
+//                   borderColor: colors.borderColor.color1,
+//                   backgroundColor: colors.background.color3,
+//                 },
+//               ]}
+//               placeholderTextColor={colors.textColor.color5}
+//             />
+//             {emailError && (
+//               <ThemeTextSecondary
+//                 style={[
+//                   styles.error,
+//                   {
+//                     color: colors.textColor.color7,
+//                   },
+//                 ]}
+//               >
+//                 {emailError}
+//               </ThemeTextSecondary>
+//             )}
+//           </View>
+
+//           <View style={styles.inputGroup}>
+//             <ThemeTextPrimary
+//               style={[
+//                 styles.label,
+//                 {
+//                   color: colors.textColor.color3,
+//                 },
+//               ]}
+//             >
+//               {baseContent.passwordInput.header}
+//             </ThemeTextPrimary>
+
+//             <View
+//               style={[
+//                 styles.passwordContainer,
+//                 {
+//                   borderColor: colors.borderColor.color1,
+//                   backgroundColor: colors.background.color3,
+//                 },
+//               ]}
+//             >
+//               <TextInput
+//                 placeholder={baseContent.passwordInput.placeholder}
+//                 value={password}
+//                 onChangeText={(t) => {
+//                   setPassword(t);
+//                   setPasswordError("");
+//                 }}
+//                 secureTextEntry={!showPassword}
+//                 style={styles.passwordInput}
+//                 placeholderTextColor={colors.textColor.color5}
+//               />
+//               <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+//                 {showPassword ? (
+//                   <EyeOffIcon size={20} color={colors.textColor.color6} />
+//                 ) : (
+//                   <EyeIcon size={20} color={colors.textColor.color6} />
+//                 )}
+//               </TouchableOpacity>
+//             </View>
+
+//             {passwordError && (
+//               <ThemeTextSecondary
+//                 style={[
+//                   styles.error,
+//                   {
+//                     color: colors.textColor.color7,
+//                   },
+//                 ]}
+//               >
+//                 {passwordError}
+//               </ThemeTextSecondary>
+//             )}
+//           </View>
+
+//           <View style={styles.rememberRow}>
+//             <View
+//               style={{
+//                 flexDirection: "row",
+//                 alignItems: "center",
+//                 gap: scale(10),
+//               }}
+//             >
+//               <TouchableOpacity
+//                 onPress={() => setRememberMe(!rememberMe)}
+//                 style={[
+//                   styles.checkbox,
+//                   {
+//                     borderColor: colors.borderColor.color1,
+//                     backgroundColor: colors.background.color4,
+//                   },
+//                 ]}
+//               >
+//                 {rememberMe && <CheckIcon size={14} />}
+//               </TouchableOpacity>
+//               <ThemeTextSecondary
+//                 style={[
+//                   styles.rememberText,
+//                   {
+//                     color: colors.textColor.color3,
+//                   },
+//                 ]}
+//               >
+//                 {baseContent.rememberMe}
+//               </ThemeTextSecondary>
+//             </View>
+//             <TouchableOpacity
+//               onPress={() => {
+//                 router.push("/forgotPassword");
+//               }}
+//             >
+//               <ThemeTextSecondary>Forgot Password ?</ThemeTextSecondary>
+//             </TouchableOpacity>
+//           </View>
+
+//           <TouchableOpacity onPress={handleSignIn}>
+//             <LinearGradient
+//               colors={[
+//                 colors.button.typeOne.linearOne,
+//                 colors.button.typeOne.linearTwo,
+//               ]}
+//               style={styles.signInBtn}
+//             >
+//               {signinLoader ? (
+//                 <ActivityIndicator color={colors.textColor.color4} />
+//               ) : (
+//                 <ThemeTextPrimary
+//                   style={[
+//                     styles.signInText,
+//                     {
+//                       color: colors.textColor.color4,
+//                     },
+//                   ]}
+//                 >
+//                   {baseContent.signIn}
+//                 </ThemeTextPrimary>
+//               )}
+//             </LinearGradient>
+//           </TouchableOpacity>
+
+//           <View style={styles.divider}>
+//             <View
+//               style={[
+//                 styles.line,
+//                 {
+//                   backgroundColor: colors.background.color5,
+//                 },
+//               ]}
+//             />
+//             <ThemeTextSecondary style={styles.orText}>
+//               {baseContent.or}
+//             </ThemeTextSecondary>
+//             <View
+//               style={[
+//                 styles.line,
+//                 {
+//                   backgroundColor: colors.background.color5,
+//                 },
+//               ]}
+//             />
+//           </View>
+
+//           <TouchableOpacity
+//             style={[
+//               styles.googleBtn,
+//               {
+//                 backgroundColor: colors.background.color2,
+//               },
+//             ]}
+//           >
+//             <ThemeTextPrimary style={styles.googleText}>
+//               Google Sign In
+//             </ThemeTextPrimary>
+//           </TouchableOpacity>
+
+//           <TouchableOpacity onPress={() => router.push("/signup")}>
+//             <ThemeTextSecondary style={styles.signupText}>
+//               {baseContent.dontHaveAccount}
+//               <ThemeTextPrimary style={{ color: colors.textColor.color3 }}>
+//                 {" "}
+//                 {baseContent.signUp}
+//               </ThemeTextPrimary>
+//             </ThemeTextSecondary>
+//           </TouchableOpacity>
+//         </View>
+
+//         <View style={styles.backRow}>
+//           <TouchableOpacity
+//             onPress={() => router.push("/")}
+//             style={[
+//               styles.homeIcon,
+//               {
+//                 backgroundColor: colors.background.color2,
+//               },
+//             ]}
+//           >
+//             <LeftArrowIcon size={20} color={colors.textColor.color3} />
+//           </TouchableOpacity>
+//           <ThemeTextSecondary>Back to home</ThemeTextSecondary>
+//         </View>
+//       </ThemeSafeAreaView>
+//     </TouchableWithoutFeedback>
+//   );
+// };
+
+// export default SignIn;
+
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     justifyContent: "center",
+//     alignItems: "center",
+//   },
+
+//   wrapper: {
+//     width: "90%",
+//     gap: verticalScale(18),
+//   },
+
+//   title: {
+//     fontSize: scale(20),
+//     lineHeight: verticalScale(28),
+//     fontFamily: "AirbnbCereal_W_Bd",
+//     textAlign: "center",
+//   },
+
+//   subtitle: {
+//     textAlign: "center",
+//   },
+
+//   inputGroup: {
+//     gap: verticalScale(8),
+//   },
+
+//   input: {
+//     borderWidth: 1,
+//     borderRadius: scale(10),
+//     paddingVertical: verticalScale(14),
+//     paddingHorizontal: scale(14),
+//     fontSize: scale(14),
+//   },
+
+//   passwordContainer: {
+//     flexDirection: "row",
+//     alignItems: "center",
+//     borderWidth: 1,
+//     borderRadius: scale(10),
+//     paddingRight: scale(10),
+//   },
+
+//   passwordInput: {
+//     flex: 1,
+//     paddingVertical: verticalScale(14),
+//     paddingHorizontal: scale(14),
+//   },
+
+//   rememberRow: {
+//     flexDirection: "row",
+//     alignItems: "center",
+//     justifyContent: "space-between",
+//   },
+
+//   checkbox: {
+//     width: scale(22),
+//     height: scale(22),
+//     borderRadius: scale(6),
+//     borderWidth: 1,
+//     justifyContent: "center",
+//     alignItems: "center",
+//   },
+
+//   signInBtn: {
+//     paddingVertical: verticalScale(14),
+//     borderRadius: scale(12),
+//     alignItems: "center",
+//     marginTop: verticalScale(10),
+//   },
+
+//   signInText: {
+//     fontSize: scale(16),
+//     fontFamily: "AirbnbCereal_W_Bd",
+//   },
+
+//   divider: {
+//     flexDirection: "row",
+//     alignItems: "center",
+//     marginVertical: verticalScale(10),
+//   },
+
+//   line: {
+//     flex: 1,
+//     height: 1,
+//   },
+
+//   orText: {
+//     marginHorizontal: scale(10),
+//   },
+
+//   googleBtn: {
+//     paddingVertical: verticalScale(14),
+//     borderRadius: scale(12),
+//   },
+
+//   googleText: {
+//     textAlign: "center",
+//     color: "#333",
+//   },
+
+//   signupText: {
+//     textAlign: "center",
+//     fontSize: scale(15),
+//     marginTop: verticalScale(10),
+//   },
+
+//   backRow: {
+//     flexDirection: "row",
+//     alignItems: "center",
+//     gap: scale(10),
+//     position: "absolute",
+//     top: verticalScale(45),
+//     left: scale(15),
+//   },
+
+//   homeIcon: {
+//     width: scale(40),
+//     height: scale(40),
+//     borderRadius: scale(10),
+//     justifyContent: "center",
+//     alignItems: "center",
+//   },
+// });
+
+
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Keyboard,
+  Platform,
   StyleSheet,
+  Text,
   TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
 import { scale, verticalScale } from "react-native-size-matters";
 import { Toast } from "toastify-react-native";
-import ThemeSafeAreaView from "../../../components/ThemeSafeAreaView";
-import ThemeTextPrimary from "../../../components/ThemeTextPrimary";
-import ThemeTextSecondary from "../../../components/ThemeTextSecondary";
+import { SafeAreaView } from "react-native-safe-area-context";
+
 import {
   CheckIcon,
   EyeIcon,
@@ -25,10 +502,21 @@ import {
 import api from "../../../utils/api";
 import { isValidEmail } from "../../../utils/emailValidation";
 import i18n from "../../src/localization/i18n";
-import appTheme from "../../../constants/appTheme";
+import { darkTheme } from "../../../constants/appTheme";
 
 const SignIn = () => {
   const baseContent = i18n.t("auth.adminauth.signin");
+  const router = useRouter();
+
+  const [email, setEmail] = useState("bikki@yopmail.com");
+  const [password, setPassword] = useState("12345678");
+  const [showPassword, setShowPassword] = useState(false);
+  const [signinLoader, setSigninLoader] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+
+  // Error state
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
 
   useEffect(() => {
     const fetch_admin_remember_me_email = async () => {
@@ -44,18 +532,6 @@ const SignIn = () => {
 
     fetch_admin_remember_me_email();
   }, []);
-
-  const router = useRouter();
-
-  const [email, setEmail] = useState("bikki@yopmail.com");
-  const [password, setPassword] = useState("12345678");
-  const [showPassword, setShowPassword] = useState(false);
-  const [signinLoader, setSigninLoader] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
-
-  // Error state
-  const [emailError, setEmailError] = useState("");
-  const [passwordError, setPasswordError] = useState("");
 
   const handleSignIn = async () => {
     let hasError = false;
@@ -81,10 +557,7 @@ const SignIn = () => {
     try {
       setSigninLoader(true);
 
-      const payload = {
-        email,
-        password,
-      };
+      const payload = { email, password };
 
       const { data } = await api.post("/web-app/admin/login", payload);
       await AsyncStorage.setItem("adminEmail", data?.foundUser?.email);
@@ -105,32 +578,42 @@ const SignIn = () => {
     }
   };
 
-  const colors = appTheme?.colors;
-
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <ThemeSafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: darkTheme.colors.background }]}>
+        
+        {/* Back navigation header anchor */}
+        <View style={styles.backRow}>
+          <TouchableOpacity
+            onPress={() => router.push("/")}
+            style={[
+              styles.homeIcon,
+              {
+                backgroundColor: darkTheme.colors.card,
+                borderRadius: darkTheme.layout.borderRadiusMedium,
+              },
+            ]}
+          >
+            <LeftArrowIcon size={20} color={darkTheme.colors.textMain} />
+          </TouchableOpacity>
+          <Text style={[darkTheme.typography.bodyMuted]}>Back to home</Text>
+        </View>
+
         <View style={styles.wrapper}>
           <View style={{ gap: verticalScale(10) }}>
-            <ThemeTextPrimary style={styles.title}>
+            <Text style={[darkTheme.typography.headerTitle, styles.title]}>
               {baseContent.header}
-            </ThemeTextPrimary>
-            <ThemeTextSecondary style={styles.subtitle}>
+            </Text>
+            <Text style={[darkTheme.typography.headerSubtitle, styles.subtitle]}>
               {baseContent.subHeader}
-            </ThemeTextSecondary>
+            </Text>
           </View>
 
+          {/* Email Input Group */}
           <View style={styles.inputGroup}>
-            <ThemeTextPrimary
-              style={[
-                styles.label,
-                {
-                  color: colors.textColor.color3,
-                },
-              ]}
-            >
+            <Text style={[darkTheme.typography.inputLabel]}>
               {baseContent.emailInput.header}
-            </ThemeTextPrimary>
+            </Text>
             <TextInput
               placeholder={baseContent.emailInput.placeholder}
               value={email}
@@ -139,46 +622,40 @@ const SignIn = () => {
                 setEmailError("");
               }}
               style={[
-                styles.input,
+                styles.textInput,
+                darkTheme.typography.bodyMain,
                 {
-                  borderColor: colors.borderColor.color1,
-                  backgroundColor: colors.background.color3,
+                  backgroundColor: darkTheme.colors.card,
+                  borderColor: darkTheme.colors.border,
+                  borderRadius: darkTheme.layout.borderRadiusMedium,
+                  height: darkTheme.layout.componentHeight,
                 },
               ]}
-              placeholderTextColor={colors.textColor.color5}
+              placeholderTextColor={darkTheme.colors.textMuted}
+              keyboardType="email-address"
+              autoCapitalize="none"
             />
             {emailError && (
-              <ThemeTextSecondary
-                style={[
-                  styles.error,
-                  {
-                    color: colors.textColor.color7,
-                  },
-                ]}
-              >
+              <Text style={[darkTheme.typography.bodyMuted, styles.error, { color: darkTheme.status.error.text }]}>
                 {emailError}
-              </ThemeTextSecondary>
+              </Text>
             )}
           </View>
 
+          {/* Password Input Group */}
           <View style={styles.inputGroup}>
-            <ThemeTextPrimary
-              style={[
-                styles.label,
-                {
-                  color: colors.textColor.color3,
-                },
-              ]}
-            >
+            <Text style={[darkTheme.typography.inputLabel]}>
               {baseContent.passwordInput.header}
-            </ThemeTextPrimary>
+            </Text>
 
             <View
               style={[
                 styles.passwordContainer,
                 {
-                  borderColor: colors.borderColor.color1,
-                  backgroundColor: colors.background.color3,
+                  backgroundColor: darkTheme.colors.card,
+                  borderColor: darkTheme.colors.border,
+                  borderRadius: darkTheme.layout.borderRadiusMedium,
+                  height: darkTheme.layout.componentHeight,
                 },
               ]}
             >
@@ -190,158 +667,125 @@ const SignIn = () => {
                   setPasswordError("");
                 }}
                 secureTextEntry={!showPassword}
-                style={styles.passwordInput}
-                placeholderTextColor={colors.textColor.color5}
+                style={[styles.passwordInput, darkTheme.typography.bodyMain]}
+                placeholderTextColor={darkTheme.colors.textMuted}
+                autoCapitalize="none"
               />
-              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+              <TouchableOpacity 
+                onPress={() => setShowPassword(!showPassword)}
+                style={styles.eyeIconWrapper}
+              >
                 {showPassword ? (
-                  <EyeOffIcon size={20} color={colors.textColor.color6} />
+                  <EyeOffIcon size={20} color={darkTheme.colors.textMuted} />
                 ) : (
-                  <EyeIcon size={20} color={colors.textColor.color6} />
+                  <EyeIcon size={20} color={darkTheme.colors.textMuted} />
                 )}
               </TouchableOpacity>
             </View>
 
             {passwordError && (
-              <ThemeTextSecondary
-                style={[
-                  styles.error,
-                  {
-                    color: colors.textColor.color7,
-                  },
-                ]}
-              >
+              <Text style={[darkTheme.typography.bodyMuted, styles.error, { color: darkTheme.status.error.text }]}>
                 {passwordError}
-              </ThemeTextSecondary>
+              </Text>
             )}
           </View>
 
+          {/* Options Line (Remember Me & Forgot Password) */}
           <View style={styles.rememberRow}>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: scale(10),
-              }}
-            >
+            <View style={{ flexDirection: "row", alignItems: "center", gap: scale(10) }}>
               <TouchableOpacity
                 onPress={() => setRememberMe(!rememberMe)}
                 style={[
                   styles.checkbox,
                   {
-                    borderColor: colors.borderColor.color1,
-                    backgroundColor: colors.background.color4,
+                    borderColor: darkTheme.colors.border,
+                    backgroundColor: darkTheme.colors.card,
                   },
                 ]}
+                activeOpacity={0.8}
               >
-                {rememberMe && <CheckIcon size={14} />}
+                {rememberMe && <CheckIcon size={14} color={darkTheme.colors.accent} />}
               </TouchableOpacity>
-              <ThemeTextSecondary
-                style={[
-                  styles.rememberText,
-                  {
-                    color: colors.textColor.color3,
-                  },
-                ]}
-              >
+              <Text style={[darkTheme.typography.bodyMain]}>
                 {baseContent.rememberMe}
-              </ThemeTextSecondary>
+              </Text>
             </View>
             <TouchableOpacity
               onPress={() => {
                 router.push("/forgotPassword");
               }}
+              activeOpacity={0.7}
             >
-              <ThemeTextSecondary>Forgot Password ?</ThemeTextSecondary>
+              <Text style={[darkTheme.typography.bodyMuted]}>Forgot Password ?</Text>
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity onPress={handleSignIn}>
+          {/* Action Trigger Submit Button */}
+          <TouchableOpacity onPress={handleSignIn} activeOpacity={0.8}>
             <LinearGradient
               colors={[
-                colors.button.typeOne.linearOne,
-                colors.button.typeOne.linearTwo,
+                darkTheme.colors.accent, 
+                darkTheme.colors.accent
               ]}
-              style={styles.signInBtn}
+              style={[
+                styles.signInBtn,
+                {
+                  borderRadius: darkTheme.layout.borderRadiusMedium,
+                  height: darkTheme.layout.buttonHeight,
+                },
+              ]}
             >
               {signinLoader ? (
-                <ActivityIndicator color={colors.textColor.color4} />
+                <ActivityIndicator color="#000000" />
               ) : (
-                <ThemeTextPrimary
-                  style={[
-                    styles.signInText,
-                    {
-                      color: colors.textColor.color4,
-                    },
-                  ]}
-                >
+                <Text style={[darkTheme.typography.btnText, { color: "#000000" }]}>
                   {baseContent.signIn}
-                </ThemeTextPrimary>
+                </Text>
               )}
             </LinearGradient>
           </TouchableOpacity>
 
+          {/* Visual Break/Divider */}
           <View style={styles.divider}>
-            <View
-              style={[
-                styles.line,
-                {
-                  backgroundColor: colors.background.color5,
-                },
-              ]}
-            />
-            <ThemeTextSecondary style={styles.orText}>
+            <View style={[styles.line, { backgroundColor: darkTheme.colors.border }]} />
+            <Text style={[darkTheme.typography.bodyMuted, styles.orText]}>
               {baseContent.or}
-            </ThemeTextSecondary>
-            <View
-              style={[
-                styles.line,
-                {
-                  backgroundColor: colors.background.color5,
-                },
-              ]}
-            />
+            </Text>
+            <View style={[styles.line, { backgroundColor: darkTheme.colors.border }]} />
           </View>
 
+          {/* Alternate Provider Login */}
           <TouchableOpacity
             style={[
               styles.googleBtn,
               {
-                backgroundColor: colors.background.color2,
+                backgroundColor: darkTheme.colors.card,
+                borderRadius: darkTheme.layout.borderRadiusMedium,
+                height: darkTheme.layout.buttonHeight,
+                borderWidth: 1,
+                borderColor: darkTheme.colors.border,
               },
             ]}
+            activeOpacity={0.8}
           >
-            <ThemeTextPrimary style={styles.googleText}>
+            <Text style={[darkTheme.typography.bodyMain, styles.googleText]}>
               Google Sign In
-            </ThemeTextPrimary>
+            </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => router.push("/signup")}>
-            <ThemeTextSecondary style={styles.signupText}>
+          {/* Account Creation Redirect Link */}
+          <TouchableOpacity onPress={() => router.push("/signup")} activeOpacity={0.7}>
+            <Text style={[darkTheme.typography.bodyMuted, styles.signupText]}>
               {baseContent.dontHaveAccount}
-              <ThemeTextPrimary style={{ color: colors.textColor.color3 }}>
+              <Text style={{ color: darkTheme.colors.accent, fontWeight: "600" }}>
                 {" "}
                 {baseContent.signUp}
-              </ThemeTextPrimary>
-            </ThemeTextSecondary>
+              </Text>
+            </Text>
           </TouchableOpacity>
         </View>
 
-        <View style={styles.backRow}>
-          <TouchableOpacity
-            onPress={() => router.push("/")}
-            style={[
-              styles.homeIcon,
-              {
-                backgroundColor: colors.background.color2,
-              },
-            ]}
-          >
-            <LeftArrowIcon size={20} color={colors.textColor.color3} />
-          </TouchableOpacity>
-          <ThemeTextSecondary>Back to home</ThemeTextSecondary>
-        </View>
-      </ThemeSafeAreaView>
+      </SafeAreaView>
     </TouchableWithoutFeedback>
   );
 };
@@ -354,120 +798,102 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-
   wrapper: {
     width: "90%",
     gap: verticalScale(18),
   },
-
   title: {
-    fontSize: scale(20),
-    lineHeight: verticalScale(28),
-    fontFamily: "AirbnbCereal_W_Bd",
     textAlign: "center",
   },
-
   subtitle: {
     textAlign: "center",
   },
-
   inputGroup: {
-    gap: verticalScale(8),
+    width: "100%",
   },
-
-  input: {
+  textInput: {
+    width: "100%",
     borderWidth: 1,
-    borderRadius: scale(10),
-    paddingVertical: verticalScale(14),
     paddingHorizontal: scale(14),
-    fontSize: scale(14),
+    marginTop: verticalScale(8),
   },
-
   passwordContainer: {
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderRadius: scale(10),
-    paddingRight: scale(10),
+    width: "100%",
+    marginTop: verticalScale(8),
   },
-
   passwordInput: {
     flex: 1,
-    paddingVertical: verticalScale(14),
+    height: "100%",
     paddingHorizontal: scale(14),
   },
-
+  eyeIconWrapper: {
+    paddingHorizontal: scale(14),
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  error: {
+    marginTop: verticalScale(4),
+  },
   rememberRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    marginTop: verticalScale(4),
   },
-
   checkbox: {
     width: scale(22),
     height: scale(22),
-    borderRadius: scale(6),
     borderWidth: 1,
+    borderRadius: scale(6),
     justifyContent: "center",
     alignItems: "center",
   },
-
   signInBtn: {
-    paddingVertical: verticalScale(14),
-    borderRadius: scale(12),
+    width: "100%",
     alignItems: "center",
+    justifyContent: "center",
     marginTop: verticalScale(10),
   },
-
-  signInText: {
-    fontSize: scale(16),
-    fontFamily: "AirbnbCereal_W_Bd",
-  },
-
   divider: {
     flexDirection: "row",
     alignItems: "center",
     marginVertical: verticalScale(10),
   },
-
   line: {
     flex: 1,
     height: 1,
   },
-
   orText: {
     marginHorizontal: scale(10),
   },
-
   googleBtn: {
-    paddingVertical: verticalScale(14),
-    borderRadius: scale(12),
+    width: "100%",
+    justifyContent: "center",
+    alignItems: "center",
   },
-
   googleText: {
     textAlign: "center",
-    color: "#333",
   },
-
   signupText: {
     textAlign: "center",
-    fontSize: scale(15),
     marginTop: verticalScale(10),
   },
-
   backRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: scale(10),
     position: "absolute",
-    top: verticalScale(45),
+    top: Platform.OS === "ios" ? verticalScale(50) : verticalScale(30),
     left: scale(15),
+    zIndex: 10,
   },
-
   homeIcon: {
     width: scale(40),
     height: scale(40),
-    borderRadius: scale(10),
     justifyContent: "center",
     alignItems: "center",
   },
