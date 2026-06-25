@@ -1,21 +1,18 @@
+import React, { useEffect, useState } from "react";
+import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { scale, verticalScale } from "react-native-size-matters";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
-import { Dimensions, StyleSheet, TouchableOpacity, View } from "react-native";
-import { scale, verticalScale } from "react-native-size-matters";
+
 import i18n from "../app/src/localization/i18n";
-import ThemeSafeAreaView from "../components/ThemeSafeAreaView";
-import ThemeTextPrimary from "../components/ThemeTextPrimary";
-import ThemeTextSecondary from "../components/ThemeTextSecondary";
-import appTheme from "../constants/appTheme";
+import { darkTheme } from "../constants/appTheme";
 
 const { width } = Dimensions.get("window");
 
 const InitialScreen = () => {
-  const colors = appTheme?.colors;
-
   const router = useRouter();
   const [showWelcome, setShowWelcome] = useState(false);
   const baseContent = i18n.t("index");
@@ -29,7 +26,6 @@ const InitialScreen = () => {
         router.replace("/(admin)/(admintabs)/(home)");
       } else if (savedBarberEmail) {
         // router.replace("/(barber)/(barbertabs)/(home)");
-        // router.replace("/(auth)/(adminauth)/signin")
       } else {
         setShowWelcome(true);
       }
@@ -40,10 +36,13 @@ const InitialScreen = () => {
   if (!showWelcome) return null;
 
   return (
-    <ThemeSafeAreaView style={styles.container}>
+    <SafeAreaView 
+      edges={["top", "bottom", "left", "right"]} 
+      style={[styles.container, { backgroundColor: darkTheme.colors.background }]}
+    >
       {/* Upper Section: Branding */}
       <View style={styles.topSection}>
-        <View style={[styles.imageWrapper, { borderColor: colors.borderColor.color1 }]}>
+        <View style={[styles.imageWrapper, { borderColor: darkTheme.colors.border }]}>
           <Image
             style={styles.image}
             source="https://i.pinimg.com/736x/0f/5d/ac/0f5dac39ba6687e95f08623a9c9faca9.jpg"
@@ -52,12 +51,12 @@ const InitialScreen = () => {
         </View>
 
         <View style={styles.textContainer}>
-          <ThemeTextPrimary style={styles.headline}>
+          <Text style={[darkTheme.typography.headerTitle, styles.headline]}>
             {baseContent.header}
-          </ThemeTextPrimary>
-          <ThemeTextSecondary style={styles.subHeadline}>
+          </Text>
+          <Text style={[darkTheme.typography.bodyMuted, styles.subHeadline]}>
             {baseContent.subHeader}
-          </ThemeTextSecondary>
+          </Text>
         </View>
       </View>
 
@@ -66,40 +65,42 @@ const InitialScreen = () => {
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={() => router.push("/(adminauth)/signin")}
-          style={styles.buttonContainer}
+          style={[styles.buttonContainer, { height: darkTheme.layout.buttonHeight }]}
         >
           <LinearGradient
-            colors={[
-              colors.button.typeOne.linearOne,
-              colors.button.typeOne.linearTwo,
-            ]}
+            colors={["#FF9500", "#FF5E00"]} 
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={styles.primaryBtn}
+            style={[styles.primaryBtn, { borderRadius: darkTheme.layout.borderRadiusLarge }]}
           >
-            <ThemeTextPrimary
-              style={[styles.btnText, { color: colors.textColor.color4 }]}
-            >
+            <Text style={[darkTheme.typography.btnText, styles.primaryBtnText]}>
               {baseContent.admin}
-            </ThemeTextPrimary>
+            </Text>
           </LinearGradient>
         </TouchableOpacity>
 
         <TouchableOpacity
           activeOpacity={0.7}
-          onPress={() => router.push("/(barberauth)/signin")}
-          style={[styles.secondaryBtn, { borderColor: colors.borderColor.color1 }]}
+          // onPress={() => router.push("/(barberauth)/signin")}
+          style={[
+            styles.secondaryBtn, 
+            { 
+              borderColor: darkTheme.colors.border, 
+              borderRadius: darkTheme.layout.borderRadiusLarge,
+              height: darkTheme.layout.buttonHeight 
+            }
+          ]}
         >
-          <ThemeTextPrimary style={[styles.btnText, { color: colors.textColor.color3 }]}>
+          <Text style={[darkTheme.typography.btnText, { color: darkTheme.colors.textMain }]}>
             {baseContent.barber}
-          </ThemeTextPrimary>
+          </Text>
         </TouchableOpacity>
 
-        <ThemeTextSecondary style={styles.footerText}>
+        <Text style={[darkTheme.typography.bodyMuted, styles.footerText]}>
           Select your portal to continue
-        </ThemeTextSecondary>
+        </Text>
       </View>
-    </ThemeSafeAreaView>
+    </SafeAreaView>
   );
 };
 
@@ -108,7 +109,7 @@ export default InitialScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: scale(24),
+    paddingHorizontal: darkTheme.layout.paddingHorizontal,
   },
   topSection: {
     flex: 2.5,
@@ -135,7 +136,6 @@ const styles = StyleSheet.create({
   },
   headline: {
     fontSize: scale(26),
-    fontFamily: "AirbnbCereal_W_Bd",
     textAlign: "center",
     letterSpacing: -0.5,
   },
@@ -156,33 +156,23 @@ const styles = StyleSheet.create({
     marginBottom: verticalScale(15),
   },
   primaryBtn: {
-    paddingVertical: verticalScale(16),
-    borderRadius: scale(14),
+    flex: 1,
     alignItems: "center",
-    elevation: 4, // Subtle Android shadow
-    shadowColor: "#000", // Subtle iOS shadow
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
+    justifyContent: "center",
+  },
+  primaryBtnText: {
+    color: "#FFFFFF",
   },
   secondaryBtn: {
-    paddingVertical: verticalScale(16),
-    borderRadius: scale(14),
+    width: "100%",
     alignItems: "center",
+    justifyContent: "center",
     borderWidth: 1.5,
     backgroundColor: "transparent",
-  },
-  btnText: {
-    fontSize: scale(16),
-    fontFamily: "AirbnbCereal_W_Bd",
-    textTransform: "uppercase",
-    letterSpacing: 1,
   },
   footerText: {
     textAlign: "center",
     fontSize: scale(12),
     marginTop: verticalScale(20),
-    opacity: 0.6,
   },
 });
-

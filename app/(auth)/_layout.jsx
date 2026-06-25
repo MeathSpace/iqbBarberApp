@@ -5,7 +5,7 @@ const AuthLayout = () => {
     return (
         <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(adminauth)" />
-            <Stack.Screen name="(barberauth)" />
+            {/* <Stack.Screen name="(barberauth)" /> */}
         </Stack>
     )
 }
