@@ -1,4 +1,3 @@
-import { Feather, Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
@@ -15,15 +14,89 @@ import {
 import { scale, verticalScale } from "react-native-size-matters";
 
 import { darkTheme } from "../../constants/appTheme";
-import { LeftArrowIcon } from "../../constants/icons";
+import {
+  DownIcon, // Wallet icon substitute if needed, or choose standard
+  HistoryIcon,
+  LeftArrowIcon,
+  MenuIcon,
+  PaymentHistoryIcon,
+  PaymentIcon,
+  QueueIcon,
+  ReportIcon,
+  RightIcon,
+  ScissorIcon,
+  SettingsIcon,
+} from "../../constants/icons";
 
 const { width, height } = Dimensions.get("window");
 const DRAWER_WIDTH = width * 0.65;
 
+// Dynamic Menu Configuration mapping directly to your imported custom icon components
+const MENU_ITEMS = [
+  {
+    key: "services",
+    label: "Services",
+    IconComponent: ScissorIcon,
+    route: "/(admin)/(admintabs)/(services)",
+  },
+  {
+    key: "reports",
+    label: "Reports",
+    IconComponent: ReportIcon,
+    route: "/(admin)/(admintabs)/(reports)",
+  },
+  {
+    key: "payments",
+    label: "Payments",
+    IconComponent: PaymentIcon, // Swap with whatever your custom library maps to wallet
+    isAccordion: true,
+    children: [
+      {
+        key: "payment-history",
+        label: "Payment History",
+        IconComponent: PaymentHistoryIcon,
+        route: "/(admin)/(payments)/",
+      },
+      {
+        key: "payment-settings",
+        label: "Payment Settings",
+        IconComponent: SettingsIcon,
+        route: "/(admin)/(payments)/paymentSettings",
+      },
+    ],
+  },
+  {
+    key: "queue",
+    label: "Queue",
+    IconComponent: QueueIcon,
+    isAccordion: true,
+    children: [
+      {
+        key: "queue-list",
+        label: "Queue List",
+        IconComponent: QueueIcon,
+        route: "/(admin)/(queue)",
+      },
+      {
+        key: "queue-history",
+        label: "Queue History",
+        IconComponent: HistoryIcon,
+        route: "/(admin)/(queue)/queueHistory",
+      },
+    ],
+  },
+  {
+    key: "subscriptions",
+    label: "Subscriptions",
+    IconComponent: ReportIcon,
+    route: "/(admin)/(subscriptions)",
+  },
+];
+
 const Header = ({ title, subTitle, showBack = false }) => {
   const router = useRouter();
   const [menuVisible, setMenuVisible] = useState(false);
-  const [paymentsExpanded, setPaymentsExpanded] = useState(false); // Track submenu state
+  const [expandedSections, setExpandedSections] = useState({});
   const slideAnim = useRef(new Animated.Value(DRAWER_WIDTH)).current;
 
   const openMenu = () => {
@@ -60,6 +133,13 @@ const Header = ({ title, subTitle, showBack = false }) => {
     router.push(route);
   };
 
+  const toggleSection = (key) => {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+
   return (
     <View style={styles.headerRow}>
       <View style={styles.headerRowContainer}>
@@ -85,11 +165,7 @@ const Header = ({ title, subTitle, showBack = false }) => {
       </View>
 
       <TouchableOpacity activeOpacity={0.7} onPress={openMenu}>
-        <Ionicons
-          name="menu"
-          size={scale(24)}
-          color={darkTheme.colors.textMain}
-        />
+        <MenuIcon size={scale(24)} color={darkTheme.colors.textMain} />
       </TouchableOpacity>
 
       <Modal
@@ -133,74 +209,111 @@ const Header = ({ title, subTitle, showBack = false }) => {
                 Menu
               </Text>
               <TouchableOpacity onPress={closeMenu}>
-                <Ionicons
-                  name="close"
+                <LeftArrowIcon
                   size={scale(22)}
                   color={darkTheme.colors.textMain}
                 />
               </TouchableOpacity>
             </View>
 
-            {/* Main Menu Links */}
+            {/* Dynamic Menu Links */}
             <View style={styles.menuItemsList}>
-              {/* Services Item */}
-              <TouchableOpacity
-                style={styles.menuRowItem}
-                activeOpacity={0.7}
-                onPress={() => handleNavigation("/(admin)/(admintabs)/(services)")}
-              >
-                <Feather name="scissors" size={scale(18)} color={darkTheme.colors.textMuted} style={styles.menuIcon} />
-                <Text style={[darkTheme.typography.bodyMain, styles.menuItemText]}>Services</Text>
-              </TouchableOpacity>
+              {MENU_ITEMS.map((item) => {
+                const isExpanded = !!expandedSections[item.key];
+                const MainIcon = item.IconComponent;
 
-              {/* Reports Item */}
-              <TouchableOpacity
-                style={styles.menuRowItem}
-                activeOpacity={0.7}
-                onPress={() => handleNavigation("/(admin)/(admintabs)/(reports)")}
-              >
-                <Ionicons name="bar-chart-outline" size={scale(18)} color={darkTheme.colors.textMuted} style={styles.menuIcon} />
-                <Text style={[darkTheme.typography.bodyMain, styles.menuItemText]}>Reports</Text>
-              </TouchableOpacity>
+                if (item.isAccordion) {
+                  return (
+                    <View key={item.key}>
+                      <TouchableOpacity
+                        style={[styles.menuRowItem, styles.accordionHeader]}
+                        activeOpacity={0.7}
+                        onPress={() => toggleSection(item.key)}
+                      >
+                        <View style={styles.accordionLeft}>
+                          <MainIcon
+                            size={scale(18)}
+                            color={darkTheme.colors.textMuted}
+                            style={styles.menuIcon}
+                          />
+                          <Text
+                            style={[
+                              darkTheme.typography.bodyMain,
+                              styles.menuItemText,
+                            ]}
+                          >
+                            {item.label}
+                          </Text>
+                        </View>
+                        {isExpanded ? (
+                          <DownIcon
+                            size={scale(16)}
+                            color={darkTheme.colors.textMuted}
+                          />
+                        ) : (
+                          <RightIcon
+                            size={scale(16)}
+                            color={darkTheme.colors.textMuted}
+                          />
+                        )}
+                      </TouchableOpacity>
 
-     
-              <TouchableOpacity
-                style={[styles.menuRowItem, styles.accordionHeader]}
-                activeOpacity={0.7}
-                onPress={() => setPaymentsExpanded(!paymentsExpanded)}
-              >
-                <View style={styles.accordionLeft}>
-                  <Ionicons name="wallet-outline" size={scale(18)} color={darkTheme.colors.textMuted} style={styles.menuIcon} />
-                  <Text style={[darkTheme.typography.bodyMain, styles.menuItemText]}>Payments</Text>
-                </View>
-                <Ionicons 
-                  name={paymentsExpanded ? "chevron-down" : "chevron-forward"} 
-                  size={scale(16)} 
-                  color={darkTheme.colors.textMuted} 
-                />
-              </TouchableOpacity>
+                      {isExpanded && item.children && (
+                        <View style={styles.submenuContainer}>
+                          {item.children.map((subItem) => {
+                            const SubIcon = subItem.IconComponent;
+                            return (
+                              <TouchableOpacity
+                                key={subItem.key}
+                                style={styles.submenuRowItem}
+                                activeOpacity={0.7}
+                                onPress={() => handleNavigation(subItem.route)}
+                              >
+                                <SubIcon
+                                  size={scale(16)}
+                                  color={darkTheme.colors.textMuted}
+                                  style={styles.menuIcon}
+                                />
+                                <Text
+                                  style={[
+                                    darkTheme.typography.bodyMain,
+                                    styles.submenuItemText,
+                                  ]}
+                                >
+                                  {subItem.label}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
+                      )}
+                    </View>
+                  );
+                }
 
-              {paymentsExpanded && (
-                <View style={styles.submenuContainer}>
+                return (
                   <TouchableOpacity
-                    style={styles.submenuRowItem}
+                    key={item.key}
+                    style={styles.menuRowItem}
                     activeOpacity={0.7}
-                    onPress={() => handleNavigation("/(admin)/(payments)/")}
+                    onPress={() => handleNavigation(item.route)}
                   >
-                    <Ionicons name="receipt-outline" size={scale(16)} color={darkTheme.colors.textMuted} style={styles.menuIcon} />
-                    <Text style={[darkTheme.typography.bodyMain, styles.submenuItemText]}>Payment History</Text>
+                    <MainIcon
+                      size={scale(18)}
+                      color={darkTheme.colors.textMuted}
+                      style={styles.menuIcon}
+                    />
+                    <Text
+                      style={[
+                        darkTheme.typography.bodyMain,
+                        styles.menuItemText,
+                      ]}
+                    >
+                      {item.label}
+                    </Text>
                   </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.submenuRowItem}
-                    activeOpacity={0.7}
-                    onPress={() => handleNavigation("/(admin)/(payments)/paymentSettings")}
-                  >
-                    <Ionicons name="settings-outline" size={scale(16)} color={darkTheme.colors.textMuted} style={styles.menuIcon} />
-                    <Text style={[darkTheme.typography.bodyMain, styles.submenuItemText]}>Payment Settings</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
+                );
+              })}
             </View>
 
             {/* Footer Log Out Area */}
@@ -227,7 +340,9 @@ const Header = ({ title, subTitle, showBack = false }) => {
                 </Text>
               </TouchableOpacity>
 
-              <Text style={[darkTheme.typography.bodyMuted, styles.versionText]}>
+              <Text
+                style={[darkTheme.typography.bodyMuted, styles.versionText]}
+              >
                 Admin Panel v1.0
               </Text>
             </View>
