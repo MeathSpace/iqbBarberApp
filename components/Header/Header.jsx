@@ -86,6 +86,26 @@ const MENU_ITEMS = [
     ],
   },
   {
+    key: "appointment",
+    label: "Appointment",
+    IconComponent: QueueIcon,
+    isAccordion: true,
+    children: [
+      {
+        key: "appointment-list",
+        label: "Appointment List",
+        IconComponent: QueueIcon,
+        route: "/(admin)/(appointment)",
+      },
+      {
+        key: "appointment-history",
+        label: "Appointment History",
+        IconComponent: HistoryIcon,
+        route: "/(admin)/(appointment)/appointmentHistory",
+      },
+    ],
+  },
+  {
     key: "subscriptions",
     label: "Subscriptions",
     IconComponent: ReportIcon,
