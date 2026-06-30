@@ -43,7 +43,7 @@ const MENU_ITEMS = [
     key: "reports",
     label: "Reports",
     IconComponent: ReportIcon,
-    route: "/(admin)/(admintabs)/(reports)",
+    route: "/(admin)/(reports)",
   },
   {
     key: "payments",
