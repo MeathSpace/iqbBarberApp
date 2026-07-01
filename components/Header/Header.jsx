@@ -40,6 +40,12 @@ const MENU_ITEMS = [
     route: "/(admin)/(admintabs)/(services)",
   },
   {
+    key: "customer",
+    label: "Customers",
+    IconComponent: ReportIcon,
+    route: "/(admin)/(customer)",
+  },
+  {
     key: "reports",
     label: "Reports",
     IconComponent: ReportIcon,

@@ -73,7 +73,7 @@ export const darkTheme = {
   },
   typography: {
     headerTitle: {
-      fontSize: scale(20),
+      fontSize: scale(18),
       fontWeight: "700",
       letterSpacing: -0.5,
       color: "#FFFFFF",
