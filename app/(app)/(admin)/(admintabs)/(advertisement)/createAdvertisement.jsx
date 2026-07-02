@@ -13,7 +13,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { scale, verticalScale } from "react-native-size-matters";
 import { useRouter } from "expo-router";
 
-// Architecture Imports Matching Your Design Pattern
 import Header from "../../../../../components/Header/Header";
 import { darkTheme } from "../../../../../constants/appTheme";
 import { CameraIcon, NotificationIcon } from "../../../../../constants/icons";
@@ -43,7 +42,6 @@ const CreateAdvertisement = () => {
         >
           <View style={styles.formContainer}>
             
-            {/* Input Field Group */}
             <View style={styles.inputGroup}>
               <Text style={darkTheme.typography.inputLabel}>
                 Advertisement Name *
@@ -94,7 +92,6 @@ const CreateAdvertisement = () => {
               </TouchableOpacity>
             </View>
 
-            {/* Explanatory Info Card Display Location */}
             <View 
               style={[
                 styles.infoBanner, 
@@ -118,7 +115,6 @@ const CreateAdvertisement = () => {
 
           </View>
 
-          {/* Persistent Form Submission Action Button */}
           <TouchableOpacity
             style={[
               styles.finishButton, 
@@ -130,7 +126,6 @@ const CreateAdvertisement = () => {
             ]}
             activeOpacity={0.8}
             onPress={() => {
-              // Action logic goes here
               router.back();
             }}
           >

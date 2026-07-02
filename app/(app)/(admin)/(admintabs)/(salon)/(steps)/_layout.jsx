@@ -5,6 +5,8 @@ const CreateSalonSteps = () => {
     return (
         <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="index" />
+            <Stack.Screen name="businessInformation" />
+            <Stack.Screen name="gallery" />
         </Stack>
     )
 }

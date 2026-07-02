@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { scale, verticalScale } from "react-native-size-matters";
 import { Ionicons, Feather, MaterialIcons } from "@expo/vector-icons";
 
-import Header from "../../../../components/Header/Header"; // Adjust path as needed
+import Header from "../../../../components/Header/Header";
 import { darkTheme } from "../../../../constants/appTheme";
 
 const HISTORIC_DATA = [
@@ -37,7 +37,7 @@ const AppointmentHistory = () => {
           },
         ]}
       >
-        {/* Main Info Row */}
+
         <View style={styles.cardHeader}>
           <View style={styles.profileRow}>
             <View style={[styles.avatarFrame, { backgroundColor: "#2C2C2E" }]}>
@@ -107,13 +107,12 @@ const AppointmentHistory = () => {
       edges={["top", "right", "left"]}
       style={[styles.container, { backgroundColor: darkTheme.colors.background }]}
     >
-      {/* Structural Header */}
+
       <Header title="Appoinment History" subTitle="Log of past walk-in customers and arrivals" showBack={false} />
-      {/* Upgraded Premium Filter Actions Context Row */}
+
       <View style={styles.topContainer}>
         <View style={styles.filterActionRow}>
           
-          {/* Action Tools Left Subgroup */}
           <View style={styles.toolsLeftGroup}>
             <TouchableOpacity 
               activeOpacity={0.7}
@@ -137,7 +136,6 @@ const AppointmentHistory = () => {
             </TouchableOpacity>
           </View>
 
-          {/* Premium Filter Toggle Button (Highlight Style Accent Accent) */}
           <TouchableOpacity 
             activeOpacity={0.8}
             style={[styles.filterLabelButton, { backgroundColor: "rgba(255, 149, 0, 0.1)", borderColor: darkTheme.colors.accent }]}
@@ -151,7 +149,6 @@ const AppointmentHistory = () => {
         </View>
       </View>
 
-      {/* Core List Element */}
       <FlatList
         data={history}
         keyExtractor={(item) => item.id}
@@ -192,7 +189,7 @@ const styles = StyleSheet.create({
     width: scale(36),
     height: scale(36),
     borderWidth: 1,
-    borderRadius: scale(18), // Perfectly circular pill styles
+    borderRadius: scale(18), 
     justifyContent: "center",
     alignItems: "center",
   },
@@ -201,7 +198,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     height: scale(36),
     borderWidth: 1,
-    borderRadius: scale(18), // Circular button symmetry
+    borderRadius: scale(18), 
     paddingHorizontal: scale(14),
   },
   filterIcon: {

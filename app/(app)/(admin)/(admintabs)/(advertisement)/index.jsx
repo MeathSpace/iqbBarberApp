@@ -158,7 +158,6 @@ const styles = StyleSheet.create({
   scrollContainer: {
     paddingHorizontal: darkTheme.layout.paddingHorizontal,
     paddingTop: verticalScale(20),
-    // Increased packing depth below the list elements to prevent viewport overflow cuts
     paddingBottom: verticalScale(44), 
   },
   premiumBanner: {
