@@ -131,9 +131,6 @@ const StepBasicInfo = ({ formData, updateFields }) => {
   );
 };
 
-/* ==========================================================================
-   SUB-COMPONENT: STEP 2 - INTERACTIVE SERVICES LIST SELECTION
-   ========================================================================== */
 const StepSelectServices = ({ selectedIds, onToggleService }) => {
   return (
     <View style={[styles.stepContainer, styles.servicesStepGap]}>
@@ -191,9 +188,6 @@ const StepSelectServices = ({ selectedIds, onToggleService }) => {
   );
 };
 
-/* ==========================================================================
-   MAIN PARENT ROUTE HANDLER WRAPPER
-   ========================================================================== */
 const CreateBarber = () => {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
@@ -228,7 +222,6 @@ const CreateBarber = () => {
     }
   };
 
-  // Compute standard dynamic structural header properties labels on demand
   const headerTitle = currentStep === 1 ? "Basic Information" : "Select Services";
   const headerSubtitle = currentStep === 1 
     ? "Step 1 of 2" 

@@ -9,15 +9,13 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { scale, verticalScale } from "react-native-size-matters";
 import { useRouter } from "expo-router";
-
-// Core Architecture & Design Pattern Imports
 import Header from "../../../../../components/Header/Header";
 import { darkTheme } from "../../../../../constants/appTheme";
 import {
-  AboutIcon,        // Step 1: Info Icon
-  WebIcon,          // Step 2: Business Info
-  SalonIcon,        // Step 3: Services
-  CameraIcon,       // Step 4: Gallery
+  AboutIcon,       
+  WebIcon,          
+  SalonIcon,        
+  CameraIcon,       
 } from "../../../../../constants/icons";
 
 const CreateSalonScreen = () => {
@@ -80,7 +78,6 @@ const CreateSalonScreen = () => {
                 ]}
               >
                 <View style={styles.leftContent}>
-                  {/* Tinted background canvas box for the vector elements */}
                   <View style={styles.iconWrapper}>
                     <CustomIcon 
                       size={scale(16)} 
@@ -167,12 +164,12 @@ const styles = StyleSheet.create({
     width: scale(40),
     height: scale(40),
     borderRadius: darkTheme.layout.borderRadiusMedium,
-    backgroundColor: "#151311", // Dark tinted box underlay matching your premium banner accenting
+    backgroundColor: "#151311",
     justifyContent: "center",
     alignItems: "center",
     marginRight: scale(12),
     borderWidth: 1,
-    borderColor: "rgba(255, 149, 0, 0.1)", // Light glow tracking around the icon container bounding box
+    borderColor: "rgba(255, 149, 0, 0.1)", 
   },
   numberBadge: {
     width: scale(24),

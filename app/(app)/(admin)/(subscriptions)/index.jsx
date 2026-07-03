@@ -12,40 +12,24 @@ const SUBSCRIPTION_DATA = [
     id: "1",
     salonName: "Modern Unisex Salon",
     items: [
-      { id: "s1_1", type: "Queue", status: "Paid", date: "14 Aug, 2027 2:38 PM", action: "Renew" },
-      { id: "s1_2", type: "Appointment", status: "Paid", date: "16 May, 2027 2:35 PM", action: "Renew" }
+      { id: "s1_1", type: "Queue", status: "Paid", date: "14 Aug, 2027", duration: "519days", action: "Renew" },
+      { id: "s1_2", type: "Appointment", status: "Paid", date: "16 May, 2027", duration: "429days", action: "Renew" }
     ]
   },
   {
     id: "2",
     salonName: "Salon 2",
     items: [
-      { id: "s2_1", type: "Queue", status: "Paid", date: "27 Mar, 2025 9:06 AM", action: "Renew" },
-      { id: "s2_2", type: "Appointment", status: "select a plan", date: "select a plan", action: "Buy" }
+      { id: "s2_1", type: "Queue", status: "Paid", date: "27 Mar, 2025", duration: "120days", action: "Renew" },
+      { id: "s2_2", type: "Appointment", status: "Select plan", date: "No plan active", duration: "--", action: "Buy" }
     ]
   },
   {
     id: "3",
     salonName: "Salon 3",
     items: [
-      { id: "s3_1", type: "Queue", status: "Free", date: "15 Mar, 2025 6:56 AM", action: "Buy" },
-      { id: "s3_2", type: "Appointment", status: "Paid", date: "30 May, 2025 6:26 AM", action: "Renew" }
-    ]
-  },
-  {
-    id: "4",
-    salonName: "Salon 4",
-    items: [
-      { id: "s4_1", type: "Queue", status: "Paid", date: "12 Jan, 2027 4:00 PM", action: "Renew" },
-      { id: "s4_2", type: "Appointment", status: "select a plan", date: "select a plan", action: "Buy" }
-    ]
-  },
-  {
-    id: "5",
-    salonName: "Elite Barber Hub",
-    items: [
-      { id: "s5_1", type: "Queue", status: "Paid", date: "19 Nov, 2026 11:15 AM", action: "Renew" },
-      { id: "s5_2", type: "Appointment", status: "Paid", date: "05 Dec, 2026 1:45 PM", action: "Renew" }
+      { id: "s3_1", type: "Queue", status: "Free Tier", date: "15 Mar, 2025", duration: "30days", action: "Buy" },
+      { id: "s3_2", type: "Appointment", status: "Paid", date: "30 May, 2025", duration: "489days", action: "Renew" }
     ]
   }
 ];
@@ -60,15 +44,15 @@ const SubscriptionsList = () => {
         {
           backgroundColor: darkTheme.colors.card,
           borderColor: "rgba(255, 255, 255, 0.06)",
-          borderRadius: scale(16),
+          borderRadius: scale(14),
         },
       ]}
     >
-      {/* Structural Card Top Bar */}
+      {/* Structural Card Top Bar (Salon Identity Group) */}
       <View style={styles.cardHeader}>
         <View style={styles.headerLeft}>
-          <View style={[styles.brandCircle, { backgroundColor: "rgba(255, 255, 255, 0.03)", borderColor: darkTheme.colors.border }]}>
-            <Ionicons name="storefront-sharp" size={scale(14)} color={darkTheme.colors.accent} />
+          <View style={[styles.brandCircle, { backgroundColor: "rgba(255, 255, 255, 0.02)", borderColor: darkTheme.colors.border }]}>
+            <Ionicons name="storefront-sharp" size={scale(13)} color={darkTheme.colors.accent} />
           </View>
           <View>
             <Text style={[darkTheme.typography.cardTitle, styles.salonTitle]}>
@@ -80,104 +64,97 @@ const SubscriptionsList = () => {
           </View>
         </View>
         <TouchableOpacity style={styles.moreButtonActive}>
-          <Feather name="arrow-up-right" size={scale(15)} color={darkTheme.colors.textMuted} />
+          <Feather name="arrow-up-right" size={scale(14)} color={darkTheme.colors.textMuted} />
         </TouchableOpacity>
       </View>
 
-      {/* Sub-Items Premium Layer Inner Blocks */}
+      {/* Sub-Items Rebuilt into a 10/10 Segmented Sub-Card Grid Matrix */}
       <View style={styles.subServicesContainer}>
         {item.items.map((subItem) => {
-          const hasActivePlan = subItem.status !== "select a plan";
-          const isFreeTier = subItem.status === "Free";
-          const isRenewAction = subItem.action === "Renew";
-          const isQueue = subItem.type === "Queue";
+          const isPaid = subItem.status === "Paid";
+          const isFree = subItem.status === "Free Tier";
+          const isRenew = subItem.action === "Renew";
 
           return (
             <View
               key={subItem.id}
               style={[
-                styles.luxuryServiceRow,
+                styles.luxuryServiceInnerBlock,
                 { 
-                  backgroundColor: "rgba(255, 255, 255, 0.015)",
+                  backgroundColor: "rgba(0, 0, 0, 0.2)",
                   borderColor: "rgba(255, 255, 255, 0.04)" 
                 },
               ]}
             >
-              <View style={styles.rowMainContent}>
-                
-                {/* Structural Left Column with Context Icons */}
-                <View style={styles.iconContextWrapper}>
-                  <View style={[styles.typeIconBox, { backgroundColor: isQueue ? "rgba(255, 149, 0, 0.06)" : "rgba(10, 132, 255, 0.06)" }]}>
-                    <Ionicons 
-                      name={isQueue ? "flash-sharp" : "calendar-sharp"} 
-                      size={scale(13)} 
-                      color={isQueue ? darkTheme.colors.accent : "#0A84FF"} 
-                    />
-                  </View>
-                </View>
-
-                {/* Core Descriptive Text Block */}
-                <View style={styles.infoColumn}>
-                  <View style={styles.typeBadgeRow}>
-                    <Text style={[darkTheme.typography.bodyMain, styles.serviceTypeText]}>
-                      {subItem.type}
-                    </Text>
-                    
-                    {hasActivePlan && (
-                      <View 
-                        style={[
-                          styles.planBadge, 
-                          {
-                            backgroundColor: isFreeTier
-                              ? "rgba(10, 132, 255, 0.08)"
-                              : "rgba(52, 199, 89, 0.08)",
-                          },
-                        ]}
-                      >
-                        <View style={[styles.pulseDot, { backgroundColor: isFreeTier ? "#0A84FF" : darkTheme.status.success.text }]} />
-                        <Text 
-                          style={[
-                            styles.badgeText, 
-                            { color: isFreeTier ? "#0A84FF" : darkTheme.status.success.text }
-                          ]}
-                        >
-                          {subItem.status}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-
-                  <Text style={[darkTheme.typography.bodyMuted, styles.timestampText]}>
-                    {subItem.date}
+              {/* Header inside row: Dynamic Label ID & Action Control */}
+              <View style={styles.innerBlockTopRow}>
+                <View>
+                  <Text style={styles.innerBlockIdText}>
+                    IQB-{subItem.type.toUpperCase()}-00101
                   </Text>
+                  <Text style={styles.innerBlockSubLabel}>{subItem.type} Architecture</Text>
                 </View>
 
-                {/* Micro-Interaction Action Target Trigger */}
                 <TouchableOpacity
                   activeOpacity={0.85}
                   style={[
-                    styles.actionButton,
+                    styles.gridActionButton,
                     {
-                      backgroundColor: isRenewAction ? "rgba(255,255,255,0.03)" : darkTheme.colors.accent,
-                      borderColor: isRenewAction ? "rgba(255,255,255,0.1)" : "transparent",
-                      borderWidth: isRenewAction ? 1 : 0,
-                      borderRadius: scale(6),
+                      backgroundColor: isRenew ? "rgba(255, 149, 0, 0.08)" : darkTheme.colors.accent,
+                      borderColor: isRenew ? "rgba(255, 149, 0, 0.2)" : "transparent",
+                      borderWidth: isRenew ? 1 : 0,
                     },
                   ]}
                 >
                   <Text
                     style={[
-                      darkTheme.typography.bodyMain,
-                      styles.actionText,
-                      {
-                        color: isRenewAction ? darkTheme.colors.textMain : "#1C1C1E",
-                      },
+                      styles.gridActionText,
+                      { color: isRenew ? darkTheme.colors.accent : "#000000" },
                     ]}
                   >
                     {subItem.action}
                   </Text>
                 </TouchableOpacity>
               </View>
+
+              {/* 3-Column Metrics Data Grid inspired by Screenshot 2026-07-03 at 2.09.28 PM.jpg */}
+              <View style={styles.innerBlockMetricsGrid}>
+                <View style={styles.metricColumn}>
+                  <Text style={styles.metricLabelText}>PURCHASED</Text>
+                  <Text style={styles.metricValueText}>13 Mar 2026</Text>
+                </View>
+                
+                <View style={styles.verticalGridHairline} />
+
+                <View style={styles.metricColumn}>
+                  <Text style={styles.metricLabelText}>EXPIRES</Text>
+                  <Text style={styles.metricValueText}>{subItem.date}</Text>
+                </View>
+
+                <View style={styles.verticalGridHairline} />
+
+                <View style={styles.metricColumn}>
+                  <Text style={styles.metricLabelText}>DURATION</Text>
+                  <Text style={styles.metricValueText}>{subItem.duration}</Text>
+                </View>
+              </View>
+
+              {/* Bottom Metadata & Status Layout Footer */}
+              <View style={styles.innerBlockBottomRow}>
+                <View style={styles.metaLeftGroup}>
+                  <Text style={styles.metaLabelMicro}>TRANSACTION ID</Text>
+                  <Text style={styles.metaValueMicro} numberOfLines={1}>
+                    pi_3TAuBt6v7Mtr8QXs1P{subItem.id}
+                  </Text>
+                </View>
+
+                <View style={[styles.statusMicroBadge, { backgroundColor: isPaid || isFree ? "rgba(52, 199, 89, 0.08)" : "rgba(255, 59, 48, 0.08)" }]}>
+                  <Text style={[styles.statusBadgeText, { color: isPaid || isFree ? "#34C759" : "#FF3B30" }]}>
+                    {isPaid ? "Paid" : isFree ? "Free" : "Hold"}
+                  </Text>
+                </View>
+              </View>
+
             </View>
           );
         })}
@@ -224,16 +201,16 @@ const styles = StyleSheet.create({
   },
   eliteCard: {
     borderWidth: 1,
-    padding: scale(16),
+    padding: scale(14),
     ...Platform.select({
       ios: {
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.2,
-        shadowRadius: 16,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
       },
       android: {
-        elevation: 4,
+        elevation: 3,
       },
     }),
   },
@@ -241,113 +218,136 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: verticalScale(16),
+    marginBottom: verticalScale(14),
   },
   headerLeft: {
     flexDirection: "row",
     alignItems: "center",
-    gap: scale(12),
+    gap: scale(10),
   },
   brandCircle: {
-    width: scale(36),
-    height: scale(36),
-    borderRadius: scale(10),
+    width: scale(32),
+    height: scale(32),
+    borderRadius: scale(8),
     borderWidth: 1,
     justifyContent: "center",
     alignItems: "center",
   },
   salonTitle: {
-    fontSize: scale(14),
+    fontSize: scale(13.5),
     fontWeight: "700",
     letterSpacing: -0.1,
   },
   branchCountText: {
-    fontSize: scale(11),
-    color: "rgba(255, 255, 255, 0.4)",
-    marginTop: verticalScale(2),
+    fontSize: scale(10.5),
+    color: "rgba(255, 255, 255, 0.35)",
+    marginTop: verticalScale(1),
   },
   moreButtonActive: {
-    width: scale(28),
-    height: scale(28),
+    width: scale(26),
+    height: scale(26),
     borderRadius: scale(6),
     justifyContent: "center",
     alignItems: "center",
   },
   subServicesContainer: {
     width: "100%",
-    gap: verticalScale(10),
+    gap: verticalScale(12),
   },
-  luxuryServiceRow: {
-    flexDirection: "row",
+  luxuryServiceInnerBlock: {
+    width: "100%",
     borderWidth: 1,
-    borderRadius: scale(10),
-    overflow: "hidden",
+    borderRadius: scale(8),
+    padding: scale(12),
   },
-  rowMainContent: {
+  innerBlockTopRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    width: "100%",
+  },
+  innerBlockIdText: {
+    color: "#FFFFFF",
+    fontSize: scale(12.5),
+    fontWeight: "700",
+    letterSpacing: 0.1,
+  },
+  innerBlockSubLabel: {
+    color: "rgba(255, 255, 255, 0.35)",
+    fontSize: scale(10.5),
+    marginTop: verticalScale(1),
+  },
+  gridActionButton: {
+    paddingHorizontal: scale(14),
+    height: verticalScale(24),
+    borderRadius: scale(4),
+    justifyContent: "center",
+    alignItems: "center",
+    minWidth: scale(64),
+  },
+  gridActionText: {
+    fontSize: scale(11),
+    fontWeight: "700",
+  },
+  innerBlockMetricsGrid: {
+    flexDirection: "row",
+    width: "100%",
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    marginVertical: verticalScale(10),
+    paddingVertical: verticalScale(8),
+    alignItems: "center",
+  },
+  metricColumn: {
     flex: 1,
+  },
+  metricLabelText: {
+    color: "rgba(255, 255, 255, 0.3)",
+    fontSize: scale(8.5),
+    fontWeight: "700",
+    letterSpacing: 0.2,
+  },
+  metricValueText: {
+    color: "#FFFFFF",
+    fontSize: scale(11),
+    fontWeight: "600",
+    marginTop: verticalScale(3),
+  },
+  verticalGridHairline: {
+    width: 1,
+    height: verticalScale(16),
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    marginHorizontal: scale(6),
+  },
+  innerBlockBottomRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: scale(12),
-    paddingVertical: verticalScale(12),
+    width: "100%",
   },
-  iconContextWrapper: {
-    marginRight: scale(10),
-  },
-  typeIconBox: {
-    width: scale(28),
-    height: scale(28),
-    borderRadius: scale(8),
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  infoColumn: {
+  metaLeftGroup: {
     flex: 1,
-    paddingRight: scale(8),
+    paddingRight: scale(12),
   },
-  typeBadgeRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: scale(8),
-  },
-  serviceTypeText: {
-    fontSize: scale(13),
-    fontWeight: "600",
-    letterSpacing: -0.1,
-  },
-  planBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: scale(6),
-    paddingVertical: verticalScale(2),
-    borderRadius: scale(4),
-    gap: scale(4),
-  },
-  pulseDot: {
-    width: scale(4),
-    height: scale(4),
-    borderRadius: scale(2),
-  },
-  badgeText: {
-    fontSize: scale(9),
+  metaLabelMicro: {
+    color: "rgba(255, 255, 255, 0.3)",
+    fontSize: scale(8),
     fontWeight: "700",
     letterSpacing: 0.2,
-    textTransform: "uppercase",
   },
-  timestampText: {
-    fontSize: scale(11),
-    marginTop: verticalScale(4),
-    color: "rgba(255,255,255,0.35)",
+  metaValueMicro: {
+    color: "rgba(255, 255, 255, 0.45)",
+    fontSize: scale(10),
+    fontFamily: Platform.OS === "ios" ? "Courier" : "monospace",
+    marginTop: verticalScale(1),
   },
-  actionButton: {
-    paddingHorizontal: scale(14),
-    height: scale(28),
-    minWidth: scale(72),
-    justifyContent: "center",
-    alignItems: "center",
+  statusMicroBadge: {
+    paddingHorizontal: scale(8),
+    paddingVertical: verticalScale(2),
+    borderRadius: scale(4),
   },
-  actionText: {
+  statusBadgeText: {
+    fontSize: scale(9.5),
     fontWeight: "700",
-    fontSize: scale(11),
   },
 });
