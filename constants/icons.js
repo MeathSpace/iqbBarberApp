@@ -257,3 +257,9 @@ export const MenuIcon = ({
   color = "#FFFFFF",
   style,
 }) => <MaterialIcons name="menu-open" size={size} color={color} style={style} />;
+
+export const AdvertisementIcon = ({
+  size = moderateScale(22),
+  color = "#FFFFFF",
+  style,
+}) => <MaterialCommunityIcons name="advertisements" size={size} color={color} style={style} />;

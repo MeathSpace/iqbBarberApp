@@ -14,8 +14,8 @@ import { scale, verticalScale } from "react-native-size-matters";
 import { useRouter } from "expo-router";
 
 // Core Architecture & Design Pattern Imports
-import Header from "../../../../../../components/Header/Header";
-import { darkTheme } from "../../../../../../constants/appTheme";
+import Header from "../../../../../components/Header/Header";
+import { darkTheme } from "../../../../../constants/appTheme";
 
 const SalonInfoStep = () => {
   const router = useRouter();

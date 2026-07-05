@@ -9,14 +9,14 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { scale, verticalScale } from "react-native-size-matters";
 import { useRouter } from "expo-router";
-import Header from "../../../../../components/Header/Header";
-import { darkTheme } from "../../../../../constants/appTheme";
+import Header from "../../../../components/Header/Header";
+import { darkTheme } from "../../../../constants/appTheme";
 import {
   AboutIcon,       
   WebIcon,          
   SalonIcon,        
   CameraIcon,       
-} from "../../../../../constants/icons";
+} from "../../../../constants/icons";
 
 const CreateSalonScreen = () => {
   const router = useRouter();

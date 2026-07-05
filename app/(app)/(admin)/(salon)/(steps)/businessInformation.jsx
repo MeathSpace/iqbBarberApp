@@ -14,9 +14,9 @@ import { scale, verticalScale } from "react-native-size-matters";
 import { useRouter } from "expo-router";
 
 // Core Architecture & Design Pattern Imports
-import Header from "../../../../../../components/Header/Header";
-import { darkTheme } from "../../../../../../constants/appTheme";
-import { DownIcon } from "../../../../../../constants/icons";
+import Header from "../../../../../components/Header/Header";
+import { darkTheme } from "../../../../../constants/appTheme";
+import { DownIcon } from "../../../../../constants/icons";
 
 const BusinessInformation = () => {
   const router = useRouter();

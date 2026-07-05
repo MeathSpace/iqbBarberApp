@@ -13,8 +13,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { scale, verticalScale } from "react-native-size-matters";
 
-import Header from "../../../../components/Header/Header"; // Adjust relative path as needed
-import { darkTheme } from "../../../../constants/appTheme";
+import Header from "../../../../../components/Header/Header"; // Adjust relative path as needed
+import { darkTheme } from "../../../../../constants/appTheme";
 
 // 10 Mock Datasets accurately capturing live multi-user workflow variables
 const LIVE_QUEUE_DATA = [

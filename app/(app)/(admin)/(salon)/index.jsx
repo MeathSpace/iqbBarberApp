@@ -7,9 +7,9 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { scale, verticalScale } from "react-native-size-matters";
-import Header from "../../../../../components/Header/Header";
-import { darkTheme } from "../../../../../constants/appTheme";
-import { LocationIcon, HomeIcon, StarIcon } from "../../../../../constants/icons";
+import Header from "../../../../components/Header/Header";
+import { darkTheme } from "../../../../constants/appTheme";
+import { LocationIcon, HomeIcon, StarIcon } from "../../../../constants/icons";
 import { useRouter } from "expo-router";
 
 const SalonsScreen = () => {

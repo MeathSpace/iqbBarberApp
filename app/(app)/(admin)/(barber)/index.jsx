@@ -9,10 +9,10 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { scale, verticalScale } from "react-native-size-matters";
-import Header from "../../../../../components/Header/Header";
-import { darkTheme } from "../../../../../constants/appTheme";
+import Header from "../../../../components/Header/Header";
+import { darkTheme } from "../../../../constants/appTheme";
 import { useRouter } from "expo-router";
-import { BarberIcon, DownIcon, HomeIcon } from "../../../../../constants/icons";
+import { BarberIcon, DownIcon, HomeIcon } from "../../../../constants/icons";
 
 const index = () => {
   const barbersData = [
@@ -85,7 +85,7 @@ const index = () => {
           style={[styles.addButton, { borderColor: darkTheme.colors.accent, height: darkTheme.layout.buttonHeight }]}
           activeOpacity={0.8}
           onPress={() => {
-            router.push("createBarber");
+            router.push("/(steps)");
           }}
         >
           <BarberIcon
