@@ -206,7 +206,7 @@ const BusinessInformation = () => {
             ]}
             activeOpacity={0.8}
             onPress={() => {
-              router.push('/gallery');
+              router.push('/selectServices');
               // Action routing sequence pipeline link goes here
             }}
           >

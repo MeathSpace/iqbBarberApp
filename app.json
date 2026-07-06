@@ -31,7 +31,7 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.sagnikn00.iqbBarberApp",
-      "versionCode": 6
+      "versionCode": 8
     },
     "web": {
       "output": "static",
