@@ -6,7 +6,7 @@ const AppLayout = () => {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(admin)" />
-      {/* <Stack.Screen name="(barber)" /> */}
+      <Stack.Screen name="(barber)" />
     </Stack>
   );
 };

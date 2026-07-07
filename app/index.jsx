@@ -25,7 +25,7 @@ const InitialScreen = () => {
       if (savedAdminEmail) {
         router.replace("/(admin)/(admintabs)/(home)");
       } else if (savedBarberEmail) {
-        // router.replace("/(barber)/(barbertabs)/(home)");
+        router.replace("/(barber)/(barbertabs)/(home)");
       } else {
         setShowWelcome(true);
       }
@@ -81,7 +81,7 @@ const InitialScreen = () => {
 
         <TouchableOpacity
           activeOpacity={0.7}
-          // onPress={() => router.push("/(barberauth)/signin")}
+          onPress={() => router.push("/(barberauth)/signin")}
           style={[
             styles.secondaryBtn, 
             { 
