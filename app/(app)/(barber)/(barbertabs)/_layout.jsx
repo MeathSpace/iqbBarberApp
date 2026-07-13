@@ -72,20 +72,20 @@ const AdminTabLayout = () => {
         }}
       />
 
-      {/* <Tabs.Screen
-        name="(advertisement)"
+      <Tabs.Screen
+        name="(barberOffDay)"
         options={{
-          title: "Advertisements",
-          href: "/(advertisement)",
+          title: "Barber Off Day",
+          href: "/(barber)/(barberOffDay)",
           tabBarIcon: ({ color, focused }) => (
-            <AdvertisementIcon
+            <CalendarIcon
               color={color}
               size={scale(22)}
               focused={focused}
             />
           ),
         }}
-      /> */}
+      />
     </Tabs>
   );
 };

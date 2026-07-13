@@ -13,10 +13,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { scale, verticalScale } from "react-native-size-matters";
 
-import Header from "../../../../../components/Header/Header"; // Adjust relative path as needed
+import Header from "../../../../../components/Header/Header"; 
 import { darkTheme } from "../../../../../constants/appTheme";
 
-// 10 Mock Datasets accurately capturing live multi-user workflow variables
 const LIVE_QUEUE_DATA = [
   { id: "1", clientName: "Shyam Sharma", barberName: "John Doe", status: "Next", position: "1" },
   { id: "2", clientName: "Aditya Verma", barberName: "Alex Crew", status: "Waiting", position: "2" },
@@ -206,7 +205,6 @@ const QueueList = () => {
         }
       />
 
-      {/* Choose Barber Assignment Modal Sheet */}
       <Modal 
         animationType="slide" 
         transparent={true} 

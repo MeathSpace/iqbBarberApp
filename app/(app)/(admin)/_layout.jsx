@@ -13,6 +13,11 @@ const AdminLayout = () => {
       <AdminAuthProvider>
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(admintabs)" />
+          <Stack.Screen name="(barber)" />
+          <Stack.Screen name="(customer)" />
+          <Stack.Screen name="(profile)" />
+          <Stack.Screen name="(reports)" />
+          <Stack.Screen name="(salon)" />
           <Stack.Screen name="(payments)" />
           <Stack.Screen name="(subscriptions)" />
         </Stack>

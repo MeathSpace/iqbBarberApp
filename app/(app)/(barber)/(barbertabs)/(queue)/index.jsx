@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { scale, verticalScale } from "react-native-size-matters";
 
-import Header from "../../../../../components/Header/Header"; 
+import BarberHeader from "../../../../../components/Header/BarberHeader"; 
 import { darkTheme } from "../../../../../constants/appTheme";
 
 const LIVE_QUEUE_DATA = [
@@ -168,7 +168,7 @@ const QueueList = () => {
         { backgroundColor: darkTheme.colors.background },
       ]}
     >
-      <Header
+      <BarberHeader
         title="Queue List"
         subTitle="Monitor and manage live customer arrivals"
         showBack={false}
@@ -440,3 +440,4 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 });
+

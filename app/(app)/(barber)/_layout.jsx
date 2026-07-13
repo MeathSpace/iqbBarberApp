@@ -1,21 +1,26 @@
-import { Stack, useRouter } from "expo-router";
-import { useEffect } from "react";
+import { Stack } from "expo-router";
 import { StyleSheet } from "react-native";
-import { AuthProvider as AdminAuthProvider } from "../../../context/admin/AuthContext";
 import { GlobalProvider as AdminGlobalProvider } from "../../../context/admin/GlobalContext";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 // **THIS IS WHERE YOU ADD THE AUTH CHECK**
 
 const AdminLayout = () => {
-
   return (
     <AdminGlobalProvider>
-      {/* <AdminAuthProvider> This is responsible for redirection */} 
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(barbertabs)" />
-          {/* <Stack.Screen name="(payments)" />
+      {/* <AdminAuthProvider> This is responsible for redirection */}
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(barbertabs)" />
+        <Stack.Screen name="(reports)" />
+        <Stack.Screen name="(profile)" />
+        <Stack.Screen
+          name="(editServices)"
+          options={{
+            presentation: "modal",
+          }}
+        />
+
+        {/* <Stack.Screen name="(payments)" />
           <Stack.Screen name="(subscriptions)" /> */}
-        </Stack>
+      </Stack>
       {/* </AdminAuthProvider> */}
     </AdminGlobalProvider>
   );

@@ -1,15 +1,14 @@
 import { Stack } from 'expo-router'
 import { StyleSheet } from 'react-native'
 
-const AuthLayout = () => {
+const BarberOffDayLayout = () => {
     return (
         <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(adminauth)" />
-            <Stack.Screen name="(barberauth)" />
+            <Stack.Screen name="index" />
         </Stack>
     )
 }
 
-export default AuthLayout
+export default BarberOffDayLayout
 
 const styles = StyleSheet.create({})
