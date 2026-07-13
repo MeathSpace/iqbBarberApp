@@ -52,7 +52,7 @@ const InitialScreen = () => {
 
         <View style={styles.textContainer}>
           <Text style={[darkTheme.typography.headerTitle, styles.headline]}>
-            {baseContent.header} Dev
+            {baseContent.header}
           </Text>
           <Text style={[darkTheme.typography.bodyMuted, styles.subHeadline]}>
             {baseContent.subHeader}
