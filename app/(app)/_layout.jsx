@@ -1,8 +1,10 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Stack } from "expo-router";
 import { StyleSheet } from "react-native";
 // **THIS IS WHERE YOU ADD THE AUTH CHECK**
 
 const AppLayout = () => {
+  
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(admin)" />

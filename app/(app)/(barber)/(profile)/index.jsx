@@ -19,6 +19,7 @@ import { scale, verticalScale } from "react-native-size-matters";
 
 import BarberHeader from "../../../../components/Header/BarberHeader"; // Adjust path dynamically
 import { darkTheme } from "../../../../constants/appTheme";
+import { useBarberAuth } from "../../../../context/barber/AuthContext";
 
 const GENDER_OPTIONS = [
   { label: "Male", value: "Male" },
@@ -27,6 +28,7 @@ const GENDER_OPTIONS = [
 ];
 
 const EditProfileScreen = () => {
+  const { fetchLoggedInBarber } = useBarberAuth()
   // Local state properties dictionary mapping input structures
   const [name, setName] = useState("Bikki u");
   const [email, setEmail] = useState("bikki@yopmail.com");
@@ -66,6 +68,20 @@ const EditProfileScreen = () => {
   };
 
   const isMobileValid = validateMobileNumber(mobNumber);
+
+  const saveProfileHandler = async() => {
+    console.log("Profile Data Captured:", {
+      name,
+      email,
+      password,
+      mobileNumber: mobNumber,
+      gender,
+      dateOfBirthRaw: dobDate,
+      dateOfBirthFormatted: formatDisplayDate(dobDate),
+      isMobileValid, // Useful check to ensure it passes validation before sync
+    });
+    await fetchLoggedInBarber()
+  };
 
   return (
     <SafeAreaView
@@ -458,9 +474,7 @@ const EditProfileScreen = () => {
               },
             ]}
             activeOpacity={0.8}
-            onPress={() =>
-              console.log("Profile parameters flushed to core database API")
-            }
+            onPress={saveProfileHandler}
           >
             <Text
               style={[

@@ -1,28 +1,28 @@
 import { Stack } from "expo-router";
 import { StyleSheet } from "react-native";
-import { GlobalProvider as AdminGlobalProvider } from "../../../context/admin/GlobalContext";
-// **THIS IS WHERE YOU ADD THE AUTH CHECK**
+import { AuthProvider as BarberAuthProvider } from "../../../context/barber/AuthContext";
+import { GlobalProvider as BarberGlobalProvider } from "../../../context/barber/GlobalContext";
 
 const AdminLayout = () => {
   return (
-    <AdminGlobalProvider>
-      {/* <AdminAuthProvider> This is responsible for redirection */}
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(barbertabs)" />
-        <Stack.Screen name="(reports)" />
-        <Stack.Screen name="(profile)" />
-        <Stack.Screen
-          name="(editServices)"
-          options={{
-            presentation: "modal",
-          }}
-        />
+    <BarberGlobalProvider>
+      <BarberAuthProvider>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(barbertabs)" />
+          <Stack.Screen name="(reports)" />
+          <Stack.Screen name="(profile)" />
+          <Stack.Screen
+            name="(editServices)"
+            options={{
+              presentation: "modal",
+            }}
+          />
 
-        {/* <Stack.Screen name="(payments)" />
+          {/* <Stack.Screen name="(payments)" />
           <Stack.Screen name="(subscriptions)" /> */}
-      </Stack>
-      {/* </AdminAuthProvider> */}
-    </AdminGlobalProvider>
+        </Stack>
+      </BarberAuthProvider>
+    </BarberGlobalProvider>
   );
 };
 

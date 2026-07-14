@@ -1,5 +1,4 @@
 import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter, useSegments } from "expo-router";
 import { useRef, useState } from "react";
 import {
@@ -17,6 +16,7 @@ import {
 import { scale, verticalScale } from "react-native-size-matters";
 
 import { darkTheme } from "../../constants/appTheme";
+import { useAdminAuth } from "../../context/admin/AuthContext";
 
 const { width, height } = Dimensions.get("window");
 const DRAWER_WIDTH = width * 0.72;
@@ -190,6 +190,7 @@ const MENU_ITEMS = [
 ];
 
 const Header = ({ title, subTitle, showBack = false }) => {
+  const { userLogut } = useAdminAuth();
   const router = useRouter();
   const segments = useSegments();
   const [menuVisible, setMenuVisible] = useState(false);
@@ -248,14 +249,8 @@ const Header = ({ title, subTitle, showBack = false }) => {
     });
   };
 
-  const logoutPressed = async () => {
-    try {
-      await AsyncStorage.removeItem("adminEmail");
-      closeMenu();
-      router.replace("/(auth)/(adminauth)/signin");
-    } catch (error) {
-      console.error("Error during logout sequence:", error);
-    }
+  const logoutPressed = () => {
+    userLogut();
   };
 
   const handleNavigation = (route) => {

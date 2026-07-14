@@ -1,6 +1,7 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
+import * as SecureStore from "expo-secure-store";
 import { createContext, useContext, useEffect, useState } from "react";
+
 import api from "../../utils/api";
 
 const AuthContext = createContext();
@@ -8,78 +9,77 @@ const AuthContext = createContext();
 export const useAdminAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
-  const [userEmail, setUserEmail] = useState("");
-  const [userSalonId, setUserSalonId] = useState(0);
-  const [user, setUser] = useState(null);
-
   const router = useRouter();
 
-  const fetch_user_email_from_storage = async () => {
-    try {
-      const savedUserEmail = (await AsyncStorage.getItem("adminEmail")) || "";
-      const savedUserSalonId =
-        (await AsyncStorage.getItem("adminSalonId")) || 0;
+  const [authenticatedUser, setAuthenticatedUser] = useState(null);
 
-      if (savedUserEmail) {
-        setUserEmail(savedUserEmail);
-        setUserSalonId(Number(savedUserSalonId));
-      } else {
-        router.replace("/(adminauth)/signin");
-      }
+  const userLogut = async () => {
+    try {
+      await SecureStore.deleteItemAsync("adminRefreshToken");
+      await SecureStore.deleteItemAsync("adminEmail");
+
+      router.replace("/(adminauth)/signin");
     } catch (error) {
-      console.log("Failed to fetch user email ", error);
+      console.error("Error during logout sequence:", error);
     }
   };
 
-  // This code is basically fetching the saved email.
-  // I am writing because without async i cannot use async-storage
+  // Setup Axios interceptors
   useEffect(() => {
-    fetch_user_email_from_storage();
-  }, [userEmail]);
+    const requestInterceptor = api.interceptors.request.use(
+      async (config) => {
+        const refreshToken =
+          await SecureStore.getItemAsync("adminRefreshToken");
 
-  const fetch_loggedin_admin_data = async () => {
+        if (refreshToken) {
+          config.headers.Authorization = `Bearer ${refreshToken}`;
+        }
+
+        return config;
+      },
+      (error) => Promise.reject(error),
+    );
+
+    const responseInterceptor = api.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          userLogut();
+        }
+
+        return Promise.reject(error);
+      },
+    );
+
+    return () => {
+      api.interceptors.request.eject(requestInterceptor);
+      api.interceptors.response.eject(responseInterceptor);
+    };
+  }, [router]);
+
+  // Pass this fetchLoggedInAdmin and use it explicitly
+
+  const fetchLoggedInAdmin = async () => {
     try {
-      const { data } = await api.post("/web-app/admin/adminloggedin", {
-        email: userEmail,
-      });
-      setUser(data?.user?.[0]);
+      const { data } = await api.get("/admin/adminloggedin");
+      setAuthenticatedUser(data?.user?.[0] ?? null);
     } catch (error) {
-      console.log("Error fetching admin loggedin data ", error);
+      console.log("Error fetching admin:", error);
     }
   };
 
-  // i can pass here multiple dependency of example salon chage , update and trigger this api
-
   useEffect(() => {
-    if (userEmail) {
-      fetch_loggedin_admin_data();
-    }
-  }, [userEmail, userSalonId]);
+    fetchLoggedInAdmin();
+  }, []);
 
-
-  //   ✅ Why removing setUser made it log once
-
-  // Without setUser, React doesn’t schedule a re-render → no second pass occurs.
-  // That’s why you saw a single console.log(data.user[0]) (only from the fetch).
-
-  // But once you call setUser, React:
-
-  // Renders once with old state. (VVP) - i will see this console.log very fast and instant
-
-  // Applies new state (user).
-
-  // Renders again with new state. -> this takes time to show and print
-
-  // In dev mode, runs that process twice (to detect bad side effects).
-
-  // Hence, your log appears twice.
+  console.log("Current user:", authenticatedUser); // Log the current user state
 
   return (
     <AuthContext.Provider
       value={{
-        setUserSalonId,
-        setUserEmail,
-        user
+        authenticatedUser,
+        userLogut,
+        fetchLoggedInAdmin
       }}
     >
       {children}

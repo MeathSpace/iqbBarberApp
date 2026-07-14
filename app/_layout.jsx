@@ -29,6 +29,7 @@ const RootLayout = () => {
     return null;
   }
 
+
   return (
     <LanguageProvider>
       <Stack screenOptions={{ headerShown: false }}>

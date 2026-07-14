@@ -1,4 +1,8 @@
-import React, { useEffect, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
+import * as SecureStore from "expo-secure-store";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Keyboard,
@@ -10,13 +14,11 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { scale, verticalScale } from "react-native-size-matters";
 import { Toast } from "toastify-react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
+import { darkTheme } from "../../../constants/appTheme";
 import {
   CheckIcon,
   EyeIcon,
@@ -26,14 +28,13 @@ import {
 import api from "../../../utils/api";
 import { isValidEmail } from "../../../utils/emailValidation";
 import i18n from "../../src/localization/i18n";
-import { darkTheme } from "../../../constants/appTheme";
 
 const SignIn = () => {
   const baseContent = i18n.t("auth.adminauth.signin");
   const router = useRouter();
 
-  const [email, setEmail] = useState("bikki@yopmail.com");
-  const [password, setPassword] = useState("12345678");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [signinLoader, setSigninLoader] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -44,7 +45,7 @@ const SignIn = () => {
 
   useEffect(() => {
     const fetch_admin_remember_me_email = async () => {
-      const admin_remember_me_email = await AsyncStorage.getItem(
+      const admin_remember_me_email = await SecureStore.getItemAsync(
         "admin_remember_me_email",
       );
 
@@ -83,16 +84,15 @@ const SignIn = () => {
 
       const payload = { email, password };
 
-      const { data } = await api.post("/web-app/admin/login", payload);
-      await AsyncStorage.setItem("adminEmail", data?.foundUser?.email);
-      await AsyncStorage.setItem(
-        "adminSalonId",
-        JSON.stringify(data?.foundUser?.salonId),
-      );
+      const { data } = await api.post("/admin/login", payload);
+
+      await SecureStore.setItemAsync("adminRefreshToken", data.accessToken);
+      await SecureStore.setItemAsync("adminEmail", data?.foundAdmin?.email);
+
       if (rememberMe) {
-        await AsyncStorage.setItem("admin_remember_me_email", email);
+        await SecureStore.setItemAsync("admin_remember_me_email", email);
       } else {
-        await AsyncStorage.setItem("admin_remember_me_email", "");
+        await SecureStore.setItemAsync("admin_remember_me_email", "");
       }
       router.push("/(admin)/(admintabs)/(home)");
     } catch (error) {
@@ -104,8 +104,12 @@ const SignIn = () => {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <SafeAreaView style={[styles.container, { backgroundColor: darkTheme.colors.background }]}>
-        
+      <SafeAreaView
+        style={[
+          styles.container,
+          { backgroundColor: darkTheme.colors.background },
+        ]}
+      >
         {/* Back navigation header anchor */}
         <View style={styles.backRow}>
           <TouchableOpacity
@@ -128,7 +132,9 @@ const SignIn = () => {
             <Text style={[darkTheme.typography.headerTitle, styles.title]}>
               {baseContent.header}
             </Text>
-            <Text style={[darkTheme.typography.headerSubtitle, styles.subtitle]}>
+            <Text
+              style={[darkTheme.typography.headerSubtitle, styles.subtitle]}
+            >
               {baseContent.subHeader}
             </Text>
           </View>
@@ -160,7 +166,13 @@ const SignIn = () => {
               autoCapitalize="none"
             />
             {emailError && (
-              <Text style={[darkTheme.typography.bodyMuted, styles.error, { color: darkTheme.status.error.text }]}>
+              <Text
+                style={[
+                  darkTheme.typography.bodyMuted,
+                  styles.error,
+                  { color: darkTheme.status.error.text },
+                ]}
+              >
                 {emailError}
               </Text>
             )}
@@ -195,7 +207,7 @@ const SignIn = () => {
                 placeholderTextColor={darkTheme.colors.textMuted}
                 autoCapitalize="none"
               />
-              <TouchableOpacity 
+              <TouchableOpacity
                 onPress={() => setShowPassword(!showPassword)}
                 style={styles.eyeIconWrapper}
               >
@@ -208,7 +220,13 @@ const SignIn = () => {
             </View>
 
             {passwordError && (
-              <Text style={[darkTheme.typography.bodyMuted, styles.error, { color: darkTheme.status.error.text }]}>
+              <Text
+                style={[
+                  darkTheme.typography.bodyMuted,
+                  styles.error,
+                  { color: darkTheme.status.error.text },
+                ]}
+              >
                 {passwordError}
               </Text>
             )}
@@ -216,7 +234,13 @@ const SignIn = () => {
 
           {/* Options Line (Remember Me & Forgot Password) */}
           <View style={styles.rememberRow}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: scale(10) }}>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: scale(10),
+              }}
+            >
               <TouchableOpacity
                 onPress={() => setRememberMe(!rememberMe)}
                 style={[
@@ -228,7 +252,9 @@ const SignIn = () => {
                 ]}
                 activeOpacity={0.8}
               >
-                {rememberMe && <CheckIcon size={14} color={darkTheme.colors.accent} />}
+                {rememberMe && (
+                  <CheckIcon size={14} color={darkTheme.colors.accent} />
+                )}
               </TouchableOpacity>
               <Text style={[darkTheme.typography.bodyMain]}>
                 {baseContent.rememberMe}
@@ -240,17 +266,16 @@ const SignIn = () => {
               }}
               activeOpacity={0.7}
             >
-              <Text style={[darkTheme.typography.bodyMuted]}>Forgot Password ?</Text>
+              <Text style={[darkTheme.typography.bodyMuted]}>
+                Forgot Password ?
+              </Text>
             </TouchableOpacity>
           </View>
 
           {/* Action Trigger Submit Button */}
           <TouchableOpacity onPress={handleSignIn} activeOpacity={0.8}>
             <LinearGradient
-              colors={[
-                darkTheme.colors.accent, 
-                darkTheme.colors.accent
-              ]}
+              colors={[darkTheme.colors.accent, darkTheme.colors.accent]}
               style={[
                 styles.signInBtn,
                 {
@@ -262,7 +287,9 @@ const SignIn = () => {
               {signinLoader ? (
                 <ActivityIndicator color="#000000" />
               ) : (
-                <Text style={[darkTheme.typography.btnText, { color: "#000000" }]}>
+                <Text
+                  style={[darkTheme.typography.btnText, { color: "#000000" }]}
+                >
                   {baseContent.signIn}
                 </Text>
               )}
@@ -271,11 +298,21 @@ const SignIn = () => {
 
           {/* Visual Break/Divider */}
           <View style={styles.divider}>
-            <View style={[styles.line, { backgroundColor: darkTheme.colors.border }]} />
+            <View
+              style={[
+                styles.line,
+                { backgroundColor: darkTheme.colors.border },
+              ]}
+            />
             <Text style={[darkTheme.typography.bodyMuted, styles.orText]}>
               {baseContent.or}
             </Text>
-            <View style={[styles.line, { backgroundColor: darkTheme.colors.border }]} />
+            <View
+              style={[
+                styles.line,
+                { backgroundColor: darkTheme.colors.border },
+              ]}
+            />
           </View>
 
           {/* Alternate Provider Login */}
@@ -298,17 +335,21 @@ const SignIn = () => {
           </TouchableOpacity>
 
           {/* Account Creation Redirect Link */}
-          <TouchableOpacity onPress={() => router.push("/signup")} activeOpacity={0.7}>
+          <TouchableOpacity
+            onPress={() => router.push("/signup")}
+            activeOpacity={0.7}
+          >
             <Text style={[darkTheme.typography.bodyMuted, styles.signupText]}>
               {baseContent.dontHaveAccount}
-              <Text style={{ color: darkTheme.colors.accent, fontWeight: "600" }}>
+              <Text
+                style={{ color: darkTheme.colors.accent, fontWeight: "600" }}
+              >
                 {" "}
                 {baseContent.signUp}
               </Text>
             </Text>
           </TouchableOpacity>
         </View>
-
       </SafeAreaView>
     </TouchableWithoutFeedback>
   );

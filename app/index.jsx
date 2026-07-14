@@ -1,11 +1,17 @@
-import React, { useEffect, useState } from "react";
-import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { scale, verticalScale } from "react-native-size-matters";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
+import * as SecureStore from "expo-secure-store";
+import { useEffect, useState } from "react";
+import {
+  Dimensions,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { scale, verticalScale } from "react-native-size-matters";
 
 import i18n from "../app/src/localization/i18n";
 import { darkTheme } from "../constants/appTheme";
@@ -19,16 +25,18 @@ const InitialScreen = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const savedAdminEmail = await AsyncStorage.getItem("adminEmail");
-      const savedBarberEmail = await AsyncStorage.getItem("barberEmail");
+      const adminRefreshToken =
+        await SecureStore.getItemAsync("adminRefreshToken");
+      const barberRefreshToken =
+        await SecureStore.getItemAsync("barberRefreshToken");
 
-      if (savedAdminEmail) {
+      if (adminRefreshToken) {
         router.replace("/(admin)/(admintabs)/(home)");
-      } else if (savedBarberEmail) {
+      }else if(barberRefreshToken){
         router.replace("/(barber)/(barbertabs)/(home)");
-      } else {
-        setShowWelcome(true);
       }
+
+      setShowWelcome(true);
     };
     checkAuth();
   }, []);
@@ -36,13 +44,21 @@ const InitialScreen = () => {
   if (!showWelcome) return null;
 
   return (
-    <SafeAreaView 
-      edges={["top", "bottom", "left", "right"]} 
-      style={[styles.container, { backgroundColor: darkTheme.colors.background }]}
+    <SafeAreaView
+      edges={["top", "bottom", "left", "right"]}
+      style={[
+        styles.container,
+        { backgroundColor: darkTheme.colors.background },
+      ]}
     >
       {/* Upper Section: Branding */}
       <View style={styles.topSection}>
-        <View style={[styles.imageWrapper, { borderColor: darkTheme.colors.border }]}>
+        <View
+          style={[
+            styles.imageWrapper,
+            { borderColor: darkTheme.colors.border },
+          ]}
+        >
           <Image
             style={styles.image}
             source="https://i.pinimg.com/736x/0f/5d/ac/0f5dac39ba6687e95f08623a9c9faca9.jpg"
@@ -65,13 +81,19 @@ const InitialScreen = () => {
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={() => router.push("/(adminauth)/signin")}
-          style={[styles.buttonContainer, { height: darkTheme.layout.buttonHeight }]}
+          style={[
+            styles.buttonContainer,
+            { height: darkTheme.layout.buttonHeight },
+          ]}
         >
           <LinearGradient
-            colors={["#FF9500", "#FF5E00"]} 
+            colors={["#FF9500", "#FF5E00"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={[styles.primaryBtn, { borderRadius: darkTheme.layout.borderRadiusLarge }]}
+            style={[
+              styles.primaryBtn,
+              { borderRadius: darkTheme.layout.borderRadiusLarge },
+            ]}
           >
             <Text style={[darkTheme.typography.btnText, styles.primaryBtnText]}>
               {baseContent.admin}
@@ -83,15 +105,20 @@ const InitialScreen = () => {
           activeOpacity={0.7}
           onPress={() => router.push("/(barberauth)/signin")}
           style={[
-            styles.secondaryBtn, 
-            { 
-              borderColor: darkTheme.colors.border, 
+            styles.secondaryBtn,
+            {
+              borderColor: darkTheme.colors.border,
               borderRadius: darkTheme.layout.borderRadiusLarge,
-              height: darkTheme.layout.buttonHeight 
-            }
+              height: darkTheme.layout.buttonHeight,
+            },
           ]}
         >
-          <Text style={[darkTheme.typography.btnText, { color: darkTheme.colors.textMain }]}>
+          <Text
+            style={[
+              darkTheme.typography.btnText,
+              { color: darkTheme.colors.textMain },
+            ]}
+          >
             {baseContent.barber}
           </Text>
         </TouchableOpacity>
