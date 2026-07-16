@@ -72,8 +72,6 @@ export const AuthProvider = ({ children }) => {
     fetchLoggedInAdmin();
   }, []);
 
-  console.log("Current user:", authenticatedUser); // Log the current user state
-
   return (
     <AuthContext.Provider
       value={{

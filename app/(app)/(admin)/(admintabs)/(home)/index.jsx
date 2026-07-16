@@ -240,8 +240,10 @@
 //   },
 // });
 
-
-import React, { useState } from "react";
+import { Feather, Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
+import { useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -250,50 +252,138 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { BarChart } from "react-native-gifted-charts";
+import Shimmer from "react-native-modern-shimmer";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { scale, verticalScale } from "react-native-size-matters";
-import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-// Native interactive charting engine components
-import { BarChart } from "react-native-gifted-charts";
-
-import Header from "../../../../../components/Header/Header"; // Adjust path as needed
+import Header from "../../../../../components/Header/Header";
 import { darkTheme } from "../../../../../constants/appTheme";
-
-const STAFF_ROSTER = [
-  { id: "s1", name: "Jazz", hasAvatar: true },
-  { id: "s2", name: "Hercules", hasAvatar: true },
-  { id: "s3", name: "New barber", hasAvatar: false, initial: "N" },
-  { id: "s4", name: "Buch", hasAvatar: false, initial: "B" },
-  { id: "s5", name: "Jum", hasAvatar: false, initial: "J" },
-];
+import { useAdminAuth } from "../../../../../context/admin/AuthContext";
+import { useAdminGlobal } from "../../../../../context/admin/GlobalContext";
+import api from "../../../../../utils/api";
 
 const Dashboard = () => {
-  // Live dynamic text stream variables
+  const { currentSalon } = useAdminGlobal();
+  const { authenticatedUser } = useAdminAuth();
+
+  // Input & Update Status States
   const [isEditingInfo, setIsEditingInfo] = useState(false);
-  const [salonDescription, setSalonDescription] = useState(
-    "A curated grooming experience tailored to individual style and precision. Designed for modern comfort and seamless scheduling, our master artisans combine classic techniques with modern styling to ensure a refined aesthetic every visit."
+  const [salonDescription, setSalonDescription] = useState("");
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const isLongDescription = salonDescription && salonDescription.length > 120;
+
+  // Server data states
+  const [barbersData, setBarberData] = useState({ loading: false, data: [] });
+  const [queuelistData, setQueuelistData] = useState({
+    loading: false,
+    data: [],
+  });
+  const [reportData, setReportData] = useState({ loading: false, data: null });
+
+  // Sync profile details when context loads
+  useFocusEffect(
+    useCallback(() => {
+      if (currentSalon?.data?.salonInfo) {
+        setSalonDescription(currentSalon.data.salonInfo);
+      }
+    }, [currentSalon?.data?.salonInfo]),
   );
 
-  const appointmentChartData = [
-    {
-      value: 1,
-      label: "Total",
-      frontColor: darkTheme.colors.accent,
-      topLabelComponent: () => <Text style={styles.chartTopLabel}>1</Text>,
-    },
-    {
-      value: 1,
-      label: "Served",
-      frontColor: "#34C759",
-      topLabelComponent: () => <Text style={styles.chartTopLabel}>1</Text>,
-    },
-    {
-      value: 0,
-      label: "Canceled",
-      frontColor: "#FF3B30",
-      topLabelComponent: () => <Text style={styles.chartTopLabel}>0</Text>,
-    },
-  ];
+  // Consolidated parallel API initiator
+  const fetchDashboardData = useCallback(async () => {
+    const salonId = authenticatedUser?.salonId;
+    if (!salonId) return;
+
+    setBarberData((prev) => ({ ...prev, loading: true }));
+    setQueuelistData((prev) => ({ ...prev, loading: true }));
+    setReportData((prev) => ({ ...prev, loading: true }));
+
+    try {
+      const [barbersRes, queueRes, reportRes] = await Promise.all([
+        api.get(`/admin/getAllBarbersForDashboard?salonId=${salonId}`),
+        api.get(`/queue/getQListBySalonId?salonId=${salonId}`),
+        api.post(`reports/getnewdashboardReports`, { salonId }),
+      ]);
+
+      setBarberData({
+        loading: false,
+        data: barbersRes.data?.getAllBarbers || [],
+      });
+      setQueuelistData({ loading: false, data: queueRes.data?.response || [] });
+
+      // FIX: Capture the nested "response" sub-object directly into state
+      setReportData({ loading: false, data: reportRes.data?.response || null });
+    } catch (error) {
+      console.error("Dashboard data aggregation error:", error);
+      setBarberData((prev) => ({ ...prev, loading: false }));
+      setQueuelistData((prev) => ({ ...prev, loading: false }));
+      setReportData((prev) => ({ ...prev, loading: false }));
+    }
+  }, [authenticatedUser?.salonId]);
+
+  useFocusEffect(
+    useCallback(() => {
+      let isMounted = true;
+      if (isMounted) {
+        fetchDashboardData();
+      }
+      return () => {
+        isMounted = false;
+      };
+    }, [fetchDashboardData]),
+  );
+
+  // Dummy API handler to update the Salon Profile text
+  const handleSaveSalonProfile = async () => {
+    if (isEditingInfo) {
+      try {
+        setIsSavingProfile(true);
+
+        const payload = {
+          salonId: authenticatedUser?.salonId,
+          salonInfo: salonDescription,
+        };
+
+        await api.post(`/salon/updateSalonInfo`, payload);
+  
+      } catch (error) {
+        console.error("Failed to update salon profile text:", error);
+      } finally {
+        setIsSavingProfile(false);
+        setIsEditingInfo(false);
+      }
+    } else {
+      setIsEditingInfo(true);
+    }
+  };
+
+  // Extract nested properties cleanly
+  const queueReport = reportData?.data?.queue;
+  const appointmentReport = reportData?.data?.appointment;
+  const nextUpClient = queuelistData.data?.[0];
+
+  // Map backend last7daysCount array elements to the Bar Chart configuration keys
+  const rawChartData = appointmentReport?.last7daysCount || [];
+
+  const appointmentChartData = rawChartData.map((item) => ({
+    value: item.TotalAppoinment,
+    label: item.date,
+    frontColor: darkTheme.colors.accent,
+    topLabelComponent: () => (
+      <Text style={styles.chartTopLabel}>{item.TotalAppoinment}</Text>
+    ),
+  }));
+
+  // Auto-scale the max height bounds dynamically depending on absolute backend parameters
+  const maxChartValue = Math.max(
+    ...rawChartData.map((d) => d.TotalAppoinment),
+    3,
+  );
+
+  // Dynamic Trend Indicator styling based on backend return strings
+  const isTrendFall = queueReport?.queueTrend === "Fall";
 
   return (
     <SafeAreaView
@@ -313,159 +403,268 @@ const Dashboard = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContainer}
       >
-        {/* 1. Immersive Salon Info Section (Editorial Typography Layout) */}
+        {/* 1. Immersive Salon Info Section */}
         <View style={styles.editorialHeaderBlock}>
           <View style={styles.editorialRow}>
-            <Text style={[styles.editorialTitle, { color: darkTheme.colors.textMain }]}>
+            <Text
+              style={[
+                styles.editorialTitle,
+                { color: darkTheme.colors.textMain },
+              ]}
+            >
               The Salon Profile
             </Text>
             <TouchableOpacity
               style={[
                 styles.minimalEditTrigger,
-                isEditingInfo && { backgroundColor: "rgba(255, 149, 0, 0.1)" }
+                isEditingInfo && { backgroundColor: "rgba(255, 149, 0, 0.1)" },
               ]}
-              onPress={() => setIsEditingInfo(!isEditingInfo)}
+              onPress={handleSaveSalonProfile}
+              disabled={isSavingProfile}
               activeOpacity={0.7}
             >
               <Feather
-                name={isEditingInfo ? "check-circle" : "edit-2"}
+                name={
+                  isSavingProfile
+                    ? "loader"
+                    : isEditingInfo
+                      ? "check-circle"
+                      : "edit-2"
+                }
                 size={scale(13)}
-                color={isEditingInfo ? darkTheme.colors.accent : darkTheme.colors.textMuted}
+                color={
+                  isEditingInfo
+                    ? darkTheme.colors.accent
+                    : darkTheme.colors.textMuted
+                }
               />
-              <Text style={[styles.minimalEditText, { color: isEditingInfo ? darkTheme.colors.accent : darkTheme.colors.textMuted }]}>
-                {isEditingInfo ? "Save Changes" : "Edit Details"}
+              <Text
+                style={[
+                  styles.minimalEditText,
+                  {
+                    color: isEditingInfo
+                      ? darkTheme.colors.accent
+                      : darkTheme.colors.textMuted,
+                  },
+                ]}
+              >
+                {isSavingProfile
+                  ? "Saving..."
+                  : isEditingInfo
+                    ? "Save Changes"
+                    : "Edit Details"}
               </Text>
             </TouchableOpacity>
           </View>
 
           {isEditingInfo ? (
             <TextInput
-              style={[styles.premiumInlineInput, { color: darkTheme.colors.textMain }]}
+              style={[
+                styles.premiumInlineInput,
+                { color: darkTheme.colors.textMain },
+              ]}
               value={salonDescription}
               onChangeText={setSalonDescription}
               multiline
               autoFocus
+              editable={!isSavingProfile}
             />
+          ) : currentSalon?.loading ? (
+            <View style={{ gap: 8 }}>
+              {[...Array(4)].map((_, i) => (
+                <Shimmer key={i} width="100%" height={16} isDark />
+              ))}
+            </View>
           ) : (
-            <Text style={[styles.editorialParagraph, { color: darkTheme.colors.textMuted }]}>
-              {salonDescription}
-            </Text>
+            <View>
+              <Text
+                style={[
+                  styles.editorialParagraph,
+                  { color: darkTheme.colors.textMuted },
+                ]}
+                numberOfLines={isExpanded ? undefined : 3}
+              >
+                {salonDescription || "No profile description configured."}
+              </Text>
+
+              {isLongDescription && (
+                <TouchableOpacity
+                  onPress={() => setIsExpanded(!isExpanded)}
+                  activeOpacity={0.6}
+                  style={styles.seeMoreToggleContainer}
+                >
+                  <Text
+                    style={[
+                      styles.seeMoreText,
+                      { color: darkTheme.colors.accent },
+                    ]}
+                  >
+                    {isExpanded ? "See Less" : "See More"}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
           )}
         </View>
 
         {/* 2. Compact Performance Quick-Metrics Split Row */}
         <View style={styles.splitGridRow}>
+          {reportData.loading ? (
+            <>
+              <Shimmer
+                isDark
+                style={{
+                  flex: 1,
+                  padding: scale(12),
+                  minHeight: verticalScale(70),
+                }}
+              />
+              <Shimmer
+                isDark
+                style={{
+                  flex: 1,
+                  padding: scale(12),
+                  minHeight: verticalScale(70),
+                }}
+              />
+            </>
+          ) : (
+            <>
+              <View
+                style={[
+                  styles.compactDataCard,
+                  {
+                    backgroundColor: darkTheme.colors.card,
+                    borderColor: "rgba(255,255,255,0.05)",
+                  },
+                ]}
+              >
+                <View style={styles.compactMetricHeader}>
+                  <Text style={styles.miniCapsTitle}>QUEUE HISTORY</Text>
+                  <Ionicons
+                    name={isTrendFall ? "trending-down" : "trending-up"}
+                    size={scale(14)}
+                    color={isTrendFall ? "#FF3B30" : "#34C759"}
+                  />
+                </View>
+                <Text style={styles.massiveMetricText}>
+                  {queueReport?.percentageChangelast30Days || 0}%
+                </Text>
+                <View style={styles.miniProgressTrack}>
+                  <View
+                    style={[
+                      styles.miniProgressFill,
+                      {
+                        width: `${queueReport?.servedHistoryPercentage || 0}%`,
+                        backgroundColor: "#34C759",
+                      },
+                    ]}
+                  />
+                  <View
+                    style={[
+                      styles.miniProgressFill,
+                      {
+                        width: `${queueReport?.cancelledHistoryPercentage || 0}%`,
+                        backgroundColor: "#FF3B30",
+                      },
+                    ]}
+                  />
+                </View>
+              </View>
+
+              <View
+                style={[
+                  styles.compactDataCard,
+                  {
+                    backgroundColor: darkTheme.colors.card,
+                    borderColor: "rgba(255,255,255,0.05)",
+                  },
+                ]}
+              >
+                <View style={styles.compactMetricHeader}>
+                  <Text style={styles.miniCapsTitle}>FLOOR CAPACITY</Text>
+                  <Ionicons
+                    name="people-outline"
+                    size={scale(14)}
+                    color={darkTheme.colors.accent}
+                  />
+                </View>
+                <Text style={styles.massiveMetricText}>
+                  7 <Text style={styles.metricUnit}>Staff</Text>
+                </Text>
+                <Text style={styles.metricContextHint}>
+                  Active floor roster
+                </Text>
+              </View>
+            </>
+          )}
+        </View>
+
+        {/* 3. Live Queue Card */}
+        {queuelistData.loading ? (
+          <Shimmer width="100%" height={100} isDark />
+        ) : (
           <View
             style={[
-              styles.compactDataCard,
+              styles.spotlightQueueCard,
               {
                 backgroundColor: darkTheme.colors.card,
-                borderColor: "rgba(255,255,255,0.05)",
+                borderColor: "rgba(255,255,255,0.06)",
               },
             ]}
           >
-            <View style={styles.compactMetricHeader}>
-              <Text style={styles.miniCapsTitle}>QUEUE HISTORY</Text>
-              <Ionicons name="trending-down" size={scale(14)} color="#FF3B30" />
+            <View style={styles.spotlightBadgeRow}>
+              <View style={styles.liveIndicatorContainer}>
+                <View style={styles.pulseDot} />
+                <Text style={styles.liveIndicatorText}>LIVE QUEUE STATUS</Text>
+              </View>
+              <View style={styles.nextPillContainer}>
+                <Text style={styles.nextPillText}>UP NEXT</Text>
+              </View>
             </View>
-            <Text style={styles.massiveMetricText}>-97.6%</Text>
-            <View style={styles.miniProgressTrack}>
+
+            <View style={styles.spotlightProfileRow}>
               <View
                 style={[
-                  styles.miniProgressFill,
-                  { width: "50%", backgroundColor: "#34C759" },
-                ]}
-              />
-              <View
-                style={[
-                  styles.miniProgressFill,
-                  { width: "50%", backgroundColor: "#FF3B30" },
-                ]}
-              />
-            </View>
-          </View>
-
-          <View
-            style={[
-              styles.compactDataCard,
-              {
-                backgroundColor: darkTheme.colors.card,
-                borderColor: "rgba(255,255,255,0.05)",
-              },
-            ]}
-          >
-            <View style={styles.compactMetricHeader}>
-              <Text style={styles.miniCapsTitle}>FLOOR CAPACITY</Text>
-              <Ionicons
-                name="people-outline"
-                size={scale(14)}
-                color={darkTheme.colors.accent}
-              />
-            </View>
-            <Text style={styles.massiveMetricText}>
-              7 <Text style={styles.metricUnit}>Staff</Text>
-            </Text>
-            <Text style={styles.metricContextHint}>Active floor roster</Text>
-          </View>
-        </View>
-
-        {/* 3. High-Fidelity Queue Spotlight Focus Box */}
-        <View
-          style={[
-            styles.spotlightQueueCard,
-            {
-              backgroundColor: darkTheme.colors.card,
-              borderColor: "rgba(255,255,255,0.06)",
-            },
-          ]}
-        >
-          <View style={styles.spotlightBadgeRow}>
-            <View style={styles.liveIndicatorContainer}>
-              <View style={styles.pulseDot} />
-              <Text style={styles.liveIndicatorText}>LIVE QUEUE STATUS</Text>
-            </View>
-            <View style={styles.nextPillContainer}>
-              <Text style={styles.nextPillText}>UP NEXT</Text>
-            </View>
-          </View>
-
-          <View style={styles.spotlightProfileRow}>
-            <View
-              style={[
-                styles.spotlightAvatarBox,
-                { backgroundColor: "rgba(255,149,0,0.08)" },
-              ]}
-            >
-              <Ionicons
-                name="flash"
-                size={scale(18)}
-                color={darkTheme.colors.accent}
-              />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text
-                style={[
-                  styles.spotlightClientName,
-                  { color: darkTheme.colors.textMain },
+                  styles.spotlightAvatarBox,
+                  { backgroundColor: "rgba(255,149,0,0.08)" },
                 ]}
               >
-                Shyam Sharma
-              </Text>
-              <Text
-                style={[
-                  darkTheme.typography.bodyMuted,
-                  styles.spotlightStylistSub,
-                ]}
-              >
-                Assigned: Stylist John Doe
-              </Text>
-            </View>
-            <View style={styles.timeAlignmentColumn}>
-              <Text style={styles.timeValueText}>--</Text>
-              <Text style={styles.timeLabelText}>EST. MINS</Text>
+                <Ionicons
+                  name="flash"
+                  size={scale(18)}
+                  color={darkTheme.colors.accent}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={[
+                    styles.spotlightClientName,
+                    { color: darkTheme.colors.textMain },
+                  ]}
+                >
+                  {nextUpClient
+                    ? nextUpClient.customerName
+                    : "No active live clients"}
+                </Text>
+                {nextUpClient && (
+                  <Text
+                    style={[
+                      darkTheme.typography.bodyMuted,
+                      styles.spotlightStylistSub,
+                    ]}
+                  >
+                    Assigned: {nextUpClient.barberName}
+                  </Text>
+                )}
+              </View>
+              <View style={styles.timeAlignmentColumn}>
+                <Text style={styles.timeValueText}>--</Text>
+                <Text style={styles.timeLabelText}>EST. MINS</Text>
+              </View>
             </View>
           </View>
-        </View>
+        )}
 
         {/* 4. Barbers Horizontal Deck */}
         <View style={styles.sectionHeaderSpacing}>
@@ -483,93 +682,127 @@ const Dashboard = () => {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.cleanHorizontalRosterTrack}
           >
-            {STAFF_ROSTER.map((staff) => (
-              <View key={staff.id} style={styles.minimalRosterNode}>
-                <View
-                  style={[
-                    styles.rosterRingFrame,
-                    {
-                      backgroundColor: darkTheme.colors.card,
-                    },
-                  ]}
-                >
-                  {staff.hasAvatar ? (
-                    <MaterialCommunityIcons
-                      name="account-tie-outline"
-                      size={scale(18)}
-                      color={darkTheme.colors.accent}
-                    />
-                  ) : (
-                    <Text style={styles.fallbackInitialText}>
-                      {staff.initial}
-                    </Text>
-                  )}
-                  <View style={styles.absoluteStatusDot} />
-                </View>
-                <Text
-                  style={[
-                    styles.minimalStaffLabel,
-                    { color: darkTheme.colors.textMain },
-                  ]}
-                  numberOfLines={1}
-                >
-                  {staff.name}
-                </Text>
+            {barbersData.loading ? (
+              <View style={{ flexDirection: "row", gap: scale(10) }}>
+                {[...Array(5)].map((_, i) => (
+                  <Shimmer
+                    key={i}
+                    width={scale(46)}
+                    height={scale(46)}
+                    borderRadius={scale(23)}
+                    isDark
+                  />
+                ))}
               </View>
-            ))}
+            ) : barbersData.data.length > 0 ? (
+              barbersData.data.map((staff) => (
+                <View key={staff._id} style={styles.minimalRosterNode}>
+                  <View
+                    style={[
+                      styles.rosterRingFrame,
+                      { backgroundColor: darkTheme.colors.card },
+                    ]}
+                  >
+                    {staff?.profile?.[0]?.url ? (
+                      <Image
+                        source={staff.profile[0].url}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          borderRadius: scale(26),
+                        }}
+                        contentFit="cover"
+                        transition={300}
+                      />
+                    ) : (
+                      <Text style={styles.fallbackInitialText}>
+                        {staff.initial || staff.name?.[0]}
+                      </Text>
+                    )}
+                  </View>
+                  <Text
+                    style={[
+                      styles.minimalStaffLabel,
+                      { color: darkTheme.colors.textMain },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {staff.name}
+                  </Text>
+                </View>
+              ))
+            ) : (
+              <Text style={{ color: darkTheme.colors.textMuted }}>
+                No active staff available
+              </Text>
+            )}
           </ScrollView>
         </View>
 
         {/* 5. Analytics Overview Container */}
-        <View
-          style={[
-            styles.premiumCard,
-            {
-              backgroundColor: darkTheme.colors.card,
-              borderColor: "rgba(255,255,255,0.06)",
-            },
-          ]}
-        >
-          <View style={styles.chartHeaderBlock}>
-            <Text
-              style={[
-                darkTheme.typography.cardTitle,
-                styles.sectionTitleLabel,
-                { color: darkTheme.colors.textMain },
-              ]}
-            >
-              Appointments Overview
-            </Text>
-            <Text
-              style={[
-                darkTheme.typography.bodyMuted,
-                styles.chartSubtitleLabel,
-              ]}
-            >
-              Dynamic active logs • Last 7 days
-            </Text>
-          </View>
+        {reportData.loading ? (
+          <Shimmer width="100%" height={230} isDark />
+        ) : appointmentChartData.length > 0 ? (
+          <View
+            style={[
+              styles.premiumCard,
+              {
+                backgroundColor: darkTheme.colors.card,
+                borderColor: "rgba(255,255,255,0.06)",
+              },
+            ]}
+          >
+            <View style={styles.chartHeaderBlock}>
+              <Text
+                style={[
+                  darkTheme.typography.cardTitle,
+                  styles.sectionTitleLabel,
+                  { color: darkTheme.colors.textMain },
+                ]}
+              >
+                Appointments Overview
+              </Text>
+              <Text
+                style={[
+                  darkTheme.typography.bodyMuted,
+                  styles.chartSubtitleLabel,
+                ]}
+              >
+                {appointmentReport?.dateFormat || "Last 7 days"}
+              </Text>
+            </View>
 
-          <View style={styles.chartWrapperAlignmentFrame}>
-            <BarChart
-              data={appointmentChartData}
-              barWidth={scale(38)}
-              spacing={scale(32)}
-              roundedTop
-              noOfSections={3}
-              maxValue={3}
-              isAnimated
-              yAxisThickness={0}
-              xAxisThickness={1}
-              xAxisColor="rgba(255,255,255,0.08)"
-              yAxisTextStyle={styles.chartAxisLabelTextStyle}
-              xAxisLabelTextStyle={styles.chartAxisLabelTextStyle}
-              rulesType="solid"
-              rulesColor="rgba(255,255,255,0.03)"
-              height={verticalScale(110)}
-            />
+            <View style={styles.chartWrapperAlignmentFrame}>
+              <BarChart
+                data={appointmentChartData}
+                barWidth={scale(24)}
+                spacing={scale(16)}
+                roundedTop
+                noOfSections={4}
+                maxValue={maxChartValue}
+                isAnimated
+                yAxisThickness={0}
+                xAxisThickness={1}
+                xAxisColor="rgba(255,255,255,0.08)"
+                yAxisTextStyle={styles.chartAxisLabelTextStyle}
+                xAxisLabelTextStyle={styles.chartAxisLabelTextStyle}
+                rulesType="solid"
+                rulesColor="rgba(255,255,255,0.03)"
+                height={verticalScale(130)}
+              />
+            </View>
           </View>
-        </View>
+        ) : (
+          <Text
+            style={{
+              alignSelf: "center",
+              color: darkTheme.colors.textMuted,
+              marginVertical: 20,
+            }}
+          >
+            No report metrics collected.
+          </Text>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

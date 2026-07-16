@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   FlatList,
   Platform,
@@ -15,6 +15,7 @@ import { scale, verticalScale } from "react-native-size-matters";
 
 import Header from "../../../../../components/Header/Header"; 
 import { darkTheme } from "../../../../../constants/appTheme";
+import { useFocusEffect } from "expo-router";
 
 const LIVE_QUEUE_DATA = [
   { id: "1", clientName: "Shyam Sharma", barberName: "John Doe", status: "Next", position: "1" },

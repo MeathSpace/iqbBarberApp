@@ -6,12 +6,16 @@ export const useAdminGlobal = () => useContext(GlobalContext);
 
 // Provider component
 export const GlobalProvider = ({ children }) => {
-  const [global] = useState("Global Context From Admin");
+  const [currentSalon, setCurrentSalon] = useState({
+    loading: false,
+    data: null
+  });
 
   return (
     <GlobalContext.Provider
       value={{
-        global,
+        currentSalon,
+        setCurrentSalon
       }}
     >
       {children}

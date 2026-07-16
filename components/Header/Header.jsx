@@ -1,7 +1,8 @@
 import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { useRouter, useSegments } from "expo-router";
-import { useRef, useState } from "react";
+import { useFocusEffect, useRouter, useSegments } from "expo-router";
+import { useCallback, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Animated,
   Dimensions,
   Modal,
@@ -17,17 +18,11 @@ import { scale, verticalScale } from "react-native-size-matters";
 
 import { darkTheme } from "../../constants/appTheme";
 import { useAdminAuth } from "../../context/admin/AuthContext";
+import { useAdminGlobal } from "../../context/admin/GlobalContext";
+import api from "../../utils/api";
 
 const { width, height } = Dimensions.get("window");
 const DRAWER_WIDTH = width * 0.72;
-
-// Mock list matching your platform salon catalog index profiles
-const MOCK_SALONS = [
-  { id: "s1", name: "Modern Unisex Salon" },
-  { id: "s2", name: "Salon 2" },
-  { id: "s3", name: "Salon 3" },
-  { id: "s4", name: "salon 4" },
-];
 
 const MENU_ITEMS = [
   {
@@ -190,7 +185,9 @@ const MENU_ITEMS = [
 ];
 
 const Header = ({ title, subTitle, showBack = false }) => {
-  const { userLogut } = useAdminAuth();
+  const { userLogut, authenticatedUser, fetchLoggedInAdmin } = useAdminAuth();
+  const { currentSalon, setCurrentSalon } = useAdminGlobal();
+
   const router = useRouter();
   const segments = useSegments();
   const [menuVisible, setMenuVisible] = useState(false);
@@ -270,6 +267,74 @@ const Header = ({ title, subTitle, showBack = false }) => {
       return <Feather name={name} size={size} color={color} />;
     }
     return <Ionicons name={name} size={size} color={color} />;
+  };
+
+  // console.log("Current User Salon Id", authenticatedUser?.salonId)
+
+  const [allSalons, setAllSalons] = useState(null);
+
+  const get_salon_info = async () => {
+    try {
+      setCurrentSalon((prev) => ({
+        ...prev,
+        loading: true,
+      }));
+
+      const { data } = await api.post("/admin/getDefaultSalonByAdmin", {
+        adminEmail: authenticatedUser?.email,
+      });
+
+      setCurrentSalon({
+        loading: false,
+        data: data?.response,
+      });
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setCurrentSalon((prev) => ({
+        ...prev,
+        loading: false,
+      }));
+    }
+  };
+
+  const get_all_salons = async () => {
+    try {
+      const { data } = await api.post("/admin/getAllSalonsByAdmin", {
+        adminEmail: authenticatedUser?.email,
+      });
+
+      setAllSalons(data?.salons);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      if (authenticatedUser?.salonId) {
+        get_salon_info();
+        get_all_salons();
+      }
+    }, [authenticatedUser?.salonId]),
+  );
+
+  const [applyLoader, setApplyLoader] = useState(false);
+
+  const applySalonHandler = async () => {
+    try {
+      setApplyLoader(true);
+      await api.post("/admin/changeDefaultSalonIdofAdmin", {
+        salonId: selectedSalonId,
+        adminEmail: authenticatedUser?.email,
+      });
+      fetchLoggedInAdmin();
+      closeSalonModal();
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setApplyLoader(false);
+    }
   };
 
   return (
@@ -680,8 +745,7 @@ const Header = ({ title, subTitle, showBack = false }) => {
                 style={{ marginRight: scale(10) }}
               />
               <Text style={styles.activeSalonLabelText}>
-                {MOCK_SALONS.find((s) => s.id === selectedSalonId)?.name ||
-                  "Select Profile Workspace"}
+                {currentSalon?.data?.salonName}
               </Text>
             </View>
 
@@ -693,47 +757,69 @@ const Header = ({ title, subTitle, showBack = false }) => {
               ]}
             >
               <ScrollView showsVerticalScrollIndicator={false}>
-                {MOCK_SALONS.map((salon) => {
-                  const isCurrentSelection = selectedSalonId === salon.id;
-                  return (
-                    <TouchableOpacity
-                      key={salon.id}
-                      activeOpacity={0.8}
-                      onPress={() => setSelectedSalonId(salon.id)}
-                      style={[
-                        styles.salonSelectionItemRowUnit,
-                        isCurrentSelection && {
-                          backgroundColor: "rgba(255, 149, 0, 0.04)",
-                        },
-                      ]}
-                    >
-                      <Text
+                {allSalons?.length > 0 ? (
+                  allSalons.map((salon) => {
+                    const isCurrentSelection =
+                      selectedSalonId === salon.salonId;
+
+                    return (
+                      <TouchableOpacity
+                        key={salon._id}
+                        activeOpacity={0.8}
+                        onPress={() => setSelectedSalonId(salon.salonId)}
                         style={[
-                          styles.salonSelectionItemLabelText,
-                          {
-                            color: isCurrentSelection
-                              ? darkTheme.colors.accent
-                              : "rgba(255,255,255,0.5)",
+                          styles.salonSelectionItemRowUnit,
+                          isCurrentSelection && {
+                            backgroundColor: "rgba(255, 149, 0, 0.04)",
                           },
                         ]}
                       >
-                        {salon.name}
-                      </Text>
-                      {isCurrentSelection && (
-                        <Ionicons
-                          name="checkmark-circle"
-                          size={scale(14)}
-                          color={darkTheme.colors.accent}
-                        />
-                      )}
-                    </TouchableOpacity>
-                  );
-                })}
+                        <Text
+                          style={[
+                            styles.salonSelectionItemLabelText,
+                            {
+                              color: isCurrentSelection
+                                ? darkTheme.colors.accent
+                                : "rgba(255,255,255,0.5)",
+                            },
+                          ]}
+                        >
+                          {salon.salonName}
+                        </Text>
+
+                        {isCurrentSelection && (
+                          <Ionicons
+                            name="checkmark-circle"
+                            size={scale(14)}
+                            color={darkTheme.colors.accent}
+                          />
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })
+                ) : (
+                  <View
+                    style={{
+                      paddingVertical: verticalScale(20),
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.salonSelectionItemLabelText,
+                        {
+                          color: "rgba(255,255,255,0.5)",
+                        },
+                      ]}
+                    >
+                      No salons available
+                    </Text>
+                  </View>
+                )}
               </ScrollView>
             </View>
 
-            {/* Confirmation workflow submission click controller track */}
-            {/* Confirmation workflow submission click controller track */}
             <TouchableOpacity
               style={[
                 styles.sheetSubmitActionBtn,
@@ -741,18 +827,22 @@ const Header = ({ title, subTitle, showBack = false }) => {
               ]}
               activeOpacity={0.85}
               onPress={() => {
-                console.log(
-                  "Context profile altered successfully to target ID instance reference:",
-                  selectedSalonId,
-                );
-                closeSalonModal();
+                applySalonHandler();
               }}
+              disabled={applyLoader}
             >
-              <Text
-                style={[styles.sheetSubmitActionBtnText, { color: "#000000" }]}
-              >
-                Apply
-              </Text>
+              {applyLoader ? (
+                <ActivityIndicator color="#000" />
+              ) : (
+                <Text
+                  style={[
+                    styles.sheetSubmitActionBtnText,
+                    { color: "#000000" },
+                  ]}
+                >
+                  Apply
+                </Text>
+              )}
             </TouchableOpacity>
           </Animated.View>
         </View>
