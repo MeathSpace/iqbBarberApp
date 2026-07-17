@@ -1,6 +1,7 @@
 import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter, useSegments } from "expo-router";
 import { useCallback, useRef, useState } from "react";
+import { MENU_ITEMS } from "../Header/menu"
 import {
   ActivityIndicator,
   Animated,
@@ -23,166 +24,6 @@ import api from "../../utils/api";
 
 const { width, height } = Dimensions.get("window");
 const DRAWER_WIDTH = width * 0.72;
-
-const MENU_ITEMS = [
-  {
-    key: "dashboard",
-    label: "Dashboard",
-    iconFamily: "Feather",
-    iconName: "grid",
-    route: "/(admintabs)/(home)",
-  },
-  {
-    key: "change-salon", // New tactical toggle option action hook trigger
-    label: "Change Salon",
-    iconFamily: "Ionicons",
-    iconName: "swap-horizontal-outline",
-    isActionTrigger: true,
-  },
-  {
-    key: "profile",
-    label: "Profile",
-    iconFamily: "Feather",
-    iconName: "user",
-    route: "/(admin)/(profile)",
-  },
-  {
-    key: "customer",
-    label: "Customers",
-    iconFamily: "Feather",
-    iconName: "users",
-    route: "/(admin)/(customer)",
-  },
-  {
-    key: "salon",
-    label: "Salons",
-    iconFamily: "Ionicons",
-    iconName: "storefront-outline",
-    isAccordion: true,
-    children: [
-      {
-        key: "salon-list",
-        label: "Salon List",
-        iconFamily: "Ionicons",
-        iconName: "list-outline",
-        route: "/(admin)/(salon)",
-      },
-      {
-        key: "create-salon",
-        label: "Create Salon",
-        iconFamily: "Ionicons",
-        iconName: "add-circle-outline",
-        route: "/(admin)/(salon)/createSalon",
-      },
-    ],
-  },
-  {
-    key: "barber",
-    label: "Barbers",
-    iconFamily: "Ionicons",
-    iconName: "cut-outline",
-    isAccordion: true,
-    children: [
-      {
-        key: "barber-list",
-        label: "Barber List",
-        iconFamily: "Ionicons",
-        iconName: "list-outline",
-        route: "/(admin)/(barber)",
-      },
-      {
-        key: "create-barber",
-        label: "Create Barber",
-        iconFamily: "Ionicons",
-        iconName: "person-add-outline",
-        route: "/(admin)/(barber)/(steps)",
-      },
-    ],
-  },
-  {
-    key: "reports",
-    label: "Analytics",
-    iconFamily: "Feather",
-    iconName: "bar-chart-2",
-    route: "/(admin)/(reports)",
-  },
-  {
-    key: "payments",
-    label: "Payments",
-    iconFamily: "Feather",
-    iconName: "credit-card",
-    isAccordion: true,
-    children: [
-      {
-        key: "payment-history",
-        label: "History",
-        iconFamily: "Feather",
-        iconName: "activity",
-        route: "/(admin)/(payments)/",
-      },
-      {
-        key: "payment-settings",
-        label: "Gateways",
-        iconFamily: "Feather",
-        iconName: "sliders",
-        route: "/(admin)/(payments)/paymentSettings",
-      },
-    ],
-  },
-  {
-    key: "queue",
-    label: "Live Queue",
-    iconFamily: "Ionicons",
-    iconName: "git-commit-outline",
-    isAccordion: true,
-    children: [
-      {
-        key: "queue-list",
-        label: "Active List",
-        iconFamily: "Ionicons",
-        iconName: "list-outline",
-        route: "/(admintabs)/(queue)",
-      },
-      {
-        key: "queue-history",
-        label: "History Log",
-        iconFamily: "Ionicons",
-        iconName: "time-outline",
-        route: "/(admintabs)/(queue)/queueHistory",
-      },
-    ],
-  },
-  {
-    key: "appointment",
-    label: "Appointments",
-    iconFamily: "Feather",
-    iconName: "calendar",
-    isAccordion: true,
-    children: [
-      {
-        key: "appointment-list",
-        label: "Schedules",
-        iconFamily: "Feather",
-        iconName: "clock",
-        route: "/(admintabs)/(appointment)",
-      },
-      {
-        key: "appointment-history",
-        label: "Historical Records",
-        iconFamily: "Feather",
-        iconName: "archive",
-        route: "/(admintabs)/(appointment)/appointmentHistory",
-      },
-    ],
-  },
-  {
-    key: "subscriptions",
-    label: "Premium Membership",
-    iconFamily: "Feather",
-    iconName: "award",
-    route: "/(admin)/(subscriptions)",
-  },
-];
 
 const Header = ({ title, subTitle, showBack = false }) => {
   const { userLogut, authenticatedUser, fetchLoggedInAdmin } = useAdminAuth();
@@ -268,8 +109,6 @@ const Header = ({ title, subTitle, showBack = false }) => {
     }
     return <Ionicons name={name} size={size} color={color} />;
   };
-
-  // console.log("Current User Salon Id", authenticatedUser?.salonId)
 
   const [allSalons, setAllSalons] = useState(null);
 

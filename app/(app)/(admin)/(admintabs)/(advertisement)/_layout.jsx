@@ -6,6 +6,7 @@ const AppointmentLayout = () => {
         <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="index" />
             <Stack.Screen name="createAdvertisement" />
+            <Stack.Screen name="editAdvertisement" />
         </Stack>
     )
 }

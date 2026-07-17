@@ -240,11 +240,1780 @@
 //   },
 // });
 
+// import { Feather, Ionicons } from "@expo/vector-icons";
+// import { Image } from "expo-image";
+// import { useFocusEffect } from "expo-router";
+// import { useCallback, useState } from "react";
+// import {
+//   ScrollView,
+//   StyleSheet,
+//   Text,
+//   TextInput,
+//   TouchableOpacity,
+//   View,
+// } from "react-native";
+// import { BarChart } from "react-native-gifted-charts";
+// import Shimmer from "react-native-modern-shimmer";
+// import { SafeAreaView } from "react-native-safe-area-context";
+// import { scale, verticalScale } from "react-native-size-matters";
+// import Header from "../../../../../components/Header/Header";
+// import { darkTheme } from "../../../../../constants/appTheme";
+// import { useAdminAuth } from "../../../../../context/admin/AuthContext";
+// import { useAdminGlobal } from "../../../../../context/admin/GlobalContext";
+// import api from "../../../../../utils/api";
+
+// const Dashboard = () => {
+//   const { currentSalon } = useAdminGlobal();
+//   const { authenticatedUser } = useAdminAuth();
+
+//   // Input & Update Status States
+//   const [isEditingInfo, setIsEditingInfo] = useState(false);
+//   const [salonDescription, setSalonDescription] = useState("");
+//   const [isSavingProfile, setIsSavingProfile] = useState(false);
+//   const [isExpanded, setIsExpanded] = useState(false);
+
+//   const isLongDescription = salonDescription && salonDescription.length > 120;
+
+//   // Server data states
+//   const [barbersData, setBarberData] = useState({ loading: false, data: [] });
+//   const [queuelistData, setQueuelistData] = useState({
+//     loading: false,
+//     data: [],
+//   });
+//   const [reportData, setReportData] = useState({ loading: false, data: null });
+
+//   // Sync profile details when context loads
+//   useFocusEffect(
+//     useCallback(() => {
+//       if (currentSalon?.data?.salonInfo) {
+//         setSalonDescription(currentSalon.data.salonInfo);
+//       }
+//     }, [currentSalon?.data?.salonInfo]),
+//   );
+
+//   // Consolidated parallel API initiator
+//   const fetchDashboardData = useCallback(async () => {
+//     const salonId = authenticatedUser?.salonId;
+//     if (!salonId) return;
+
+//     setBarberData((prev) => ({ ...prev, loading: true }));
+//     setQueuelistData((prev) => ({ ...prev, loading: true }));
+//     setReportData((prev) => ({ ...prev, loading: true }));
+
+//     try {
+//       const [barbersRes, queueRes, reportRes] = await Promise.all([
+//         api.get(`/admin/getAllBarbersForDashboard?salonId=${salonId}`),
+//         api.get(`/queue/getQListBySalonId?salonId=${salonId}`),
+//         api.post(`reports/getnewdashboardReports`, { salonId }),
+//       ]);
+
+//       setBarberData({
+//         loading: false,
+//         data: barbersRes.data?.getAllBarbers || [],
+//       });
+//       setQueuelistData({ loading: false, data: queueRes.data?.response || [] });
+
+//       // FIX: Capture the nested "response" sub-object directly into state
+//       setReportData({ loading: false, data: reportRes.data?.response || null });
+//     } catch (error) {
+//       console.error("Dashboard data aggregation error:", error);
+//       setBarberData((prev) => ({ ...prev, loading: false }));
+//       setQueuelistData((prev) => ({ ...prev, loading: false }));
+//       setReportData((prev) => ({ ...prev, loading: false }));
+//     }
+//   }, [authenticatedUser?.salonId]);
+
+//   useFocusEffect(
+//     useCallback(() => {
+//       let isMounted = true;
+//       if (isMounted) {
+//         fetchDashboardData();
+//       }
+//       return () => {
+//         isMounted = false;
+//       };
+//     }, [fetchDashboardData]),
+//   );
+
+//   // Dummy API handler to update the Salon Profile text
+//   const handleSaveSalonProfile = async () => {
+//     if (isEditingInfo) {
+//       try {
+//         setIsSavingProfile(true);
+
+//         const payload = {
+//           salonId: authenticatedUser?.salonId,
+//           salonInfo: salonDescription,
+//         };
+
+//         await api.post(`/salon/updateSalonInfo`, payload);
+
+//       } catch (error) {
+//         console.error("Failed to update salon profile text:", error);
+//       } finally {
+//         setIsSavingProfile(false);
+//         setIsEditingInfo(false);
+//       }
+//     } else {
+//       setIsEditingInfo(true);
+//     }
+//   };
+
+//   // Extract nested properties cleanly
+//   const queueReport = reportData?.data?.queue;
+//   const appointmentReport = reportData?.data?.appointment;
+//   const nextUpClient = queuelistData.data?.[0];
+
+//   // Map backend last7daysCount array elements to the Bar Chart configuration keys
+//   const rawChartData = appointmentReport?.last7daysCount || [];
+
+//   const appointmentChartData = rawChartData.map((item) => ({
+//     value: item.TotalAppoinment,
+//     label: item.date,
+//     frontColor: darkTheme.colors.accent,
+//     topLabelComponent: () => (
+//       <Text style={styles.chartTopLabel}>{item.TotalAppoinment}</Text>
+//     ),
+//   }));
+
+//   // Auto-scale the max height bounds dynamically depending on absolute backend parameters
+//   const maxChartValue = Math.max(
+//     ...rawChartData.map((d) => d.TotalAppoinment),
+//     3,
+//   );
+
+//   // Dynamic Trend Indicator styling based on backend return strings
+//   const isTrendFall = queueReport?.queueTrend === "Fall";
+
+//   return (
+//     <SafeAreaView
+//       edges={["top", "right", "left"]}
+//       style={[
+//         styles.container,
+//         { backgroundColor: darkTheme.colors.background },
+//       ]}
+//     >
+//       <Header
+//         title="Dashboard"
+//         subTitle="Salon Administration Ecosystem"
+//         showBack={false}
+//       />
+
+//       <ScrollView
+//         showsVerticalScrollIndicator={false}
+//         contentContainerStyle={styles.scrollContainer}
+//       >
+//         {/* 1. Immersive Salon Info Section */}
+//         <View style={styles.editorialHeaderBlock}>
+//           <View style={styles.editorialRow}>
+//             <Text
+//               style={[
+//                 styles.editorialTitle,
+//                 { color: darkTheme.colors.textMain },
+//               ]}
+//             >
+//               The Salon Profile
+//             </Text>
+//             <TouchableOpacity
+//               style={[
+//                 styles.minimalEditTrigger,
+//                 isEditingInfo && { backgroundColor: "rgba(255, 149, 0, 0.1)" },
+//               ]}
+//               onPress={handleSaveSalonProfile}
+//               disabled={isSavingProfile}
+//               activeOpacity={0.7}
+//             >
+//               <Feather
+//                 name={
+//                   isSavingProfile
+//                     ? "loader"
+//                     : isEditingInfo
+//                       ? "check-circle"
+//                       : "edit-2"
+//                 }
+//                 size={scale(13)}
+//                 color={
+//                   isEditingInfo
+//                     ? darkTheme.colors.accent
+//                     : darkTheme.colors.textMuted
+//                 }
+//               />
+//               <Text
+//                 style={[
+//                   styles.minimalEditText,
+//                   {
+//                     color: isEditingInfo
+//                       ? darkTheme.colors.accent
+//                       : darkTheme.colors.textMuted,
+//                   },
+//                 ]}
+//               >
+//                 {isSavingProfile
+//                   ? "Saving..."
+//                   : isEditingInfo
+//                     ? "Save Changes"
+//                     : "Edit Details"}
+//               </Text>
+//             </TouchableOpacity>
+//           </View>
+
+//           {isEditingInfo ? (
+//             <TextInput
+//               style={[
+//                 styles.premiumInlineInput,
+//                 { color: darkTheme.colors.textMain },
+//               ]}
+//               value={salonDescription}
+//               onChangeText={setSalonDescription}
+//               multiline
+//               autoFocus
+//               editable={!isSavingProfile}
+//             />
+//           ) : currentSalon?.loading ? (
+//             <View style={{ gap: 8 }}>
+//               {[...Array(4)].map((_, i) => (
+//                 <Shimmer key={i} width="100%" height={16} isDark />
+//               ))}
+//             </View>
+//           ) : (
+//             <View>
+//               <Text
+//                 style={[
+//                   styles.editorialParagraph,
+//                   { color: darkTheme.colors.textMuted },
+//                 ]}
+//                 numberOfLines={isExpanded ? undefined : 3}
+//               >
+//                 {salonDescription || "No profile description configured."}
+//               </Text>
+
+//               {isLongDescription && (
+//                 <TouchableOpacity
+//                   onPress={() => setIsExpanded(!isExpanded)}
+//                   activeOpacity={0.6}
+//                   style={styles.seeMoreToggleContainer}
+//                 >
+//                   <Text
+//                     style={[
+//                       styles.seeMoreText,
+//                       { color: darkTheme.colors.accent },
+//                     ]}
+//                   >
+//                     {isExpanded ? "See Less" : "See More"}
+//                   </Text>
+//                 </TouchableOpacity>
+//               )}
+//             </View>
+//           )}
+//         </View>
+
+//         {/* 2. Compact Performance Quick-Metrics Split Row */}
+//         <View style={styles.splitGridRow}>
+//           {reportData.loading ? (
+//             <>
+//               <Shimmer
+//                 isDark
+//                 style={{
+//                   flex: 1,
+//                   padding: scale(12),
+//                   minHeight: verticalScale(70),
+//                 }}
+//               />
+//               <Shimmer
+//                 isDark
+//                 style={{
+//                   flex: 1,
+//                   padding: scale(12),
+//                   minHeight: verticalScale(70),
+//                 }}
+//               />
+//             </>
+//           ) : (
+//             <>
+//               <View
+//                 style={[
+//                   styles.compactDataCard,
+//                   {
+//                     backgroundColor: darkTheme.colors.card,
+//                     borderColor: "rgba(255,255,255,0.05)",
+//                   },
+//                 ]}
+//               >
+//                 <View style={styles.compactMetricHeader}>
+//                   <Text style={styles.miniCapsTitle}>QUEUE HISTORY</Text>
+//                   <Ionicons
+//                     name={isTrendFall ? "trending-down" : "trending-up"}
+//                     size={scale(14)}
+//                     color={isTrendFall ? "#FF3B30" : "#34C759"}
+//                   />
+//                 </View>
+//                 <Text style={styles.massiveMetricText}>
+//                   {queueReport?.percentageChangelast30Days || 0}%
+//                 </Text>
+//                 <View style={styles.miniProgressTrack}>
+//                   <View
+//                     style={[
+//                       styles.miniProgressFill,
+//                       {
+//                         width: `${queueReport?.servedHistoryPercentage || 0}%`,
+//                         backgroundColor: "#34C759",
+//                       },
+//                     ]}
+//                   />
+//                   <View
+//                     style={[
+//                       styles.miniProgressFill,
+//                       {
+//                         width: `${queueReport?.cancelledHistoryPercentage || 0}%`,
+//                         backgroundColor: "#FF3B30",
+//                       },
+//                     ]}
+//                   />
+//                 </View>
+//               </View>
+
+//               <View
+//                 style={[
+//                   styles.compactDataCard,
+//                   {
+//                     backgroundColor: darkTheme.colors.card,
+//                     borderColor: "rgba(255,255,255,0.05)",
+//                   },
+//                 ]}
+//               >
+//                 <View style={styles.compactMetricHeader}>
+//                   <Text style={styles.miniCapsTitle}>FLOOR CAPACITY</Text>
+//                   <Ionicons
+//                     name="people-outline"
+//                     size={scale(14)}
+//                     color={darkTheme.colors.accent}
+//                   />
+//                 </View>
+//                 <Text style={styles.massiveMetricText}>
+//                   7 <Text style={styles.metricUnit}>Staff</Text>
+//                 </Text>
+//                 <Text style={styles.metricContextHint}>
+//                   Active floor roster
+//                 </Text>
+//               </View>
+//             </>
+//           )}
+//         </View>
+
+//         {/* 3. Live Queue Card */}
+//         {queuelistData.loading ? (
+//           <Shimmer width="100%" height={100} isDark />
+//         ) : (
+//           <View
+//             style={[
+//               styles.spotlightQueueCard,
+//               {
+//                 backgroundColor: darkTheme.colors.card,
+//                 borderColor: "rgba(255,255,255,0.06)",
+//               },
+//             ]}
+//           >
+//             <View style={styles.spotlightBadgeRow}>
+//               <View style={styles.liveIndicatorContainer}>
+//                 <View style={styles.pulseDot} />
+//                 <Text style={styles.liveIndicatorText}>LIVE QUEUE STATUS</Text>
+//               </View>
+//               <View style={styles.nextPillContainer}>
+//                 <Text style={styles.nextPillText}>UP NEXT</Text>
+//               </View>
+//             </View>
+
+//             <View style={styles.spotlightProfileRow}>
+//               <View
+//                 style={[
+//                   styles.spotlightAvatarBox,
+//                   { backgroundColor: "rgba(255,149,0,0.08)" },
+//                 ]}
+//               >
+//                 <Ionicons
+//                   name="flash"
+//                   size={scale(18)}
+//                   color={darkTheme.colors.accent}
+//                 />
+//               </View>
+//               <View style={{ flex: 1 }}>
+//                 <Text
+//                   style={[
+//                     styles.spotlightClientName,
+//                     { color: darkTheme.colors.textMain },
+//                   ]}
+//                 >
+//                   {nextUpClient
+//                     ? nextUpClient.customerName
+//                     : "No active live clients"}
+//                 </Text>
+//                 {nextUpClient && (
+//                   <Text
+//                     style={[
+//                       darkTheme.typography.bodyMuted,
+//                       styles.spotlightStylistSub,
+//                     ]}
+//                   >
+//                     Assigned: {nextUpClient.barberName}
+//                   </Text>
+//                 )}
+//               </View>
+//               <View style={styles.timeAlignmentColumn}>
+//                 <Text style={styles.timeValueText}>--</Text>
+//                 <Text style={styles.timeLabelText}>EST. MINS</Text>
+//               </View>
+//             </View>
+//           </View>
+//         )}
+
+//         {/* 4. Barbers Horizontal Deck */}
+//         <View style={styles.sectionHeaderSpacing}>
+//           <Text
+//             style={[
+//               darkTheme.typography.cardTitle,
+//               styles.sectionTitleLabel,
+//               { color: darkTheme.colors.textMain },
+//             ]}
+//           >
+//             Barbers On Duty
+//           </Text>
+//           <ScrollView
+//             horizontal
+//             showsHorizontalScrollIndicator={false}
+//             contentContainerStyle={styles.cleanHorizontalRosterTrack}
+//           >
+//             {barbersData.loading ? (
+//               <View style={{ flexDirection: "row", gap: scale(10) }}>
+//                 {[...Array(5)].map((_, i) => (
+//                   <Shimmer
+//                     key={i}
+//                     width={scale(46)}
+//                     height={scale(46)}
+//                     borderRadius={scale(23)}
+//                     isDark
+//                   />
+//                 ))}
+//               </View>
+//             ) : barbersData.data.length > 0 ? (
+//               barbersData.data.map((staff) => (
+//                 <View key={staff._id} style={styles.minimalRosterNode}>
+//                   <View
+//                     style={[
+//                       styles.rosterRingFrame,
+//                       { backgroundColor: darkTheme.colors.card },
+//                     ]}
+//                   >
+//                     {staff?.profile?.[0]?.url ? (
+//                       <Image
+//                         source={staff.profile[0].url}
+//                         style={{
+//                           width: "100%",
+//                           height: "100%",
+//                           borderRadius: scale(26),
+//                         }}
+//                         contentFit="cover"
+//                         transition={300}
+//                       />
+//                     ) : (
+//                       <Text style={styles.fallbackInitialText}>
+//                         {staff.initial || staff.name?.[0]}
+//                       </Text>
+//                     )}
+//                   </View>
+//                   <Text
+//                     style={[
+//                       styles.minimalStaffLabel,
+//                       { color: darkTheme.colors.textMain },
+//                     ]}
+//                     numberOfLines={1}
+//                   >
+//                     {staff.name}
+//                   </Text>
+//                 </View>
+//               ))
+//             ) : (
+//               <Text style={{ color: darkTheme.colors.textMuted }}>
+//                 No active staff available
+//               </Text>
+//             )}
+//           </ScrollView>
+//         </View>
+
+//         {/* 5. Analytics Overview Container */}
+//         {reportData.loading ? (
+//           <Shimmer width="100%" height={230} isDark />
+//         ) : appointmentChartData.length > 0 ? (
+//           <View
+//             style={[
+//               styles.premiumCard,
+//               {
+//                 backgroundColor: darkTheme.colors.card,
+//                 borderColor: "rgba(255,255,255,0.06)",
+//               },
+//             ]}
+//           >
+//             <View style={styles.chartHeaderBlock}>
+//               <Text
+//                 style={[
+//                   darkTheme.typography.cardTitle,
+//                   styles.sectionTitleLabel,
+//                   { color: darkTheme.colors.textMain },
+//                 ]}
+//               >
+//                 Appointments Overview
+//               </Text>
+//               <Text
+//                 style={[
+//                   darkTheme.typography.bodyMuted,
+//                   styles.chartSubtitleLabel,
+//                 ]}
+//               >
+//                 {appointmentReport?.dateFormat || "Last 7 days"}
+//               </Text>
+//             </View>
+
+//             <View style={styles.chartWrapperAlignmentFrame}>
+//               <BarChart
+//                 data={appointmentChartData}
+//                 barWidth={scale(24)}
+//                 spacing={scale(16)}
+//                 roundedTop
+//                 noOfSections={4}
+//                 maxValue={maxChartValue}
+//                 isAnimated
+//                 yAxisThickness={0}
+//                 xAxisThickness={1}
+//                 xAxisColor="rgba(255,255,255,0.08)"
+//                 yAxisTextStyle={styles.chartAxisLabelTextStyle}
+//                 xAxisLabelTextStyle={styles.chartAxisLabelTextStyle}
+//                 rulesType="solid"
+//                 rulesColor="rgba(255,255,255,0.03)"
+//                 height={verticalScale(130)}
+//               />
+//             </View>
+//           </View>
+//         ) : (
+//           <Text
+//             style={{
+//               alignSelf: "center",
+//               color: darkTheme.colors.textMuted,
+//               marginVertical: 20,
+//             }}
+//           >
+//             No report metrics collected.
+//           </Text>
+//         )}
+//       </ScrollView>
+//     </SafeAreaView>
+//   );
+// };
+
+// export default Dashboard;
+
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//   },
+//   scrollContainer: {
+//     paddingHorizontal: scale(16),
+//     // paddingTop: verticalScale(16),
+//     paddingBottom: verticalScale(32),
+//     gap: verticalScale(20),
+//   },
+//   premiumCard: {
+//     borderWidth: 1,
+//     borderRadius: scale(16),
+//     padding: scale(16),
+//   },
+//   editorialHeaderBlock: {
+//     paddingVertical: verticalScale(4),
+//     paddingHorizontal: scale(2),
+//   },
+//   editorialRow: {
+//     flexDirection: "row",
+//     justifyContent: "space-between",
+//     alignItems: "center",
+//     marginBottom: verticalScale(8),
+//   },
+//   editorialTitle: {
+//     fontSize: scale(18),
+//     fontWeight: "800",
+//     letterSpacing: -0.4,
+//   },
+//   minimalEditTrigger: {
+//     flexDirection: "row",
+//     alignItems: "center",
+//     gap: scale(5),
+//     paddingHorizontal: scale(8),
+//     paddingVertical: verticalScale(4),
+//     borderRadius: scale(6),
+//   },
+//   minimalEditText: {
+//     fontSize: scale(11),
+//     fontWeight: "600",
+//   },
+//   editorialParagraph: {
+//     fontSize: scale(12.5),
+//     lineHeight: scale(19),
+//     opacity: 0.7,
+//     letterSpacing: -0.1,
+//   },
+//   premiumInlineInput: {
+//     fontSize: scale(12.5),
+//     lineHeight: scale(19),
+//     letterSpacing: -0.1,
+//     borderWidth: 1,
+//     borderRadius: scale(10),
+//     padding: scale(12),
+//     backgroundColor: "rgba(0,0,0,0.25)",
+//     borderColor: "rgba(255, 255, 255, 0.12)",
+//     textAlignVertical: "top",
+//     minHeight: verticalScale(70),
+//   },
+//   splitGridRow: {
+//     flexDirection: "row",
+//     gap: scale(12),
+//     width: "100%",
+//   },
+//   compactDataCard: {
+//     flex: 1,
+//     borderWidth: 1,
+//     borderRadius: scale(14),
+//     padding: scale(12),
+//     justifyContent: "space-between",
+//     minHeight: verticalScale(85),
+//   },
+//   compactMetricHeader: {
+//     flexDirection: "row",
+//     justifyContent: "space-between",
+//     alignItems: "center",
+//   },
+//   miniCapsTitle: {
+//     fontSize: scale(9),
+//     fontWeight: "700",
+//     color: "rgba(255,255,255,0.4)",
+//     letterSpacing: 0.5,
+//   },
+//   massiveMetricText: {
+//     fontSize: scale(20),
+//     fontWeight: "700",
+//     color: "#FFFFFF",
+//     letterSpacing: -0.5,
+//     marginVertical: verticalScale(6),
+//   },
+//   metricUnit: {
+//     fontSize: scale(11),
+//     fontWeight: "400",
+//     color: "rgba(255,255,255,0.4)",
+//   },
+//   metricContextHint: {
+//     fontSize: scale(9.5),
+//     color: "rgba(255,255,255,0.35)",
+//   },
+//   miniProgressTrack: {
+//     width: "100%",
+//     height: scale(4),
+//     borderRadius: scale(2),
+//     overflow: "hidden",
+//     flexDirection: "row",
+//     backgroundColor: "rgba(255,255,255,0.05)",
+//   },
+//   miniProgressFill: {
+//     height: "100%",
+//   },
+//   spotlightQueueCard: {
+//     borderWidth: 1,
+//     borderRadius: scale(16),
+//     padding: scale(16),
+//   },
+//   spotlightBadgeRow: {
+//     flexDirection: "row",
+//     justifyContent: "space-between",
+//     alignItems: "center",
+//     marginBottom: verticalScale(14),
+//   },
+//   liveIndicatorContainer: {
+//     flexDirection: "row",
+//     alignItems: "center",
+//     gap: scale(6),
+//   },
+//   pulseDot: {
+//     width: scale(6),
+//     height: scale(6),
+//     borderRadius: scale(3),
+//     backgroundColor: darkTheme.colors.accent,
+//   },
+//   liveIndicatorText: {
+//     fontSize: scale(9.5),
+//     fontWeight: "700",
+//     color: darkTheme.colors.accent,
+//     letterSpacing: 0.5,
+//   },
+//   nextPillContainer: {
+//     backgroundColor: "rgba(52, 199, 89, 0.12)",
+//     paddingHorizontal: scale(8),
+//     paddingVertical: verticalScale(2),
+//     borderRadius: scale(20),
+//   },
+//   nextPillText: {
+//     fontSize: scale(9),
+//     fontWeight: "700",
+//     color: "#34C759",
+//   },
+//   spotlightProfileRow: {
+//     flexDirection: "row",
+//     alignItems: "center",
+//     gap: scale(14),
+//   },
+//   spotlightAvatarBox: {
+//     width: scale(42),
+//     height: scale(42),
+//     borderRadius: scale(12),
+//     justifyContent: "center",
+//     alignItems: "center",
+//   },
+//   spotlightClientName: {
+//     fontSize: scale(15),
+//     fontWeight: "700",
+//     letterSpacing: -0.2,
+//   },
+//   spotlightStylistSub: {
+//     fontSize: scale(11.5),
+//     opacity: 0.5,
+//     marginTop: verticalScale(2),
+//   },
+//   timeAlignmentColumn: {
+//     alignItems: "center",
+//   },
+//   timeValueText: {
+//     fontSize: scale(18),
+//     fontWeight: "800",
+//     color: "#FFFFFF",
+//   },
+//   timeLabelText: {
+//     fontSize: scale(8),
+//     fontWeight: "600",
+//     color: "rgba(255,255,255,0.3)",
+//     letterSpacing: 0.2,
+//   },
+//   sectionHeaderSpacing: {
+//     gap: verticalScale(12),
+//   },
+//   sectionTitleLabel: {
+//     fontSize: scale(14),
+//     fontWeight: "700",
+//     letterSpacing: -0.2,
+//   },
+//   cleanHorizontalRosterTrack: {
+//     flexDirection: "row",
+//     gap: scale(12),
+//     paddingVertical: verticalScale(2),
+//   },
+//   minimalRosterNode: {
+//     alignItems: "center",
+//     gap: verticalScale(6),
+//   },
+//   rosterRingFrame: {
+//     width: scale(46),
+//     height: scale(46),
+//     borderRadius: scale(23),
+//     borderWidth: 1.5,
+//     borderColor: "rgba(255,255,255,0.08)",
+//     justifyContent: "center",
+//     alignItems: "center",
+//     position: "relative",
+//   },
+//   fallbackInitialText: {
+//     fontSize: scale(14),
+//     fontWeight: "600",
+//     color: "rgba(255,255,255,0.8)",
+//   },
+//   absoluteStatusDot: {
+//     position: "absolute",
+//     right: scale(1),
+//     bottom: scale(1),
+//     width: scale(9),
+//     height: scale(9),
+//     borderRadius: scale(4.5),
+//     backgroundColor: "#34C759",
+//     borderWidth: 1.5,
+//     borderColor: "#1C1C1E",
+//   },
+//   minimalStaffLabel: {
+//     fontSize: scale(10.5),
+//     fontWeight: "500",
+//     opacity: 0.8,
+//   },
+//   chartHeaderBlock: {
+//     marginBottom: verticalScale(18),
+//   },
+//   chartSubtitleLabel: {
+//     fontSize: scale(11),
+//     marginTop: verticalScale(2),
+//     opacity: 0.45,
+//   },
+//   chartWrapperAlignmentFrame: {
+//     width: "100%",
+//     alignItems: "center",
+//     paddingLeft: scale(8),
+//   },
+//   chartTopLabel: {
+//     color: "#FFFFFF",
+//     fontSize: scale(9.5),
+//     fontWeight: "600",
+//     marginBottom: verticalScale(4),
+//   },
+//   chartAxisLabelTextStyle: {
+//     color: "rgba(255,255,255,0.3)",
+//     fontSize: scale(9),
+//   },
+// });
+
+// import { Feather, Ionicons } from "@expo/vector-icons";
+// import { Image } from "expo-image";
+// import { useFocusEffect } from "expo-router";
+// import { useCallback, useState } from "react";
+// import {
+//   Modal,
+//   ScrollView,
+//   StyleSheet,
+//   Text,
+//   TextInput,
+//   TouchableOpacity,
+//   View,
+// } from "react-native";
+// import { BarChart } from "react-native-gifted-charts";
+// import Shimmer from "react-native-modern-shimmer";
+// import { SafeAreaView } from "react-native-safe-area-context";
+// import { scale, verticalScale } from "react-native-size-matters";
+// import Header from "../../../../../components/Header/Header";
+// import { darkTheme } from "../../../../../constants/appTheme";
+// import { useAdminAuth } from "../../../../../context/admin/AuthContext";
+// import { useAdminGlobal } from "../../../../../context/admin/GlobalContext";
+// import api from "../../../../../utils/api";
+
+// const Dashboard = () => {
+//   const { currentSalon } = useAdminGlobal();
+//   const { authenticatedUser } = useAdminAuth();
+
+//   // Input & Update Status States
+//   const [isEditingInfo, setIsEditingInfo] = useState(false);
+//   const [salonDescription, setSalonDescription] = useState("");
+//   const [isSavingProfile, setIsSavingProfile] = useState(false);
+//   const [isExpanded, setIsExpanded] = useState(false);
+
+//   // 1. Declare state at the top level with an explicit boolean primitive
+//   const [isSalonMissing, setIsSalonMissing] = useState(false);
+
+//   // 2. Handle status tracking dynamically inside the focus wrapper
+//   useFocusEffect(
+//     useCallback(() => {
+//       // Check if salonId is completely absent, explicitly equals string "0", or equals number 0
+//       const missing =
+//         authenticatedUser?.salonId === "0" ||
+//         authenticatedUser?.salonId === 0;
+
+//       setIsSalonMissing(missing);
+//     }, [authenticatedUser]),
+//   );
+
+//   const isLongDescription = salonDescription && salonDescription.length > 120;
+
+//   // Server data states
+//   const [barbersData, setBarberData] = useState({ loading: false, data: [] });
+//   const [queuelistData, setQueuelistData] = useState({
+//     loading: false,
+//     data: [],
+//   });
+//   const [reportData, setReportData] = useState({ loading: false, data: null });
+
+//   // Sync profile details when context loads
+//   useFocusEffect(
+//     useCallback(() => {
+//       if (currentSalon?.data?.salonInfo) {
+//         setSalonDescription(currentSalon.data.salonInfo);
+//       }
+//     }, [currentSalon?.data?.salonInfo]),
+//   );
+
+//   // Consolidated parallel API initiator
+//   const fetchDashboardData = useCallback(async () => {
+//     const salonId = authenticatedUser?.salonId;
+//     if (!salonId || salonId === "0") return;
+
+//     setBarberData((prev) => ({ ...prev, loading: true }));
+//     setQueuelistData((prev) => ({ ...prev, loading: true }));
+//     setReportData((prev) => ({ ...prev, loading: true }));
+
+//     try {
+//       const [barbersRes, queueRes, reportRes] = await Promise.all([
+//         api.get(`/admin/getAllBarbersForDashboard?salonId=${salonId}`),
+//         api.get(`/queue/getQListBySalonId?salonId=${salonId}`),
+//         api.post(`reports/getnewdashboardReports`, { salonId }),
+//       ]);
+
+//       setBarberData({
+//         loading: false,
+//         data: barbersRes.data?.getAllBarbers || [],
+//       });
+//       setQueuelistData({ loading: false, data: queueRes.data?.response || [] });
+//       setReportData({ loading: false, data: reportRes.data?.response || null });
+//     } catch (error) {
+//       console.error("Dashboard data aggregation error:", error);
+//       setBarberData((prev) => ({ ...prev, loading: false }));
+//       setQueuelistData((prev) => ({ ...prev, loading: false }));
+//       setReportData((prev) => ({ ...prev, loading: false }));
+//     }
+//   }, [authenticatedUser?.salonId]);
+
+//   useFocusEffect(
+//     useCallback(() => {
+//       let isMounted = true;
+//       if (isMounted) {
+//         fetchDashboardData();
+//       }
+//       return () => {
+//         isMounted = false;
+//       };
+//     }, [fetchDashboardData]),
+//   );
+
+//   // Dummy API handler to update the Salon Profile text
+//   const handleSaveSalonProfile = async () => {
+//     if (isEditingInfo) {
+//       try {
+//         setIsSavingProfile(true);
+
+//         const payload = {
+//           salonId: authenticatedUser?.salonId,
+//           salonInfo: salonDescription,
+//         };
+
+//         await api.post(`/salon/updateSalonInfo`, payload);
+//       } catch (error) {
+//         console.error("Failed to update salon profile text:", error);
+//       } finally {
+//         setIsSavingProfile(false);
+//         setIsEditingInfo(false);
+//       }
+//     } else {
+//       setIsEditingInfo(true);
+//     }
+//   };
+
+//   const handleCreateSalonPress = () => {
+//     setIsSalonMissing(false)
+//     console.log("Navigate or trigger salon creation logic workflow.");
+//   };
+
+//   // Extract nested properties cleanly
+//   const queueReport = reportData?.data?.queue;
+//   const appointmentReport = reportData?.data?.appointment;
+//   const nextUpClient = queuelistData.data?.[0];
+
+//   // Map backend last7daysCount array elements to the Bar Chart configuration keys
+//   const rawChartData = appointmentReport?.last7daysCount || [];
+
+//   const appointmentChartData = rawChartData.map((item) => ({
+//     value: item.TotalAppoinment,
+//     label: item.date,
+//     frontColor: darkTheme.colors.accent,
+//     topLabelComponent: () => (
+//       <Text style={styles.chartTopLabel}>{item.TotalAppoinment}</Text>
+//     ),
+//   }));
+
+//   // Auto-scale the max height bounds dynamically depending on absolute backend parameters
+//   const maxChartValue = Math.max(
+//     ...rawChartData.map((d) => d.TotalAppoinment),
+//     3,
+//   );
+
+//   // Dynamic Trend Indicator styling based on backend return strings
+//   const isTrendFall = queueReport?.queueTrend === "Fall";
+
+//   return (
+//     <SafeAreaView
+//       edges={["top", "right", "left"]}
+//       style={[
+//         styles.container,
+//         { backgroundColor: darkTheme.colors.background },
+//       ]}
+//     >
+//       <Header
+//         title="Dashboard"
+//         subTitle="Salon Administration Ecosystem"
+//         showBack={false}
+//       />
+
+//       {/* NO SALON AVAILABLE MODAL INJECTOR */}
+//       <Modal
+//         visible={isSalonMissing}
+//         transparent={true}
+//         animationType="fade"
+//         statusBarTranslucent
+//       >
+//         <View style={styles.modalBlurOverlay}>
+//           <View
+//             style={[
+//               styles.modalCardContainer,
+//               { backgroundColor: darkTheme.colors.card },
+//             ]}
+//           >
+//             <View style={styles.modalIconWrapper}>
+//               <Feather
+//                 name="alert-circle"
+//                 size={scale(28)}
+//                 color={darkTheme.colors.accent}
+//               />
+//             </View>
+//             <Text style={styles.modalTitle}>No Salon Available</Text>
+//             <Text style={styles.modalSubtitle}>
+//               You haven't added a salon to your account yet. Create a salon
+//               setup to get started.
+//             </Text>
+//             <TouchableOpacity
+//               activeOpacity={0.8}
+//               style={[
+//                 styles.modalActionButton,
+//                 { backgroundColor: darkTheme.colors.accent },
+//               ]}
+//               onPress={handleCreateSalonPress}
+//             >
+//               <Text style={styles.modalActionText}>Create Salon</Text>
+//             </TouchableOpacity>
+//           </View>
+//         </View>
+//       </Modal>
+
+//       <ScrollView
+//         showsVerticalScrollIndicator={false}
+//         contentContainerStyle={styles.scrollContainer}
+//       >
+//         {/* 1. Immersive Salon Info Section */}
+//         <View style={styles.editorialHeaderBlock}>
+//           <View style={styles.editorialRow}>
+//             <Text
+//               style={[
+//                 styles.editorialTitle,
+//                 { color: darkTheme.colors.textMain },
+//               ]}
+//             >
+//               The Salon Profile
+//             </Text>
+//             <TouchableOpacity
+//               style={[
+//                 styles.minimalEditTrigger,
+//                 isEditingInfo && { backgroundColor: "rgba(255, 149, 0, 0.1)" },
+//               ]}
+//               onPress={handleSaveSalonProfile}
+//               disabled={isSavingProfile}
+//               activeOpacity={0.7}
+//             >
+//               <Feather
+//                 name={
+//                   isSavingProfile
+//                     ? "loader"
+//                     : isEditingInfo
+//                       ? "check-circle"
+//                       : "edit-2"
+//                 }
+//                 size={scale(13)}
+//                 color={
+//                   isEditingInfo
+//                     ? darkTheme.colors.accent
+//                     : darkTheme.colors.textMuted
+//                 }
+//               />
+//               <Text
+//                 style={[
+//                   styles.minimalEditText,
+//                   {
+//                     color: isEditingInfo
+//                       ? darkTheme.colors.accent
+//                       : darkTheme.colors.textMuted,
+//                   },
+//                 ]}
+//               >
+//                 {isSavingProfile
+//                   ? "Saving..."
+//                   : isEditingInfo
+//                     ? "Save Changes"
+//                     : "Edit Details"}
+//               </Text>
+//             </TouchableOpacity>
+//           </View>
+
+//           {isEditingInfo ? (
+//             <TextInput
+//               style={[
+//                 styles.premiumInlineInput,
+//                 { color: darkTheme.colors.textMain },
+//               ]}
+//               value={salonDescription}
+//               onChangeText={setSalonDescription}
+//               multiline
+//               autoFocus
+//               editable={!isSavingProfile}
+//             />
+//           ) : currentSalon?.loading ? (
+//             <View style={{ gap: 8 }}>
+//               {[...Array(4)].map((_, i) => (
+//                 <Shimmer key={i} width="100%" height={16} isDark />
+//               ))}
+//             </View>
+//           ) : (
+//             <View>
+//               <Text
+//                 style={[
+//                   styles.editorialParagraph,
+//                   { color: darkTheme.colors.textMuted },
+//                 ]}
+//                 numberOfLines={isExpanded ? undefined : 3}
+//               >
+//                 {salonDescription || "No profile description configured."}
+//               </Text>
+
+//               {isLongDescription && (
+//                 <TouchableOpacity
+//                   onPress={() => setIsExpanded(!isExpanded)}
+//                   activeOpacity={0.6}
+//                   style={styles.seeMoreToggleContainer}
+//                 >
+//                   <Text
+//                     style={[
+//                       styles.seeMoreText,
+//                       { color: darkTheme.colors.accent },
+//                     ]}
+//                   >
+//                     {isExpanded ? "See Less" : "See More"}
+//                   </Text>
+//                 </TouchableOpacity>
+//               )}
+//             </View>
+//           )}
+//         </View>
+
+//         {/* 2. Compact Performance Quick-Metrics Split Row */}
+//         <View style={styles.splitGridRow}>
+//           {reportData.loading ? (
+//             <>
+//               <Shimmer
+//                 isDark
+//                 style={{
+//                   flex: 1,
+//                   padding: scale(12),
+//                   minHeight: verticalScale(70),
+//                 }}
+//               />
+//               <Shimmer
+//                 isDark
+//                 style={{
+//                   flex: 1,
+//                   padding: scale(12),
+//                   minHeight: verticalScale(70),
+//                 }}
+//               />
+//             </>
+//           ) : (
+//             <>
+//               <View
+//                 style={[
+//                   styles.compactDataCard,
+//                   {
+//                     backgroundColor: darkTheme.colors.card,
+//                     borderColor: "rgba(255,255,255,0.05)",
+//                   },
+//                 ]}
+//               >
+//                 <View style={styles.compactMetricHeader}>
+//                   <Text style={styles.miniCapsTitle}>QUEUE HISTORY</Text>
+//                   <Ionicons
+//                     name={isTrendFall ? "trending-down" : "trending-up"}
+//                     size={scale(14)}
+//                     color={isTrendFall ? "#FF3B30" : "#34C759"}
+//                   />
+//                 </View>
+//                 <Text style={styles.massiveMetricText}>
+//                   {queueReport?.percentageChangelast30Days || 0}%
+//                 </Text>
+//                 <View style={styles.miniProgressTrack}>
+//                   <View
+//                     style={[
+//                       styles.miniProgressFill,
+//                       {
+//                         width: `${queueReport?.servedHistoryPercentage || 0}%`,
+//                         backgroundColor: "#34C759",
+//                       },
+//                     ]}
+//                   />
+//                   <View
+//                     style={[
+//                       styles.miniProgressFill,
+//                       {
+//                         width: `${queueReport?.cancelledHistoryPercentage || 0}%`,
+//                         backgroundColor: "#FF3B30",
+//                       },
+//                     ]}
+//                   />
+//                 </View>
+//               </View>
+
+//               <View
+//                 style={[
+//                   styles.compactDataCard,
+//                   {
+//                     backgroundColor: darkTheme.colors.card,
+//                     borderColor: "rgba(255,255,255,0.05)",
+//                   },
+//                 ]}
+//               >
+//                 <View style={styles.compactMetricHeader}>
+//                   <Text style={styles.miniCapsTitle}>FLOOR CAPACITY</Text>
+//                   <Ionicons
+//                     name="people-outline"
+//                     size={scale(14)}
+//                     color={darkTheme.colors.accent}
+//                   />
+//                 </View>
+//                 <Text style={styles.massiveMetricText}>
+//                   7 <Text style={styles.metricUnit}>Staff</Text>
+//                 </Text>
+//                 <Text style={styles.metricContextHint}>
+//                   Active floor roster
+//                 </Text>
+//               </View>
+//             </>
+//           )}
+//         </View>
+
+//         {/* 3. Live Queue Card */}
+//         {queuelistData.loading ? (
+//           <Shimmer width="100%" height={100} isDark />
+//         ) : (
+//           <View
+//             style={[
+//               styles.spotlightQueueCard,
+//               {
+//                 backgroundColor: darkTheme.colors.card,
+//                 borderColor: "rgba(255,255,255,0.06)",
+//               },
+//             ]}
+//           >
+//             <View style={styles.spotlightBadgeRow}>
+//               <View style={styles.liveIndicatorContainer}>
+//                 <View style={styles.pulseDot} />
+//                 <Text style={styles.liveIndicatorText}>LIVE QUEUE STATUS</Text>
+//               </View>
+//               <View style={styles.nextPillContainer}>
+//                 <Text style={styles.nextPillText}>UP NEXT</Text>
+//               </View>
+//             </View>
+
+//             <View style={styles.spotlightProfileRow}>
+//               <View
+//                 style={[
+//                   styles.spotlightAvatarBox,
+//                   { backgroundColor: "rgba(255,149,0,0.08)" },
+//                 ]}
+//               >
+//                 <Ionicons
+//                   name="flash"
+//                   size={scale(18)}
+//                   color={darkTheme.colors.accent}
+//                 />
+//               </View>
+//               <View style={{ flex: 1 }}>
+//                 <Text
+//                   style={[
+//                     styles.spotlightClientName,
+//                     { color: darkTheme.colors.textMain },
+//                   ]}
+//                 >
+//                   {nextUpClient
+//                     ? nextUpClient.customerName
+//                     : "No active live clients"}
+//                 </Text>
+//                 {nextUpClient && (
+//                   <Text
+//                     style={[
+//                       darkTheme.typography.bodyMuted,
+//                       styles.spotlightStylistSub,
+//                     ]}
+//                   >
+//                     Assigned: {nextUpClient.barberName}
+//                   </Text>
+//                 )}
+//               </View>
+//               <View style={styles.timeAlignmentColumn}>
+//                 <Text style={styles.timeValueText}>--</Text>
+//                 <Text style={styles.timeLabelText}>EST. MINS</Text>
+//               </View>
+//             </View>
+//           </View>
+//         )}
+
+//         {/* 4. Barbers Horizontal Deck */}
+//         <View style={styles.sectionHeaderSpacing}>
+//           <Text
+//             style={[
+//               darkTheme.typography.cardTitle,
+//               styles.sectionTitleLabel,
+//               { color: darkTheme.colors.textMain },
+//             ]}
+//           >
+//             Barbers On Duty
+//           </Text>
+//           <ScrollView
+//             horizontal
+//             showsHorizontalScrollIndicator={false}
+//             contentContainerStyle={styles.cleanHorizontalRosterTrack}
+//           >
+//             {barbersData.loading ? (
+//               <View style={{ flexDirection: "row", gap: scale(10) }}>
+//                 {[...Array(5)].map((_, i) => (
+//                   <Shimmer
+//                     key={i}
+//                     width={scale(46)}
+//                     height={scale(46)}
+//                     borderRadius={scale(23)}
+//                     isDark
+//                   />
+//                 ))}
+//               </View>
+//             ) : barbersData.data.length > 0 ? (
+//               barbersData.data.map((staff) => (
+//                 <View key={staff._id} style={styles.minimalRosterNode}>
+//                   <View
+//                     style={[
+//                       styles.rosterRingFrame,
+//                       { backgroundColor: darkTheme.colors.card },
+//                     ]}
+//                   >
+//                     {staff?.profile?.[0]?.url ? (
+//                       <Image
+//                         source={staff.profile[0].url}
+//                         style={{
+//                           width: "100%",
+//                           height: "100%",
+//                           borderRadius: scale(26),
+//                         }}
+//                         contentFit="cover"
+//                         transition={300}
+//                       />
+//                     ) : (
+//                       <Text style={styles.fallbackInitialText}>
+//                         {staff.initial || staff.name?.[0]}
+//                       </Text>
+//                     )}
+//                   </View>
+//                   <Text
+//                     style={[
+//                       styles.minimalStaffLabel,
+//                       { color: darkTheme.colors.textMain },
+//                     ]}
+//                     numberOfLines={1}
+//                   >
+//                     {staff.name}
+//                   </Text>
+//                 </View>
+//               ))
+//             ) : (
+//               <Text style={{ color: darkTheme.colors.textMuted }}>
+//                 No active staff available
+//               </Text>
+//             )}
+//           </ScrollView>
+//         </View>
+
+//         {/* 5. Analytics Overview Container */}
+//         {reportData.loading ? (
+//           <Shimmer width="100%" height={230} isDark />
+//         ) : appointmentChartData.length > 0 ? (
+//           <View
+//             style={[
+//               styles.premiumCard,
+//               {
+//                 backgroundColor: darkTheme.colors.card,
+//                 borderColor: "rgba(255,255,255,0.06)",
+//               },
+//             ]}
+//           >
+//             <View style={styles.chartHeaderBlock}>
+//               <Text
+//                 style={[
+//                   darkTheme.typography.cardTitle,
+//                   styles.sectionTitleLabel,
+//                   { color: darkTheme.colors.textMain },
+//                 ]}
+//               >
+//                 Appointments Overview
+//               </Text>
+//               <Text
+//                 style={[
+//                   darkTheme.typography.bodyMuted,
+//                   styles.chartSubtitleLabel,
+//                 ]}
+//               >
+//                 {appointmentReport?.dateFormat || "Last 7 days"}
+//               </Text>
+//             </View>
+
+//             <View style={styles.chartWrapperAlignmentFrame}>
+//               <BarChart
+//                 data={appointmentChartData}
+//                 barWidth={scale(24)}
+//                 spacing={scale(16)}
+//                 roundedTop
+//                 noOfSections={4}
+//                 maxValue={maxChartValue}
+//                 isAnimated
+//                 yAxisThickness={0}
+//                 xAxisThickness={1}
+//                 xAxisColor="rgba(255,255,255,0.08)"
+//                 yAxisTextStyle={styles.chartAxisLabelTextStyle}
+//                 xAxisLabelTextStyle={styles.chartAxisLabelTextStyle}
+//                 rulesType="solid"
+//                 rulesColor="rgba(255,255,255,0.03)"
+//                 height={verticalScale(130)}
+//               />
+//             </View>
+//           </View>
+//         ) : (
+//           <Text
+//             style={{
+//               alignSelf: "center",
+//               color: darkTheme.colors.textMuted,
+//               marginVertical: 20,
+//             }}
+//           >
+//             No report metrics collected.
+//           </Text>
+//         )}
+//       </ScrollView>
+//     </SafeAreaView>
+//   );
+// };
+
+// export default Dashboard;
+
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//   },
+//   scrollContainer: {
+//     paddingHorizontal: scale(16),
+//     paddingBottom: verticalScale(32),
+//     gap: verticalScale(20),
+//   },
+//   premiumCard: {
+//     borderWidth: 1,
+//     borderRadius: scale(16),
+//     padding: scale(16),
+//   },
+//   editorialHeaderBlock: {
+//     paddingVertical: verticalScale(4),
+//     paddingHorizontal: scale(2),
+//   },
+//   editorialRow: {
+//     flexDirection: "row",
+//     justifyContent: "space-between",
+//     alignItems: "center",
+//     marginBottom: verticalScale(8),
+//   },
+//   editorialTitle: {
+//     fontSize: scale(18),
+//     fontWeight: "800",
+//     letterSpacing: -0.4,
+//   },
+//   minimalEditTrigger: {
+//     flexDirection: "row",
+//     alignItems: "center",
+//     gap: scale(5),
+//     paddingHorizontal: scale(8),
+//     paddingVertical: verticalScale(4),
+//     borderRadius: scale(6),
+//   },
+//   minimalEditText: {
+//     fontSize: scale(11),
+//     fontWeight: "600",
+//   },
+//   editorialParagraph: {
+//     fontSize: scale(12.5),
+//     lineHeight: scale(19),
+//     opacity: 0.7,
+//     letterSpacing: -0.1,
+//   },
+//   premiumInlineInput: {
+//     fontSize: scale(12.5),
+//     lineHeight: scale(19),
+//     letterSpacing: -0.1,
+//     borderWidth: 1,
+//     borderRadius: scale(10),
+//     padding: scale(12),
+//     backgroundColor: "rgba(0,0,0,0.25)",
+//     borderColor: "rgba(255, 255, 255, 0.12)",
+//     textAlignVertical: "top",
+//     minHeight: verticalScale(70),
+//   },
+//   splitGridRow: {
+//     flexDirection: "row",
+//     gap: scale(12),
+//     width: "100%",
+//   },
+//   compactDataCard: {
+//     flex: 1,
+//     borderWidth: 1,
+//     borderRadius: scale(14),
+//     padding: scale(12),
+//     justifyContent: "space-between",
+//     minHeight: verticalScale(85),
+//   },
+//   compactMetricHeader: {
+//     flexDirection: "row",
+//     justifyContent: "space-between",
+//     alignItems: "center",
+//   },
+//   miniCapsTitle: {
+//     fontSize: scale(9),
+//     fontWeight: "700",
+//     color: "rgba(255,255,255,0.4)",
+//     letterSpacing: 0.5,
+//   },
+//   massiveMetricText: {
+//     fontSize: scale(20),
+//     fontWeight: "700",
+//     color: "#FFFFFF",
+//     letterSpacing: -0.5,
+//     marginVertical: verticalScale(6),
+//   },
+//   metricUnit: {
+//     fontSize: scale(11),
+//     fontWeight: "400",
+//     color: "rgba(255,255,255,0.4)",
+//   },
+//   metricContextHint: {
+//     fontSize: scale(9.5),
+//     color: "rgba(255,255,255,0.35)",
+//   },
+//   miniProgressTrack: {
+//     width: "100%",
+//     height: scale(4),
+//     borderRadius: scale(2),
+//     overflow: "hidden",
+//     flexDirection: "row",
+//     backgroundColor: "rgba(255,255,255,0.05)",
+//   },
+//   miniProgressFill: {
+//     height: "100%",
+//   },
+//   spotlightQueueCard: {
+//     borderWidth: 1,
+//     borderRadius: scale(16),
+//     padding: scale(16),
+//   },
+//   spotlightBadgeRow: {
+//     flexDirection: "row",
+//     justifyContent: "space-between",
+//     alignItems: "center",
+//     marginBottom: verticalScale(14),
+//   },
+//   liveIndicatorContainer: {
+//     flexDirection: "row",
+//     alignItems: "center",
+//     gap: scale(6),
+//   },
+//   pulseDot: {
+//     width: scale(6),
+//     height: scale(6),
+//     borderRadius: scale(3),
+//     backgroundColor: darkTheme.colors.accent,
+//   },
+//   liveIndicatorText: {
+//     fontSize: scale(9.5),
+//     fontWeight: "700",
+//     color: darkTheme.colors.accent,
+//     letterSpacing: 0.5,
+//   },
+//   nextPillContainer: {
+//     backgroundColor: "rgba(52, 199, 89, 0.12)",
+//     paddingHorizontal: scale(8),
+//     paddingVertical: verticalScale(2),
+//     borderRadius: scale(20),
+//   },
+//   nextPillText: {
+//     fontSize: scale(9),
+//     fontWeight: "700",
+//     color: "#34C759",
+//   },
+//   spotlightProfileRow: {
+//     flexDirection: "row",
+//     alignItems: "center",
+//     gap: scale(14),
+//   },
+//   spotlightAvatarBox: {
+//     width: scale(42),
+//     height: scale(42),
+//     borderRadius: scale(12),
+//     justifyContent: "center",
+//     alignItems: "center",
+//   },
+//   spotlightClientName: {
+//     fontSize: scale(15),
+//     fontWeight: "700",
+//     letterSpacing: -0.2,
+//   },
+//   spotlightStylistSub: {
+//     fontSize: scale(11.5),
+//     opacity: 0.5,
+//     marginTop: verticalScale(2),
+//   },
+//   timeAlignmentColumn: {
+//     alignItems: "center",
+//   },
+//   timeValueText: {
+//     fontSize: scale(18),
+//     fontWeight: "800",
+//     color: "#FFFFFF",
+//   },
+//   timeLabelText: {
+//     fontSize: scale(8),
+//     fontWeight: "600",
+//     color: "rgba(255,255,255,0.3)",
+//     letterSpacing: 0.2,
+//   },
+//   sectionHeaderSpacing: {
+//     gap: verticalScale(12),
+//   },
+//   sectionTitleLabel: {
+//     fontSize: scale(14),
+//     fontWeight: "700",
+//     letterSpacing: -0.2,
+//   },
+//   cleanHorizontalRosterTrack: {
+//     flexDirection: "row",
+//     gap: scale(12),
+//     paddingVertical: verticalScale(2),
+//   },
+//   minimalRosterNode: {
+//     alignItems: "center",
+//     gap: verticalScale(6),
+//   },
+//   rosterRingFrame: {
+//     width: scale(46),
+//     height: scale(46),
+//     borderRadius: scale(23),
+//     borderWidth: 1.5,
+//     borderColor: "rgba(255,255,255,0.08)",
+//     justifyContent: "center",
+//     alignItems: "center",
+//     position: "relative",
+//   },
+//   fallbackInitialText: {
+//     fontSize: scale(14),
+//     fontWeight: "600",
+//     color: "rgba(255,255,255,0.8)",
+//   },
+//   absoluteStatusDot: {
+//     position: "absolute",
+//     right: scale(1),
+//     bottom: scale(1),
+//     width: scale(9),
+//     height: scale(9),
+//     borderRadius: scale(4.5),
+//     backgroundColor: "#34C759",
+//     borderWidth: 1.5,
+//     borderColor: "#1C1C1E",
+//   },
+//   minimalStaffLabel: {
+//     fontSize: scale(10.5),
+//     fontWeight: "500",
+//     opacity: 0.8,
+//   },
+//   chartHeaderBlock: {
+//     marginBottom: verticalScale(18),
+//   },
+//   chartSubtitleLabel: {
+//     fontSize: scale(11),
+//     marginTop: verticalScale(2),
+//     opacity: 0.45,
+//   },
+//   chartWrapperAlignmentFrame: {
+//     width: "100%",
+//     alignItems: "center",
+//     paddingLeft: scale(8),
+//   },
+//   chartTopLabel: {
+//     color: "#FFFFFF",
+//     fontSize: scale(9.5),
+//     fontWeight: "600",
+//     marginBottom: verticalScale(4),
+//   },
+//   chartAxisLabelTextStyle: {
+//     color: "rgba(255,255,255,0.3)",
+//     fontSize: scale(9),
+//   },
+//   // --- PREMIUM ZERO STATE MODAL LAYER STYLES ---
+//   modalBlurOverlay: {
+//     flex: 1,
+//     backgroundColor: "rgba(0, 0, 0, 0.85)",
+//     justifyContent: "center",
+//     alignItems: "center",
+//     paddingHorizontal: scale(24),
+//   },
+//   modalCardContainer: {
+//     width: "100%",
+//     borderRadius: scale(16),
+//     padding: scale(24),
+//     alignItems: "center",
+//     borderWidth: 1,
+//     borderColor: "rgba(255, 255, 255, 0.08)",
+//   },
+//   modalIconWrapper: {
+//     width: scale(56),
+//     height: scale(56),
+//     borderRadius: scale(28),
+//     backgroundColor: "rgba(255, 149, 0, 0.1)",
+//     justifyContent: "center",
+//     alignItems: "center",
+//     marginBottom: verticalScale(16),
+//   },
+//   modalTitle: {
+//     fontSize: scale(18),
+//     fontWeight: "700",
+//     color: "#FFFFFF",
+//     letterSpacing: -0.3,
+//     marginBottom: verticalScale(8),
+//     textAlign: "center",
+//   },
+//   modalSubtitle: {
+//     fontSize: scale(12.5),
+//     lineHeight: scale(18),
+//     color: "rgba(255, 255, 255, 0.5)",
+//     textAlign: "center",
+//     marginBottom: verticalScale(24),
+//     paddingHorizontal: scale(8),
+//   },
+//   modalActionButton: {
+//     width: "100%",
+//     height: scale(42),
+//     borderRadius: scale(10),
+//     justifyContent: "center",
+//     alignItems: "center",
+//   },
+//   modalActionText: {
+//     color: "#FFFFFF",
+//     fontSize: scale(13),
+//     fontWeight: "700",
+//   },
+// });
+
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import {
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -271,8 +2040,7 @@ const Dashboard = () => {
   const [salonDescription, setSalonDescription] = useState("");
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-
-  const isLongDescription = salonDescription && salonDescription.length > 120;
+  const [isSalonMissing, setIsSalonMissing] = useState(false);
 
   // Server data states
   const [barbersData, setBarberData] = useState({ loading: false, data: [] });
@@ -281,6 +2049,25 @@ const Dashboard = () => {
     data: [],
   });
   const [reportData, setReportData] = useState({ loading: false, data: null });
+
+  // Reusable styling references for consistent dark-theme shimmers
+  // Change these colors right here:
+  const darkShimmerColors = ["#121214", "#1a1a1c", "#121214"];
+
+  // Global screen loading check to prevent layout flashing
+  const isScreenLoading =
+    barbersData.loading ||
+    queuelistData.loading ||
+    reportData.loading ||
+    !!currentSalon?.loading;
+
+  useFocusEffect(
+    useCallback(() => {
+      const missing =
+        authenticatedUser?.salonId === "0" || authenticatedUser?.salonId === 0;
+      setIsSalonMissing(missing);
+    }, [authenticatedUser]),
+  );
 
   // Sync profile details when context loads
   useFocusEffect(
@@ -294,7 +2081,7 @@ const Dashboard = () => {
   // Consolidated parallel API initiator
   const fetchDashboardData = useCallback(async () => {
     const salonId = authenticatedUser?.salonId;
-    if (!salonId) return;
+    if (!salonId || salonId === "0") return;
 
     setBarberData((prev) => ({ ...prev, loading: true }));
     setQueuelistData((prev) => ({ ...prev, loading: true }));
@@ -312,8 +2099,6 @@ const Dashboard = () => {
         data: barbersRes.data?.getAllBarbers || [],
       });
       setQueuelistData({ loading: false, data: queueRes.data?.response || [] });
-
-      // FIX: Capture the nested "response" sub-object directly into state
       setReportData({ loading: false, data: reportRes.data?.response || null });
     } catch (error) {
       console.error("Dashboard data aggregation error:", error);
@@ -335,19 +2120,15 @@ const Dashboard = () => {
     }, [fetchDashboardData]),
   );
 
-  // Dummy API handler to update the Salon Profile text
   const handleSaveSalonProfile = async () => {
     if (isEditingInfo) {
       try {
         setIsSavingProfile(true);
-
         const payload = {
           salonId: authenticatedUser?.salonId,
           salonInfo: salonDescription,
         };
-
         await api.post(`/salon/updateSalonInfo`, payload);
-  
       } catch (error) {
         console.error("Failed to update salon profile text:", error);
       } finally {
@@ -359,12 +2140,14 @@ const Dashboard = () => {
     }
   };
 
-  // Extract nested properties cleanly
+  const handleCreateSalonPress = () => {
+    setIsSalonMissing(false);
+  };
+
+  const isLongDescription = salonDescription && salonDescription.length > 120;
   const queueReport = reportData?.data?.queue;
   const appointmentReport = reportData?.data?.appointment;
   const nextUpClient = queuelistData.data?.[0];
-
-  // Map backend last7daysCount array elements to the Bar Chart configuration keys
   const rawChartData = appointmentReport?.last7daysCount || [];
 
   const appointmentChartData = rawChartData.map((item) => ({
@@ -376,14 +2159,282 @@ const Dashboard = () => {
     ),
   }));
 
-  // Auto-scale the max height bounds dynamically depending on absolute backend parameters
   const maxChartValue = Math.max(
     ...rawChartData.map((d) => d.TotalAppoinment),
     3,
   );
-
-  // Dynamic Trend Indicator styling based on backend return strings
   const isTrendFall = queueReport?.queueTrend === "Fall";
+
+  // Entire page Skeleton layout matching exact structure of the dashboard components
+  const ScreenSkeletonView = () => (
+    <ScrollView
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={styles.scrollContainer}
+    >
+      {/* Profile Skeleton */}
+      <View style={styles.editorialHeaderBlock}>
+        <Shimmer
+          style={{
+            width: scale(140),
+            height: verticalScale(18),
+            borderRadius: 4,
+            marginBottom: verticalScale(10),
+          }}
+          // color={darkShimmerColors}
+        />
+        <View style={{ gap: verticalScale(6) }}>
+          <Shimmer
+            style={{
+              width: "100%",
+              height: verticalScale(14),
+              borderRadius: 4,
+            }}
+            // color={darkShimmerColors}
+          />
+          <Shimmer
+            style={{ width: "95%", height: verticalScale(14), borderRadius: 4 }}
+            // color={darkShimmerColors}
+          />
+          <Shimmer
+            style={{ width: "70%", height: verticalScale(14), borderRadius: 4 }}
+            // color={darkShimmerColors}
+          />
+        </View>
+      </View>
+
+      {/* Grid Split Skeleton */}
+      <View style={styles.splitGridRow}>
+        <View
+          style={[
+            styles.compactDataCard,
+            {
+              backgroundColor: darkTheme.colors.card,
+              borderColor: "rgba(255,255,255,0.05)",
+            },
+          ]}
+        >
+          <Shimmer
+            style={{
+              width: scale(80),
+              height: verticalScale(10),
+              borderRadius: 3,
+            }}
+            color={darkShimmerColors}
+          />
+          <Shimmer
+            style={{
+              width: scale(60),
+              height: verticalScale(22),
+              marginVertical: verticalScale(6),
+              borderRadius: 4,
+            }}
+            color={darkShimmerColors}
+          />
+          <Shimmer
+            style={{ width: "100%", height: verticalScale(4), borderRadius: 2 }}
+            color={darkShimmerColors}
+          />
+        </View>
+        <View
+          style={[
+            styles.compactDataCard,
+            {
+              backgroundColor: darkTheme.colors.card,
+              borderColor: "rgba(255,255,255,0.05)",
+            },
+          ]}
+        >
+          <Shimmer
+            style={{
+              width: scale(80),
+              height: verticalScale(10),
+              borderRadius: 3,
+            }}
+            color={darkShimmerColors}
+          />
+          <Shimmer
+            style={{
+              width: scale(50),
+              height: verticalScale(22),
+              marginVertical: verticalScale(6),
+              borderRadius: 4,
+            }}
+            color={darkShimmerColors}
+          />
+          <Shimmer
+            style={{
+              width: scale(75),
+              height: verticalScale(10),
+              borderRadius: 3,
+            }}
+            color={darkShimmerColors}
+          />
+        </View>
+      </View>
+
+      {/* Live Queue Skeleton */}
+      <View
+        style={[
+          styles.spotlightQueueCard,
+          {
+            backgroundColor: darkTheme.colors.card,
+            borderColor: "rgba(255,255,255,0.06)",
+          },
+        ]}
+      >
+        <View style={styles.spotlightBadgeRow}>
+          <Shimmer
+            style={{
+              width: scale(110),
+              height: verticalScale(12),
+              borderRadius: 3,
+            }}
+            color={darkShimmerColors}
+          />
+          <Shimmer
+            style={{
+              width: scale(50),
+              height: verticalScale(16),
+              borderRadius: 10,
+            }}
+            color={darkShimmerColors}
+          />
+        </View>
+        <View style={styles.spotlightProfileRow}>
+          <Shimmer
+            style={{
+              width: scale(42),
+              height: scale(42),
+              borderRadius: scale(12),
+            }}
+            color={darkShimmerColors}
+          />
+          <View style={{ flex: 1, gap: verticalScale(4) }}>
+            <Shimmer
+              style={{
+                width: scale(120),
+                height: verticalScale(16),
+                borderRadius: 4,
+              }}
+              color={darkShimmerColors}
+            />
+            <Shimmer
+              style={{
+                width: scale(80),
+                height: verticalScale(12),
+                borderRadius: 3,
+              }}
+              color={darkShimmerColors}
+            />
+          </View>
+          <View style={{ alignItems: "center", gap: verticalScale(4) }}>
+            <Shimmer
+              style={{
+                width: scale(24),
+                height: verticalScale(18),
+                borderRadius: 4,
+              }}
+              color={darkShimmerColors}
+            />
+            <Shimmer
+              style={{
+                width: scale(35),
+                height: verticalScale(8),
+                borderRadius: 2,
+              }}
+              color={darkShimmerColors}
+            />
+          </View>
+        </View>
+      </View>
+
+      {/* Barbers Track Skeleton */}
+      <View style={styles.sectionHeaderSpacing}>
+        <Shimmer
+          style={{
+            width: scale(100),
+            height: verticalScale(14),
+            borderRadius: 4,
+          }}
+          color={darkShimmerColors}
+        />
+        <View style={{ flexDirection: "row", gap: scale(12) }}>
+          {[...Array(5)].map((_, i) => (
+            <View
+              key={i}
+              style={{ alignItems: "center", gap: verticalScale(6) }}
+            >
+              <Shimmer
+                width={scale(46)}
+                height={scale(46)}
+                borderRadius={scale(23)}
+                color={darkShimmerColors}
+              />
+              <Shimmer
+                width={scale(35)}
+                height={verticalScale(10)}
+                borderRadius={3}
+                color={darkShimmerColors}
+              />
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {/* Chart Skeleton */}
+      <View
+        style={[
+          styles.premiumCard,
+          {
+            backgroundColor: darkTheme.colors.card,
+            borderColor: "rgba(255,255,255,0.06)",
+            height: verticalScale(210),
+            justifyContent: "space-between",
+          },
+        ]}
+      >
+        <View style={{ gap: verticalScale(4) }}>
+          <Shimmer
+            style={{
+              width: scale(140),
+              height: verticalScale(14),
+              borderRadius: 4,
+            }}
+            color={darkShimmerColors}
+          />
+          <Shimmer
+            style={{
+              width: scale(70),
+              height: verticalScale(10),
+              borderRadius: 3,
+            }}
+            color={darkShimmerColors}
+          />
+        </View>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-around",
+            alignItems: "flex-end",
+            height: verticalScale(120),
+            paddingTop: verticalScale(10),
+          }}
+        >
+          {[60, 90, 40, 110, 75, 50, 95].map((h, i) => (
+            <Shimmer
+              key={i}
+              style={{
+                width: scale(22),
+                height: verticalScale(h),
+                borderRadius: 4,
+              }}
+              color={darkShimmerColors}
+            />
+          ))}
+        </View>
+      </View>
+    </ScrollView>
+  );
 
   return (
     <SafeAreaView
@@ -399,211 +2450,220 @@ const Dashboard = () => {
         showBack={false}
       />
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContainer}
+      <Modal
+        visible={isSalonMissing}
+        transparent={true}
+        animationType="fade"
+        statusBarTranslucent
       >
-        {/* 1. Immersive Salon Info Section */}
-        <View style={styles.editorialHeaderBlock}>
-          <View style={styles.editorialRow}>
-            <Text
-              style={[
-                styles.editorialTitle,
-                { color: darkTheme.colors.textMain },
-              ]}
-            >
-              The Salon Profile
+        <View style={styles.modalBlurOverlay}>
+          <View
+            style={[
+              styles.modalCardContainer,
+              { backgroundColor: darkTheme.colors.card },
+            ]}
+          >
+            <View style={styles.modalIconWrapper}>
+              <Feather
+                name="alert-circle"
+                size={scale(28)}
+                color={darkTheme.colors.accent}
+              />
+            </View>
+            <Text style={styles.modalTitle}>No Salon Available</Text>
+            <Text style={styles.modalSubtitle}>
+              You haven't added a salon to your account yet. Create a salon
+              setup to get started.
             </Text>
             <TouchableOpacity
+              activeOpacity={0.8}
               style={[
-                styles.minimalEditTrigger,
-                isEditingInfo && { backgroundColor: "rgba(255, 149, 0, 0.1)" },
+                styles.modalActionButton,
+                { backgroundColor: darkTheme.colors.accent },
               ]}
-              onPress={handleSaveSalonProfile}
-              disabled={isSavingProfile}
-              activeOpacity={0.7}
+              onPress={handleCreateSalonPress}
             >
-              <Feather
-                name={
-                  isSavingProfile
-                    ? "loader"
-                    : isEditingInfo
-                      ? "check-circle"
-                      : "edit-2"
-                }
-                size={scale(13)}
-                color={
-                  isEditingInfo
-                    ? darkTheme.colors.accent
-                    : darkTheme.colors.textMuted
-                }
-              />
-              <Text
-                style={[
-                  styles.minimalEditText,
-                  {
-                    color: isEditingInfo
-                      ? darkTheme.colors.accent
-                      : darkTheme.colors.textMuted,
-                  },
-                ]}
-              >
-                {isSavingProfile
-                  ? "Saving..."
-                  : isEditingInfo
-                    ? "Save Changes"
-                    : "Edit Details"}
-              </Text>
+              <Text style={styles.modalActionText}>Create Salon</Text>
             </TouchableOpacity>
           </View>
+        </View>
+      </Modal>
 
-          {isEditingInfo ? (
-            <TextInput
-              style={[
-                styles.premiumInlineInput,
-                { color: darkTheme.colors.textMain },
-              ]}
-              value={salonDescription}
-              onChangeText={setSalonDescription}
-              multiline
-              autoFocus
-              editable={!isSavingProfile}
-            />
-          ) : currentSalon?.loading ? (
-            <View style={{ gap: 8 }}>
-              {[...Array(4)].map((_, i) => (
-                <Shimmer key={i} width="100%" height={16} isDark />
-              ))}
-            </View>
-          ) : (
-            <View>
+      {isScreenLoading ? (
+        <ScreenSkeletonView />
+      ) : (
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContainer}
+        >
+          {/* 1. Immersive Salon Info Section */}
+          <View style={styles.editorialHeaderBlock}>
+            <View style={styles.editorialRow}>
               <Text
                 style={[
-                  styles.editorialParagraph,
-                  { color: darkTheme.colors.textMuted },
+                  styles.editorialTitle,
+                  { color: darkTheme.colors.textMain },
                 ]}
-                numberOfLines={isExpanded ? undefined : 3}
               >
-                {salonDescription || "No profile description configured."}
+                The Salon Profile
               </Text>
-
-              {isLongDescription && (
-                <TouchableOpacity
-                  onPress={() => setIsExpanded(!isExpanded)}
-                  activeOpacity={0.6}
-                  style={styles.seeMoreToggleContainer}
+              <TouchableOpacity
+                style={[
+                  styles.minimalEditTrigger,
+                  isEditingInfo && {
+                    backgroundColor: "rgba(255, 149, 0, 0.1)",
+                  },
+                ]}
+                onPress={handleSaveSalonProfile}
+                disabled={isSavingProfile}
+                activeOpacity={0.7}
+              >
+                <Feather
+                  name={
+                    isSavingProfile
+                      ? "loader"
+                      : isEditingInfo
+                        ? "check-circle"
+                        : "edit-2"
+                  }
+                  size={scale(13)}
+                  color={
+                    isEditingInfo
+                      ? darkTheme.colors.accent
+                      : darkTheme.colors.textMuted
+                  }
+                />
+                <Text
+                  style={[
+                    styles.minimalEditText,
+                    {
+                      color: isEditingInfo
+                        ? darkTheme.colors.accent
+                        : darkTheme.colors.textMuted,
+                    },
+                  ]}
                 >
-                  <Text
-                    style={[
-                      styles.seeMoreText,
-                      { color: darkTheme.colors.accent },
-                    ]}
-                  >
-                    {isExpanded ? "See Less" : "See More"}
-                  </Text>
-                </TouchableOpacity>
-              )}
+                  {isSavingProfile
+                    ? "Saving..."
+                    : isEditingInfo
+                      ? "Save Changes"
+                      : "Edit Details"}
+                </Text>
+              </TouchableOpacity>
             </View>
-          )}
-        </View>
 
-        {/* 2. Compact Performance Quick-Metrics Split Row */}
-        <View style={styles.splitGridRow}>
-          {reportData.loading ? (
-            <>
-              <Shimmer
-                isDark
-                style={{
-                  flex: 1,
-                  padding: scale(12),
-                  minHeight: verticalScale(70),
-                }}
-              />
-              <Shimmer
-                isDark
-                style={{
-                  flex: 1,
-                  padding: scale(12),
-                  minHeight: verticalScale(70),
-                }}
-              />
-            </>
-          ) : (
-            <>
-              <View
+            {isEditingInfo ? (
+              <TextInput
                 style={[
-                  styles.compactDataCard,
-                  {
-                    backgroundColor: darkTheme.colors.card,
-                    borderColor: "rgba(255,255,255,0.05)",
-                  },
+                  styles.premiumInlineInput,
+                  { color: darkTheme.colors.textMain },
                 ]}
-              >
-                <View style={styles.compactMetricHeader}>
-                  <Text style={styles.miniCapsTitle}>QUEUE HISTORY</Text>
-                  <Ionicons
-                    name={isTrendFall ? "trending-down" : "trending-up"}
-                    size={scale(14)}
-                    color={isTrendFall ? "#FF3B30" : "#34C759"}
-                  />
-                </View>
-                <Text style={styles.massiveMetricText}>
-                  {queueReport?.percentageChangelast30Days || 0}%
+                value={salonDescription}
+                onChangeText={setSalonDescription}
+                multiline
+                autoFocus
+                editable={!isSavingProfile}
+              />
+            ) : (
+              <View>
+                <Text
+                  style={[
+                    styles.editorialParagraph,
+                    { color: darkTheme.colors.textMuted },
+                  ]}
+                  numberOfLines={isExpanded ? undefined : 3}
+                >
+                  {salonDescription || "No profile description configured."}
                 </Text>
-                <View style={styles.miniProgressTrack}>
-                  <View
-                    style={[
-                      styles.miniProgressFill,
-                      {
-                        width: `${queueReport?.servedHistoryPercentage || 0}%`,
-                        backgroundColor: "#34C759",
-                      },
-                    ]}
-                  />
-                  <View
-                    style={[
-                      styles.miniProgressFill,
-                      {
-                        width: `${queueReport?.cancelledHistoryPercentage || 0}%`,
-                        backgroundColor: "#FF3B30",
-                      },
-                    ]}
-                  />
-                </View>
+                {isLongDescription && (
+                  <TouchableOpacity
+                    onPress={() => setIsExpanded(!isExpanded)}
+                    activeOpacity={0.6}
+                    style={styles.seeMoreToggleContainer}
+                  >
+                    <Text
+                      style={[
+                        styles.seeMoreText,
+                        { color: darkTheme.colors.accent },
+                      ]}
+                    >
+                      {isExpanded ? "See Less" : "See More"}
+                    </Text>
+                  </TouchableOpacity>
+                )}
               </View>
+            )}
+          </View>
 
-              <View
-                style={[
-                  styles.compactDataCard,
-                  {
-                    backgroundColor: darkTheme.colors.card,
-                    borderColor: "rgba(255,255,255,0.05)",
-                  },
-                ]}
-              >
-                <View style={styles.compactMetricHeader}>
-                  <Text style={styles.miniCapsTitle}>FLOOR CAPACITY</Text>
-                  <Ionicons
-                    name="people-outline"
-                    size={scale(14)}
-                    color={darkTheme.colors.accent}
-                  />
-                </View>
-                <Text style={styles.massiveMetricText}>
-                  7 <Text style={styles.metricUnit}>Staff</Text>
-                </Text>
-                <Text style={styles.metricContextHint}>
-                  Active floor roster
-                </Text>
+          {/* 2. Compact Performance Quick-Metrics Split Row */}
+          <View style={styles.splitGridRow}>
+            <View
+              style={[
+                styles.compactDataCard,
+                {
+                  backgroundColor: darkTheme.colors.card,
+                  borderColor: "rgba(255,255,255,0.05)",
+                },
+              ]}
+            >
+              <View style={styles.compactMetricHeader}>
+                <Text style={styles.miniCapsTitle}>QUEUE HISTORY</Text>
+                <Ionicons
+                  name={isTrendFall ? "trending-down" : "trending-up"}
+                  size={scale(14)}
+                  color={isTrendFall ? "#FF3B30" : "#34C759"}
+                />
               </View>
-            </>
-          )}
-        </View>
+              <Text style={styles.massiveMetricText}>
+                {queueReport?.percentageChangelast30Days || 0}%
+              </Text>
+              <View style={styles.miniProgressTrack}>
+                <View
+                  style={[
+                    styles.miniProgressFill,
+                    {
+                      width: `${queueReport?.servedHistoryPercentage || 0}%`,
+                      backgroundColor: "#34C759",
+                    },
+                  ]}
+                />
+                <View
+                  style={[
+                    styles.miniProgressFill,
+                    {
+                      width: `${queueReport?.cancelledHistoryPercentage || 0}%`,
+                      backgroundColor: "#FF3B30",
+                    },
+                  ]}
+                />
+              </View>
+            </View>
 
-        {/* 3. Live Queue Card */}
-        {queuelistData.loading ? (
-          <Shimmer width="100%" height={100} isDark />
-        ) : (
+            <View
+              style={[
+                styles.compactDataCard,
+                {
+                  backgroundColor: darkTheme.colors.card,
+                  borderColor: "rgba(255,255,255,0.05)",
+                },
+              ]}
+            >
+              <View style={styles.compactMetricHeader}>
+                <Text style={styles.miniCapsTitle}>FLOOR CAPACITY</Text>
+                <Ionicons
+                  name="people-outline"
+                  size={scale(14)}
+                  color={darkTheme.colors.accent}
+                />
+              </View>
+              <Text style={styles.massiveMetricText}>
+                7 <Text style={styles.metricUnit}>Staff</Text>
+              </Text>
+              <Text style={styles.metricContextHint}>Active floor roster</Text>
+            </View>
+          </View>
+
+          {/* 3. Live Queue Card */}
           <View
             style={[
               styles.spotlightQueueCard,
@@ -664,146 +2724,132 @@ const Dashboard = () => {
               </View>
             </View>
           </View>
-        )}
 
-        {/* 4. Barbers Horizontal Deck */}
-        <View style={styles.sectionHeaderSpacing}>
-          <Text
-            style={[
-              darkTheme.typography.cardTitle,
-              styles.sectionTitleLabel,
-              { color: darkTheme.colors.textMain },
-            ]}
-          >
-            Barbers On Duty
-          </Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.cleanHorizontalRosterTrack}
-          >
-            {barbersData.loading ? (
-              <View style={{ flexDirection: "row", gap: scale(10) }}>
-                {[...Array(5)].map((_, i) => (
-                  <Shimmer
-                    key={i}
-                    width={scale(46)}
-                    height={scale(46)}
-                    borderRadius={scale(23)}
-                    isDark
-                  />
-                ))}
-              </View>
-            ) : barbersData.data.length > 0 ? (
-              barbersData.data.map((staff) => (
-                <View key={staff._id} style={styles.minimalRosterNode}>
-                  <View
-                    style={[
-                      styles.rosterRingFrame,
-                      { backgroundColor: darkTheme.colors.card },
-                    ]}
-                  >
-                    {staff?.profile?.[0]?.url ? (
-                      <Image
-                        source={staff.profile[0].url}
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          borderRadius: scale(26),
-                        }}
-                        contentFit="cover"
-                        transition={300}
-                      />
-                    ) : (
-                      <Text style={styles.fallbackInitialText}>
-                        {staff.initial || staff.name?.[0]}
-                      </Text>
-                    )}
+          {/* 4. Barbers Horizontal Deck */}
+          <View style={styles.sectionHeaderSpacing}>
+            <Text
+              style={[
+                darkTheme.typography.cardTitle,
+                styles.sectionTitleLabel,
+                { color: darkTheme.colors.textMain },
+              ]}
+            >
+              Barbers On Duty
+            </Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.cleanHorizontalRosterTrack}
+            >
+              {barbersData.data.length > 0 ? (
+                barbersData.data.map((staff) => (
+                  <View key={staff._id} style={styles.minimalRosterNode}>
+                    <View
+                      style={[
+                        styles.rosterRingFrame,
+                        { backgroundColor: darkTheme.colors.card },
+                      ]}
+                    >
+                      {staff?.profile?.[0]?.url ? (
+                        <Image
+                          source={staff.profile[0].url}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            borderRadius: scale(26),
+                          }}
+                          contentFit="cover"
+                          transition={300}
+                        />
+                      ) : (
+                        <Text style={styles.fallbackInitialText}>
+                          {staff.initial || staff.name?.[0]}
+                        </Text>
+                      )}
+                    </View>
+                    <Text
+                      style={[
+                        styles.minimalStaffLabel,
+                        { color: darkTheme.colors.textMain },
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {staff.name}
+                    </Text>
                   </View>
-                  <Text
-                    style={[
-                      styles.minimalStaffLabel,
-                      { color: darkTheme.colors.textMain },
-                    ]}
-                    numberOfLines={1}
-                  >
-                    {staff.name}
-                  </Text>
-                </View>
-              ))
-            ) : (
-              <Text style={{ color: darkTheme.colors.textMuted }}>
-                No active staff available
-              </Text>
-            )}
-          </ScrollView>
-        </View>
-
-        {/* 5. Analytics Overview Container */}
-        {reportData.loading ? (
-          <Shimmer width="100%" height={230} isDark />
-        ) : appointmentChartData.length > 0 ? (
-          <View
-            style={[
-              styles.premiumCard,
-              {
-                backgroundColor: darkTheme.colors.card,
-                borderColor: "rgba(255,255,255,0.06)",
-              },
-            ]}
-          >
-            <View style={styles.chartHeaderBlock}>
-              <Text
-                style={[
-                  darkTheme.typography.cardTitle,
-                  styles.sectionTitleLabel,
-                  { color: darkTheme.colors.textMain },
-                ]}
-              >
-                Appointments Overview
-              </Text>
-              <Text
-                style={[
-                  darkTheme.typography.bodyMuted,
-                  styles.chartSubtitleLabel,
-                ]}
-              >
-                {appointmentReport?.dateFormat || "Last 7 days"}
-              </Text>
-            </View>
-
-            <View style={styles.chartWrapperAlignmentFrame}>
-              <BarChart
-                data={appointmentChartData}
-                barWidth={scale(24)}
-                spacing={scale(16)}
-                roundedTop
-                noOfSections={4}
-                maxValue={maxChartValue}
-                isAnimated
-                yAxisThickness={0}
-                xAxisThickness={1}
-                xAxisColor="rgba(255,255,255,0.08)"
-                yAxisTextStyle={styles.chartAxisLabelTextStyle}
-                xAxisLabelTextStyle={styles.chartAxisLabelTextStyle}
-                rulesType="solid"
-                rulesColor="rgba(255,255,255,0.03)"
-                height={verticalScale(130)}
-              />
-            </View>
+                ))
+              ) : (
+                <Text style={{ color: darkTheme.colors.textMuted }}>
+                  No active staff available
+                </Text>
+              )}
+            </ScrollView>
           </View>
-        ) : (
-          <Text
-            style={{
-              alignSelf: "center",
-              color: darkTheme.colors.textMuted,
-              marginVertical: 20,
-            }}
-          >
-            No report metrics collected.
-          </Text>
-        )}
-      </ScrollView>
+
+          {/* 5. Analytics Overview Container */}
+          {appointmentChartData.length > 0 ? (
+            <View
+              style={[
+                styles.premiumCard,
+                {
+                  backgroundColor: darkTheme.colors.card,
+                  borderColor: "rgba(255,255,255,0.06)",
+                },
+              ]}
+            >
+              <View style={styles.chartHeaderBlock}>
+                <Text
+                  style={[
+                    darkTheme.typography.cardTitle,
+                    styles.sectionTitleLabel,
+                    { color: darkTheme.colors.textMain },
+                  ]}
+                >
+                  Appointments Overview
+                </Text>
+                <Text
+                  style={[
+                    darkTheme.typography.bodyMuted,
+                    styles.chartSubtitleLabel,
+                  ]}
+                >
+                  {appointmentReport?.dateFormat || "Last 7 days"}
+                </Text>
+              </View>
+
+              <View style={styles.chartWrapperAlignmentFrame}>
+                <BarChart
+                  data={appointmentChartData}
+                  barWidth={scale(24)}
+                  spacing={scale(16)}
+                  roundedTop
+                  noOfSections={4}
+                  maxValue={maxChartValue}
+                  isAnimated
+                  yAxisThickness={0}
+                  xAxisThickness={1}
+                  xAxisColor="rgba(255,255,255,0.08)"
+                  yAxisTextStyle={styles.chartAxisLabelTextStyle}
+                  xAxisLabelTextStyle={styles.chartAxisLabelTextStyle}
+                  rulesType="solid"
+                  rulesColor="rgba(255,255,255,0.03)"
+                  height={verticalScale(130)}
+                />
+              </View>
+            </View>
+          ) : (
+            <Text
+              style={{
+                alignSelf: "center",
+                color: darkTheme.colors.textMuted,
+                marginVertical: 20,
+              }}
+            >
+              No report metrics collected.
+            </Text>
+          )}
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 };
@@ -816,7 +2862,6 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     paddingHorizontal: scale(16),
-    // paddingTop: verticalScale(16),
     paddingBottom: verticalScale(32),
     gap: verticalScale(20),
   },
@@ -1067,4 +3112,59 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.3)",
     fontSize: scale(9),
   },
+  // --- PREMIUM ZERO STATE MODAL LAYER STYLES ---
+  modalBlurOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.85)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: scale(24),
+  },
+  modalCardContainer: {
+    width: "100%",
+    borderRadius: scale(16),
+    padding: scale(24),
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+  },
+  modalIconWrapper: {
+    width: scale(56),
+    height: scale(56),
+    borderRadius: scale(28),
+    backgroundColor: "rgba(255, 149, 0, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: verticalScale(16),
+  },
+  modalTitle: {
+    fontSize: scale(18),
+    fontWeight: "700",
+    color: "#FFFFFF",
+    letterSpacing: -0.3,
+    marginBottom: verticalScale(8),
+    textAlign: "center",
+  },
+  modalSubtitle: {
+    fontSize: scale(12.5),
+    lineHeight: scale(18),
+    color: "rgba(255, 255, 255, 0.5)",
+    textAlign: "center",
+    marginBottom: verticalScale(24),
+    paddingHorizontal: scale(8),
+  },
+  modalActionButton: {
+    width: "100%",
+    height: scale(42),
+    borderRadius: scale(10),
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalActionText: {
+    color: "#FFFFFF",
+    fontSize: scale(13),
+    fontWeight: "700",
+  },
 });
+
+// ... styles object remains unchanged ...
