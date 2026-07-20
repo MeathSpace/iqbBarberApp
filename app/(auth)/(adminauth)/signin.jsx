@@ -33,7 +33,7 @@ const SignIn = () => {
   const baseContent = i18n.t("auth.adminauth.signin");
   const router = useRouter();
 
-  const [email, setEmail] = useState("arghya@yopmail.com");
+  const [email, setEmail] = useState("bikki@yopmail.com");
   const [password, setPassword] = useState("12345678");
   const [showPassword, setShowPassword] = useState(false);
   const [signinLoader, setSigninLoader] = useState(false);

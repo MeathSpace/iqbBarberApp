@@ -839,7 +839,6 @@ const AdvertisementsScreen = () => {
       <Shimmer
         style={[styles.premiumBanner, { height: verticalScale(75) }]}
         color={["#221f1c", "#332e2a", "#221f1c"]}
-        isDark
       />
       {/* Add Button Skeleton */}
       <Shimmer
@@ -848,19 +847,16 @@ const AdvertisementsScreen = () => {
           { height: darkTheme.layout.buttonHeight || verticalScale(45) },
         ]}
         color={["#2a2a2a", "#3a3a3a", "#2a2a2a"]}
-        isDark
       />
       {/* Section Text Header Skeletons */}
       <View style={styles.sectionHeaderRow}>
         <Shimmer
           style={{ width: scale(130), height: verticalScale(16), borderRadius: 4 }}
           color={["#222", "#333", "#222"]}
-          isDark
         />
         <Shimmer
           style={{ width: scale(80), height: verticalScale(14), borderRadius: 4 }}
           color={["#222", "#333", "#222"]}
-          isDark
         />
       </View>
       {/* Dummy Advertisement Card Skeletons */}
@@ -869,18 +865,15 @@ const AdvertisementsScreen = () => {
           <Shimmer
             style={{ width: "100%", height: verticalScale(140) }}
             color={["#1c1c1e", "#2c2c2e", "#1c1c1e"]}
-            isDark
           />
           <View style={styles.cardFooter}>
             <Shimmer
               style={{ width: scale(150), height: verticalScale(16), borderRadius: 4 }}
               color={["#2c2c2e", "#3a3a3c", "#2c2c2e"]}
-              isDark
             />
             <Shimmer
               style={{ width: scale(70), height: verticalScale(24), borderRadius: darkTheme.layout.borderRadiusSmall }}
               color={["#2c2c2e", "#3a3a3c", "#2c2c2e"]}
-              isDark
             />
           </View>
         </View>
