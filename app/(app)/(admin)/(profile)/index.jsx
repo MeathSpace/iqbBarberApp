@@ -2128,12 +2128,13 @@ import { Feather, FontAwesome5, Ionicons } from "@expo/vector-icons";
 import PhoneInput from "@linhnguyen96114/react-native-phone-input";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as ImagePicker from "expo-image-picker";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   Image,
   KeyboardAvoidingView,
+  Linking,
   Modal,
   Platform,
   ScrollView,
@@ -2158,1189 +2159,10 @@ const GENDER_OPTIONS = [
   { label: "Other", value: "Other" },
 ];
 
-// const EditProfileScreen = () => {
-//   const { fetchLoggedInAdmin, authenticatedUser } = useAdminAuth();
-//   const phoneInputRef = useRef(null);
-
-//   // Core Form Local States
-//   const [name, setName] = useState(authenticatedUser?.name || "");
-//   const [email, setEmail] = useState(authenticatedUser?.email || "");
-//   const [password, setPassword] = useState("********");
-//   const [gender, setGender] = useState(authenticatedUser?.gender || "Male");
-
-//   const [mobNumber, setMobNumber] = useState(
-//     authenticatedUser?.mobileNumber
-//       ? String(authenticatedUser.mobileNumber)
-//       : "",
-//   );
-//   const [countryCode, setCountryCode] = useState(
-//     authenticatedUser?.mobileCountryCode
-//       ? String(authenticatedUser.mobileCountryCode)
-//       : "",
-//   );
-
-//   const [isMobileValid, setIsMobileValid] = useState(false);
-
-//   // Date & Structural Layout State Controls
-//   const [dobDate, setDobDate] = useState(
-//     authenticatedUser?.dateOfBirth
-//       ? new Date(authenticatedUser.dateOfBirth)
-//       : new Date(),
-//   );
-//   const [showDatePicker, setShowDatePicker] = useState(false);
-//   const [isGenderFocused, setIsGenderFocused] = useState(false);
-
-//   // Modal Control States
-//   const [passwordModalVisible, setPasswordModalVisible] = useState(false);
-//   const [verificationModalVisible, setVerificationModalVisible] =
-//     useState(false);
-//   const [verificationTarget, setVerificationTarget] = useState({
-//     type: "",
-//     value: "",
-//   });
-
-//   // Password Sub-States
-
-//   const [showOldPassword, setShowOldPassword] = useState(false);
-//   const [showNewPassword, setShowNewPassword] = useState(false);
-//   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-//   const [oldPassword, setOldPassword] = useState("");
-//   const [newPassword, setNewPassword] = useState("");
-//   const [confirmPassword, setConfirmPassword] = useState("");
-
-//   // OTP Verification Sub-States
-//   const [otpCode, setOtpCode] = useState("");
-
-//   const [avatarUri, setAvatarUri] = useState(
-//     authenticatedUser?.profile?.[0]?.url || null,
-//   );
-//   const [isUploadingImage, setIsUploadingImage] = useState(false);
-
-//   const formatDisplayDate = (date) => {
-//     const day = String(date.getDate()).padStart(2, "0");
-//     const month = String(date.getMonth() + 1).padStart(2, "0");
-//     const year = date.getFullYear();
-//     return `${day}/${month}/${year}`;
-//   };
-
-//   const handleDateChange = (event, selectedDate) => {
-//     if (Platform.OS === "android") {
-//       setShowDatePicker(false);
-//     }
-//     if (selectedDate) {
-//       setDobDate(selectedDate);
-//     }
-//   };
-
-//   const isEmailValid = email.includes("@") && email.includes(".");
-
-//   // ==================== IMAGE PICKING & UPLOAD HANDLING ====================
-//   const handleSelectImage = async () => {
-//     const permissionResult =
-//       await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-//     if (permissionResult.granted === false) {
-//       Alert.alert(
-//         "Permission Denied",
-//         "Workspace requires access to your system camera roll parameters to select an avatar.",
-//       );
-//       return;
-//     }
-
-//     const result = await ImagePicker.launchImageLibraryAsync({
-//       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-//       allowsEditing: true,
-//       aspect: [1, 1],
-//       quality: 0.8,
-//     });
-
-//     if (!result.canceled && result.assets && result.assets.length > 0) {
-//       const selectedAsset = result.assets[0];
-//       setAvatarUri(selectedAsset.uri);
-//       await uploadAvatarToServer(selectedAsset); // Pass complete asset payload context object
-//     }
-//   };
-
-//   const uploadAvatarToServer = async (asset) => {
-//     const extension = asset.uri.split(".").pop()?.toLowerCase();
-
-//     const mimeType =
-//       extension === "jpg" || extension === "jpeg"
-//         ? "image/jpeg"
-//         : extension === "png"
-//           ? "image/png"
-//           : extension === "webp"
-//             ? "image/webp"
-//             : "image/jpeg";
-
-//     const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
-
-//     if (!allowedTypes.includes(mimeType)) {
-//       Alert.alert(
-//         "Invalid File",
-//         "Please upload only JPEG, PNG or WebP images.",
-//       );
-//       return;
-//     }
-
-//     setIsUploadingImage(true);
-
-//     const formData = new FormData();
-//     formData.append("email", authenticatedUser.email);
-//     formData.append("salonId", String(authenticatedUser.salonId));
-
-//     formData.append("profile", {
-//       uri: Platform.OS === "ios" ? asset.uri.replace("file://", "") : asset.uri,
-//       name: asset.fileName || `profile.${extension || "jpg"}`,
-//       type: mimeType,
-//     });
-
-//     try {
-//       const { data } = await api.post(
-//         "/admin/uploadAdminProfilePicture",
-//         formData,
-//       );
-
-//       if (!data.success) {
-//         throw new Error(data.message);
-//       }
-
-//       Alert.alert("Success", data.message || "Profile uploaded successfully.");
-//     } catch (error) {
-//       Alert.alert(
-//         "Upload Failed",
-//         error.response?.data?.message || error.message,
-//       );
-//     } finally {
-//       setIsUploadingImage(false);
-//     }
-//   };
-//   // =========================================================================
-
-//   const triggerVerificationFlow = async (type, value, isVerified) => {
-//     if (isVerified) return;
-
-//     try {
-//       if (type === "Mobile Phone") {
-//         const { data } = await api.post(
-//           "/admin/sendVerificationCodeForAdminMobile",
-//           {
-//             email: authenticatedUser?.email,
-//           },
-//         );
-
-//         // Alert.alert("Success", data.message);
-//       } else if (type === "Email") {
-//         const { data } = await api.post(
-//           "/admin/sendVerificationCodeForAdminEmail",
-//           {
-//             email: authenticatedUser?.email,
-//           },
-//         );
-
-//         // Alert.alert("Success", data.message);
-//       }
-
-//       setOtpCode("");
-//       setVerificationTarget({ type, value });
-//       setVerificationModalVisible(true);
-//     } catch (error) {
-//       Alert.alert(
-//         "Verification Failed",
-//         error?.response?.data?.message ||
-//           error?.message ||
-//           "Something went wrong.",
-//       );
-
-//       console.error("Send OTP Error:", error);
-//     }
-//   };
-
-//   const handleVerifyOTP = async () => {
-//     try {
-//       if (verificationTarget.type === "Mobile Phone") {
-//         const { data } = await api.post("/admin/changeMobileVerifiedStatus", {
-//           email: authenticatedUser?.email,
-//           verificationCode: otpCode,
-//         });
-
-//         Alert.alert("Success", data.message);
-//       } else {
-//         const { data } = await api.post("/admin/changeEmailVerifiedStatus", {
-//           email: authenticatedUser?.email,
-//           verificationCode: otpCode,
-//         });
-
-//         Alert.alert("Success", data.message);
-//       }
-
-//       setVerificationModalVisible(false);
-//       setOtpCode("");
-//     } catch (error) {
-//       Alert.alert(
-//         "Verification Failed",
-//         error?.response?.data?.message ||
-//           error?.message ||
-//           "Something went wrong.",
-//       );
-
-//       console.error(error);
-//     }
-//   };
-
-//   const handleResendOTP = () => {
-//     console.log(
-//       `Re-routing verification dispatch handshake token directly to: ${verificationTarget.value}`,
-//     );
-//   };
-
-//   const savePasswordHandler = async () => {
-//     if (!oldPassword || !newPassword || !confirmPassword) {
-//       Alert.alert("Validation Error", "Please fill in all password fields.");
-//       return;
-//     }
-
-//     if (oldPassword.length < 8) {
-//       Alert.alert(
-//         "Validation Error",
-//         "Current password must be at least 8 characters long.",
-//       );
-//       return;
-//     }
-
-//     if (newPassword.length < 8) {
-//       Alert.alert(
-//         "Validation Error",
-//         "New password must be at least 8 characters long.",
-//       );
-//       return;
-//     }
-
-//     if (newPassword !== confirmPassword) {
-//       Alert.alert(
-//         "Validation Error",
-//         "New password and confirm password do not match.",
-//       );
-//       return;
-//     }
-
-//     try {
-//       const { data } = await api.post("/admin/updateAdminPassword", {
-//         email: authenticatedUser?.email,
-//         oldPassword,
-//         password: newPassword,
-//       });
-
-//       Alert.alert("Success", data?.message || "Password updated successfully.");
-
-//       setPasswordModalVisible(false);
-//       setOldPassword("");
-//       setNewPassword("");
-//       setConfirmPassword("");
-//     } catch (error) {
-//       Alert.alert(
-//         "Password Update Failed",
-//         error?.response?.data?.message ||
-//           error?.message ||
-//           "Something went wrong.",
-//       );
-//     }
-//   };
-
-//   const [updateProfileLoader, setUpdateProfileLoader] = useState(false);
-
-//   const saveProfileHandler = async () => {
-//     const profileData = {
-//       name,
-//       email,
-//       mobileNumber: mobNumber,
-//       gender,
-//       dateOfBirth: dobDate.toISOString().split("T")[0] || "",
-//       countryCode: countryCode,
-//     };
-
-//     try {
-//       setUpdateProfileLoader(true);
-//       const response = await api.put(
-//         "/admin/updateAdminAcoountDetails",
-//         profileData,
-//       );
-
-//       await fetchLoggedInAdmin();
-
-//       Alert.alert(
-//         "Profile Updated",
-//         response?.data?.message ||
-//           "Workspace identity metrics successfully synchronized.",
-//       );
-//     } catch (error) {
-//       const errorMessage =
-//         error?.response?.data?.message ||
-//         error?.message ||
-//         "Failed to synchronize profile adjustments with the server.";
-
-//       Alert.alert("Update Failed", errorMessage);
-//     } finally {
-//       setUpdateProfileLoader(false);
-//     }
-//   };
-
-//   // Completion Matrix calculations
-//   const totalFields = 5;
-//   let completedFieldsCount = 0;
-
-//   if (name.trim().length > 0) completedFieldsCount++;
-//   if (gender) completedFieldsCount++;
-//   if (password.trim().length > 0) completedFieldsCount++;
-
-//   if (
-//     email.trim().length > 0 &&
-//     isEmailValid &&
-//     authenticatedUser?.emailVerified
-//   )
-//     completedFieldsCount++;
-//   if (isMobileValid && authenticatedUser?.mobileVerified)
-//     completedFieldsCount++;
-
-//   const completionPercentage = Math.round(
-//     (completedFieldsCount / totalFields) * 100,
-//   );
-
-//   return (
-//     <SafeAreaView
-//       edges={["top", "right", "left"]}
-//       style={[
-//         styles.container,
-//         { backgroundColor: darkTheme.colors.background },
-//       ]}
-//     >
-//       <Header
-//         title="Profile"
-//         subTitle="Manage your workspace identity"
-//         showBack={true}
-//       />
-
-//       <KeyboardAvoidingView
-//         behavior={Platform.OS === "ios" ? "padding" : "height"}
-//         style={styles.keyboardContainer}
-//       >
-//         <ScrollView
-//           showsVerticalScrollIndicator={false}
-//           contentContainerStyle={styles.scrollContainer}
-//         >
-//           {/* 1. Hero Identity Block */}
-//           <View style={styles.heroSectionContainer}>
-//             <View style={styles.avatarWrapperContainer}>
-//               <View
-//                 style={[
-//                   styles.avatarOuterRing,
-//                   { borderColor: darkTheme.colors.accent },
-//                 ]}
-//               >
-//                 <View style={styles.avatarInnerCircle}>
-//                   {avatarUri ? (
-//                     <Image
-//                       source={{ uri: avatarUri }}
-//                       style={styles.avatarImagePlacement}
-//                       resizeMode="cover"
-//                     />
-//                   ) : (
-//                     <Ionicons
-//                       name="person"
-//                       size={scale(32)}
-//                       color="rgba(255,255,255,0.6)"
-//                     />
-//                   )}
-//                 </View>
-//               </View>
-//               <TouchableOpacity
-//                 style={[
-//                   styles.cameraFloatingBadge,
-//                   { backgroundColor: darkTheme.colors.accent },
-//                 ]}
-//                 activeOpacity={0.9}
-//                 onPress={handleSelectImage}
-//                 disabled={isUploadingImage}
-//               >
-//                 <Feather name="camera" size={scale(11)} color="#000000" />
-//               </TouchableOpacity>
-//             </View>
-
-//             <Text
-//               style={[darkTheme.typography.cardTitle, styles.userNameHeading]}
-//             >
-//               {name}
-//             </Text>
-//             <Text style={styles.userRoleTagLabel}>
-//               {authenticatedUser?.role || "System Administrator"}
-//             </Text>
-
-//             <View style={styles.metricsRibbonTrack}>
-//               <View style={styles.metricStatBlock}>
-//                 <Text style={styles.metricMainNumber}>
-//                   {authenticatedUser?.salonCount || 0}
-//                 </Text>
-//                 <Text style={styles.metricSubLabel}>Salons</Text>
-//               </View>
-//               <View style={styles.hairlineVerticalDivider} />
-//               <View style={styles.metricStatBlock}>
-//                 <Text style={styles.metricMainNumber}>
-//                   {authenticatedUser?.barbersCount || 0}
-//                 </Text>
-//                 <Text style={styles.metricSubLabel}>Barbers</Text>
-//               </View>
-//               <View style={styles.hairlineVerticalDivider} />
-//               <View style={styles.metricStatBlock}>
-//                 <Text style={styles.metricMainNumber}>
-//                   {authenticatedUser?.customersCount || 0}
-//                 </Text>
-//                 <Text style={styles.metricSubLabel}>Customers</Text>
-//               </View>
-//             </View>
-//           </View>
-
-//           {/* 2. Stripe Integration Tile */}
-//           <TouchableOpacity
-//             style={[
-//               styles.premiumStripeActionTile,
-//               {
-//                 backgroundColor: darkTheme.colors.card,
-//                 borderColor: darkTheme.colors.border,
-//               },
-//             ]}
-//             activeOpacity={0.8}
-//           >
-//             <View style={styles.stripeLeftWrapper}>
-//               <View style={styles.stripeBrandIconBox}>
-//                 <FontAwesome5
-//                   name="stripe-s"
-//                   size={scale(15)}
-//                   color="#635BFF"
-//                 />
-//               </View>
-//               <View style={styles.stripeTextStack}>
-//                 <Text style={styles.stripeTitleText}>
-//                   Stripe Merchant Integration
-//                 </Text>
-//                 <Text style={styles.stripeSubtitleText}>
-//                   Status:{" "}
-//                   {authenticatedUser?.vendorAccountDetails
-//                     ?.vendorCardPaymentStatus || "Inactive"}
-//                 </Text>
-//               </View>
-//             </View>
-//             <Ionicons
-//               name="chevron-forward"
-//               size={scale(14)}
-//               color={darkTheme.colors.textMuted}
-//             />
-//           </TouchableOpacity>
-
-//           {/* Progress Section */}
-//           <View style={styles.progressTrackerHeaderSection}>
-//             <View style={styles.progressSplitTextRow}>
-//               <Text style={styles.progressLabelText}>PROFILE COMPLETION</Text>
-//               <Text
-//                 style={[
-//                   styles.progressPercentText,
-//                   { color: darkTheme.colors.accent },
-//                 ]}
-//               >
-//                 {completionPercentage}%
-//               </Text>
-//             </View>
-//             <View style={styles.progressTrackBackgroundLine}>
-//               <View
-//                 style={[
-//                   styles.progressActiveFillLine,
-//                   {
-//                     backgroundColor: darkTheme.colors.accent,
-//                     width: `${completionPercentage}%`,
-//                   },
-//                 ]}
-//               />
-//             </View>
-//           </View>
-
-//           {/* 3. Dark Form Layout Block */}
-//           <View style={styles.formContainerVerticalDeck}>
-//             {/* Input Element: Full Name */}
-//             <View style={styles.inputLayoutContainerGroup}>
-//               <Text style={styles.premiumFieldLabelMicro}>FULL NAME</Text>
-//               <TextInput
-//                 style={[
-//                   styles.luxuryTextInput,
-//                   {
-//                     borderColor: darkTheme.colors.border,
-//                     color: darkTheme.colors.textMain,
-//                     backgroundColor: darkTheme.colors.card,
-//                   },
-//                 ]}
-//                 value={name}
-//                 onChangeText={setName}
-//                 placeholder="Enter workspace name..."
-//                 placeholderTextColor={darkTheme.colors.textMuted}
-//                 selectionColor={darkTheme.colors.accent}
-//               />
-//             </View>
-
-//             {/* Input Element: Email Address */}
-//             <View style={styles.inputLayoutContainerGroup}>
-//               <Text style={styles.premiumFieldLabelMicro}>EMAIL ADDRESS</Text>
-//               <View style={styles.inputWithIconAnchorWrapper}>
-//                 <TextInput
-//                   style={[
-//                     styles.luxuryTextInput,
-//                     {
-//                       borderColor: darkTheme.colors.border,
-//                       color: darkTheme.colors.textMain,
-//                       backgroundColor: darkTheme.colors.card,
-//                       paddingRight: scale(45),
-//                     },
-//                   ]}
-//                   value={email}
-//                   onChangeText={setEmail}
-//                   keyboardType="email-address"
-//                   autoCapitalize="none"
-//                   selectionColor={darkTheme.colors.accent}
-//                 />
-//                 <View style={styles.fieldStatusIconOverlayContainer}>
-//                   {authenticatedUser?.emailVerified ? (
-//                     <Ionicons
-//                       name="checkmark-circle"
-//                       size={scale(16)}
-//                       color="#34C759"
-//                     />
-//                   ) : (
-//                     <TouchableOpacity
-//                       onPress={() =>
-//                         triggerVerificationFlow(
-//                           "Email",
-//                           email,
-//                           authenticatedUser?.emailVerified,
-//                         )
-//                       }
-//                     >
-//                       <Ionicons
-//                         name="close-circle"
-//                         size={scale(16)}
-//                         color="#FF3B30"
-//                       />
-//                     </TouchableOpacity>
-//                   )}
-//                 </View>
-//               </View>
-//             </View>
-
-//             {/* Input Element: Security Password Interceptor */}
-//             <View style={styles.inputLayoutContainerGroup}>
-//               <Text style={styles.premiumFieldLabelMicro}>
-//                 SECURITY PASSWORD
-//               </Text>
-//               <TouchableOpacity
-//                 activeOpacity={1}
-//                 onPress={() => setPasswordModalVisible(true)}
-//                 style={[
-//                   styles.luxuryDropdownTriggerButton,
-//                   {
-//                     borderColor: darkTheme.colors.border,
-//                     backgroundColor: darkTheme.colors.card,
-//                   },
-//                 ]}
-//               >
-//                 <Text
-//                   style={{
-//                     color: darkTheme.colors.textMain,
-//                     fontSize: scale(13),
-//                   }}
-//                 >
-//                   {password}
-//                 </Text>
-//                 <Ionicons
-//                   name="lock-closed-outline"
-//                   size={scale(13)}
-//                   color={darkTheme.colors.textMuted}
-//                 />
-//               </TouchableOpacity>
-//             </View>
-
-//             {/* Input Element: Mobile Number via PhoneInput */}
-//             <View style={styles.inputLayoutContainerGroup}>
-//               <Text style={styles.premiumFieldLabelMicro}>MOBILE NUMBER</Text>
-//               <View
-//                 style={[
-//                   styles.inputWithIconAnchorWrapper,
-//                   {
-//                     backgroundColor: darkTheme.colors.card,
-//                     borderRadius: darkTheme.layout.borderRadiusMedium,
-//                   },
-//                 ]}
-//               >
-//                 <PhoneInput
-//                   ref={phoneInputRef}
-//                   // defaultCode="" // This is not country code like 44, 91 this is like GB or IN
-//                   value={mobNumber}
-//                   onChangeText={(text) => {
-//                     setMobNumber(text);
-
-//                     const valid =
-//                       phoneInputRef.current?.isValidNumber(text) ?? false;
-//                     setIsMobileValid(valid);
-//                   }}
-//                   onChangeFormattedText={(text) => {
-//                     // console.log("Formatted:", text);
-//                   }}
-//                   onChangeCountry={(country) => {
-//                     setCountryCode(country?.callingCode[0]);
-//                   }}
-//                   withDarkTheme={true}
-//                   containerStyle={[
-//                     styles.phoneContainer,
-//                     {
-//                       backgroundColor: "transparent",
-//                       borderColor: darkTheme.colors.border,
-//                       borderRadius: darkTheme.layout.borderRadiusMedium,
-//                       height: darkTheme.layout.componentHeight,
-//                     },
-//                   ]}
-//                   textContainerStyle={{
-//                     backgroundColor: "transparent",
-//                     paddingVertical: 0,
-//                   }}
-//                   textInputStyle={[
-//                     darkTheme.typography.bodyMain,
-//                     {
-//                       height: "100%",
-//                       fontSize: scale(13), // <-- Updates the typed phone number font size
-//                     },
-//                   ]}
-//                   codeTextStyle={{
-//                     color: darkTheme.colors.textMain,
-//                     fontSize: scale(13), // <-- Updates the dial code (+91) font size to match
-//                   }}
-//                   flagStyle={styles.phoneFlagAlignment}
-//                 />
-
-//                 <View style={styles.fieldStatusIconOverlayContainer}>
-//                   {authenticatedUser?.mobileVerified ? (
-//                     <Ionicons
-//                       name="checkmark-circle"
-//                       size={scale(16)}
-//                       color="#34C759"
-//                     />
-//                   ) : (
-//                     <TouchableOpacity
-//                       onPress={() =>
-//                         triggerVerificationFlow(
-//                           "Mobile Phone",
-//                           mobNumber,
-//                           authenticatedUser?.mobileVerified,
-//                         )
-//                       }
-//                     >
-//                       <Ionicons
-//                         name="close-circle"
-//                         size={scale(16)}
-//                         color="#FF3B30"
-//                       />
-//                     </TouchableOpacity>
-//                   )}
-//                 </View>
-//               </View>
-//               <Text
-//                 style={{
-//                   color: isMobileValid ? "green" : "red",
-//                 }}
-//               >
-//                 {isMobileValid ? "Valid Number" : "Invalid Number"}
-//               </Text>
-//             </View>
-
-//             {/* Input Element: Gender */}
-//             <View style={styles.inputLayoutContainerGroup}>
-//               <Text style={styles.premiumFieldLabelMicro}>
-//                 GENDER ASSIGNMENT
-//               </Text>
-//               <Dropdown
-//                 style={[
-//                   styles.dropdownMainElementContainer,
-//                   {
-//                     backgroundColor: darkTheme.colors.card,
-//                     borderColor: isGenderFocused
-//                       ? darkTheme.colors.accent
-//                       : darkTheme.colors.border,
-//                   },
-//                 ]}
-//                 placeholderStyle={[
-//                   styles.dropdownPlaceholderTextStyle,
-//                   { color: darkTheme.colors.textMuted },
-//                 ]}
-//                 selectedTextStyle={[
-//                   styles.dropdownSelectedTextStyle,
-//                   { color: darkTheme.colors.textMain },
-//                 ]}
-//                 containerStyle={[
-//                   styles.dropdownMenuInnerContainerBox,
-//                   {
-//                     backgroundColor: "#0A0A0C",
-//                     borderColor: darkTheme.colors.border,
-//                   },
-//                 ]}
-//                 itemContainerStyle={styles.dropdownItemRowUnit}
-//                 itemTextStyle={[
-//                   styles.dropdownItemRowText,
-//                   { color: darkTheme.colors.textMain },
-//                 ]}
-//                 activeColor="rgba(255, 149, 0, 0.08)"
-//                 data={GENDER_OPTIONS}
-//                 maxHeight={200}
-//                 labelField="label"
-//                 valueField="value"
-//                 placeholder="Select assigned gender"
-//                 value={gender}
-//                 onFocus={() => setIsGenderFocused(true)}
-//                 onBlur={() => setIsGenderFocused(false)}
-//                 onChange={(item) => {
-//                   setGender(item.value);
-//                   setIsGenderFocused(false);
-//                 }}
-//                 renderRightIcon={() => (
-//                   <Ionicons
-//                     name="chevron-down"
-//                     size={scale(13)}
-//                     color={
-//                       isGenderFocused
-//                         ? darkTheme.colors.accent
-//                         : darkTheme.colors.textMuted
-//                     }
-//                   />
-//                 )}
-//               />
-//             </View>
-
-//             {/* Input Element: Date of Birth Picker Overlay */}
-//             <View style={styles.inputLayoutContainerGroup}>
-//               <Text style={styles.premiumFieldLabelMicro}>DATE OF BIRTH</Text>
-//               <TouchableOpacity
-//                 style={[
-//                   styles.luxuryDropdownTriggerButton,
-//                   {
-//                     borderColor: darkTheme.colors.border,
-//                     backgroundColor: darkTheme.colors.card,
-//                   },
-//                 ]}
-//                 activeOpacity={0.7}
-//                 onPress={() => setShowDatePicker(true)}
-//               >
-//                 <Text
-//                   style={{
-//                     color: darkTheme.colors.textMain,
-//                     fontSize: scale(13),
-//                   }}
-//                 >
-//                   {formatDisplayDate(dobDate)}
-//                 </Text>
-//                 <Ionicons
-//                   name="calendar-outline"
-//                   size={scale(13)}
-//                   color={darkTheme.colors.textMuted}
-//                 />
-//               </TouchableOpacity>
-
-//               <Modal
-//                 transparent={true}
-//                 visible={showDatePicker}
-//                 animationType="fade"
-//                 onRequestClose={() => setShowDatePicker(false)}
-//               >
-//                 <TouchableWithoutFeedback
-//                   onPress={() => setShowDatePicker(false)}
-//                 >
-//                   <View style={styles.modalOverlayScrim}>
-//                     <TouchableWithoutFeedback>
-//                       <View
-//                         style={[
-//                           styles.calendarModalContent,
-//                           { backgroundColor: darkTheme.colors.card },
-//                         ]}
-//                       >
-//                         <DateTimePicker
-//                           value={dobDate}
-//                           mode="date"
-//                           display={
-//                             Platform.OS === "ios" ? "spinner" : "default"
-//                           }
-//                           onChange={handleDateChange}
-//                           maximumDate={new Date()}
-//                           themeVariant="dark"
-//                         />
-//                         {Platform.OS === "ios" && (
-//                           <TouchableOpacity
-//                             style={[
-//                               styles.modalSubmitActionCTAButton,
-//                               { backgroundColor: darkTheme.colors.accent },
-//                             ]}
-//                             onPress={() => setShowDatePicker(false)}
-//                             activeOpacity={0.8}
-//                           >
-//                             <Text
-//                               style={{
-//                                 color: "#000000",
-//                                 fontWeight: "700",
-//                                 fontSize: scale(13),
-//                               }}
-//                             >
-//                               Done
-//                             </Text>
-//                           </TouchableOpacity>
-//                         )}
-//                       </View>
-//                     </TouchableWithoutFeedback>
-//                   </View>
-//                 </TouchableWithoutFeedback>
-//               </Modal>
-//             </View>
-//           </View>
-
-//           {/* Primary Save Changes Trigger */}
-//           <TouchableOpacity
-//             style={[
-//               styles.saveProfileChangesCTAButton,
-//               {
-//                 backgroundColor: darkTheme.colors.accent,
-//                 height: darkTheme.layout.buttonHeight || verticalScale(40),
-//               },
-//             ]}
-//             activeOpacity={0.8}
-//             onPress={saveProfileHandler}
-//             disabled={updateProfileLoader}
-//           >
-//             {updateProfileLoader ? (
-//               <ActivityIndicator color={"#000000"} />
-//             ) : (
-//               <Text
-//                 style={[
-//                   darkTheme.typography.btnText,
-//                   { color: "#000000", fontWeight: "700" },
-//                 ]}
-//               >
-//                 Save Profile Changes
-//               </Text>
-//             )}
-//           </TouchableOpacity>
-//         </ScrollView>
-//       </KeyboardAvoidingView>
-
-//       {/* ==================== SCREEN MODALS MODIFICATION SHEETS ==================== */}
-
-//       {/* A. System Password Update Sheet */}
-//       <Modal
-//         transparent={true}
-//         visible={passwordModalVisible}
-//         animationType="slide"
-//         onRequestClose={() => setPasswordModalVisible(false)}
-//       >
-//         <TouchableWithoutFeedback
-//           onPress={() => setPasswordModalVisible(false)}
-//         >
-//           <View style={styles.modalBottomOverlayScrim}>
-//             <TouchableWithoutFeedback>
-//               <View
-//                 style={[
-//                   styles.bottomSheetPanelContentBox,
-//                   {
-//                     backgroundColor: "#0A0A0C",
-//                     borderColor: darkTheme.colors.border,
-//                   },
-//                 ]}
-//               >
-//                 <View style={styles.bottomSheetHeaderIndicatorNotch} />
-//                 <Text
-//                   style={[
-//                     styles.modalLayoutHeadlineText,
-//                     { color: darkTheme.colors.textMain },
-//                   ]}
-//                 >
-//                   Change your password
-//                 </Text>
-
-//                 <View style={styles.innerModalFormVerticalStackDeck}>
-//                   <View style={styles.inputLayoutContainerGroup}>
-//                     <Text style={styles.premiumFieldLabelMicro}>
-//                       CURRENT PASSWORD
-//                     </Text>
-//                     <View style={{ position: "relative" }}>
-//                       <TextInput
-//                         style={[
-//                           styles.luxuryTextInput,
-//                           {
-//                             borderColor: darkTheme.colors.border,
-//                             color: darkTheme.colors.textMain,
-//                             backgroundColor: darkTheme.colors.card,
-//                           },
-//                         ]}
-//                         secureTextEntry={!showOldPassword}
-//                         value={oldPassword}
-//                         onChangeText={setOldPassword}
-//                         placeholder="Enter old password"
-//                         placeholderTextColor="rgba(255,255,255,0.2)"
-//                       />
-
-//                       <TouchableOpacity
-//                         onPress={() => setShowOldPassword(!showOldPassword)}
-//                         style={{
-//                           position: "absolute",
-//                           right: 15,
-//                           top: 0,
-//                           bottom: 0,
-//                           justifyContent: "center",
-//                         }}
-//                       >
-//                         <Ionicons
-//                           name={
-//                             showOldPassword ? "eye-off-outline" : "eye-outline"
-//                           }
-//                           size={20}
-//                           color={darkTheme.colors.textMuted}
-//                         />
-//                       </TouchableOpacity>
-//                     </View>
-//                   </View>
-
-//                   <View style={styles.inputLayoutContainerGroup}>
-//                     <Text style={styles.premiumFieldLabelMicro}>
-//                       NEW PASSWORD
-//                     </Text>
-//                     <View style={{ position: "relative" }}>
-//                       <TextInput
-//                         style={[
-//                           styles.luxuryTextInput,
-//                           {
-//                             borderColor: darkTheme.colors.border,
-//                             color: darkTheme.colors.textMain,
-//                             backgroundColor: darkTheme.colors.card,
-//                           },
-//                         ]}
-//                         secureTextEntry={!showNewPassword}
-//                         value={newPassword}
-//                         onChangeText={setNewPassword}
-//                         placeholder="Enter new password"
-//                         placeholderTextColor="rgba(255,255,255,0.2)"
-//                       />
-//                       <TouchableOpacity
-//                         onPress={() => setShowNewPassword(!showNewPassword)}
-//                         style={{
-//                           position: "absolute",
-//                           right: 15,
-//                           top: 0,
-//                           bottom: 0,
-//                           justifyContent: "center",
-//                         }}
-//                       >
-//                         <Ionicons
-//                           name={
-//                             showNewPassword ? "eye-off-outline" : "eye-outline"
-//                           }
-//                           size={20}
-//                           color={darkTheme.colors.textMuted}
-//                         />
-//                       </TouchableOpacity>
-//                     </View>
-//                   </View>
-
-//                   <View style={styles.inputLayoutContainerGroup}>
-//                     <Text style={styles.premiumFieldLabelMicro}>
-//                       CONFIRM PASSWORD
-//                     </Text>
-//                     <View style={{ position: "relative" }}>
-//                       <TextInput
-//                         style={[
-//                           styles.luxuryTextInput,
-//                           {
-//                             borderColor: darkTheme.colors.border,
-//                             color: darkTheme.colors.textMain,
-//                             backgroundColor: darkTheme.colors.card,
-//                           },
-//                         ]}
-//                         secureTextEntry={!showConfirmPassword}
-//                         value={confirmPassword}
-//                         onChangeText={setConfirmPassword}
-//                         placeholder="Enter confirm password"
-//                         placeholderTextColor="rgba(255,255,255,0.2)"
-//                       />
-//                       <TouchableOpacity
-//                         onPress={() =>
-//                           setShowConfirmPassword(!showConfirmPassword)
-//                         }
-//                         style={{
-//                           position: "absolute",
-//                           right: 15,
-//                           top: 0,
-//                           bottom: 0,
-//                           justifyContent: "center",
-//                         }}
-//                       >
-//                         <Ionicons
-//                           name={
-//                             showConfirmPassword
-//                               ? "eye-off-outline"
-//                               : "eye-outline"
-//                           }
-//                           size={20}
-//                           color={darkTheme.colors.textMuted}
-//                         />
-//                       </TouchableOpacity>
-//                     </View>
-//                   </View>
-//                 </View>
-
-//                 <TouchableOpacity
-//                   style={[
-//                     styles.modalSubmitActionCTAButton,
-//                     {
-//                       backgroundColor: darkTheme.colors.accent,
-//                       marginTop: verticalScale(20),
-//                     },
-//                   ]}
-//                   onPress={savePasswordHandler}
-//                 >
-//                   <Text
-//                     style={{
-//                       color: "#000000",
-//                       fontWeight: "700",
-//                       fontSize: scale(13),
-//                     }}
-//                   >
-//                     Update password
-//                   </Text>
-//                 </TouchableOpacity>
-//               </View>
-//             </TouchableWithoutFeedback>
-//           </View>
-//         </TouchableWithoutFeedback>
-//       </Modal>
-
-//       {/* B. OTP Verification Sheet */}
-//       <Modal
-//         transparent={true}
-//         visible={verificationModalVisible}
-//         animationType="slide"
-//         onRequestClose={() => setVerificationModalVisible(false)}
-//       >
-//         <TouchableWithoutFeedback
-//           onPress={() => setVerificationModalVisible(false)}
-//         >
-//           <View style={styles.modalBottomOverlayScrim}>
-//             <TouchableWithoutFeedback>
-//               <View
-//                 style={[
-//                   styles.bottomSheetPanelContentBox,
-//                   {
-//                     backgroundColor: "#0A0A0C",
-//                     borderColor: darkTheme.colors.border,
-//                   },
-//                 ]}
-//               >
-//                 <View style={styles.bottomSheetHeaderIndicatorNotch} />
-//                 <Text
-//                   style={[
-//                     styles.modalLayoutHeadlineText,
-//                     { color: darkTheme.colors.textMain },
-//                   ]}
-//                 >
-//                   Verify {verificationTarget.type}
-//                 </Text>
-//                 <Text style={styles.modalLayoutSubHeaderText}>
-//                   We have sent a code to your{" "}
-//                   {verificationTarget.value || "your credentials"}.
-//                 </Text>
-
-//                 <View style={styles.innerModalFormVerticalStackDeck}>
-//                   <View style={styles.inputLayoutContainerGroup}>
-//                     <Text style={styles.premiumFieldLabelMicro}>
-//                       ENTER 4-DIGIT OTP AUTH CODE
-//                     </Text>
-//                     <TextInput
-//                       style={[
-//                         styles.luxuryTextInput,
-//                         {
-//                           borderColor: darkTheme.colors.accent,
-//                           color: darkTheme.colors.textMain,
-//                           backgroundColor: darkTheme.colors.card,
-//                           letterSpacing: scale(4),
-//                           textAlign: "center",
-//                           fontSize: scale(16),
-//                           fontWeight: "700",
-//                         },
-//                       ]}
-//                       keyboardType="number-pad"
-//                       maxLength={6}
-//                       value={otpCode}
-//                       onChangeText={setOtpCode}
-//                       placeholder="0000"
-//                       placeholderTextColor="rgba(255,255,255,0.15)"
-//                     />
-//                   </View>
-
-//                   <View style={styles.otpActionUtilityControlContextRow}>
-//                     <Text
-//                       style={{
-//                         color: "rgba(255,255,255,0.3)",
-//                         fontSize: scale(11),
-//                       }}
-//                     >
-//                       Didn't acquire the payload?
-//                     </Text>
-//                     <TouchableOpacity onPress={handleResendOTP}>
-//                       <Text
-//                         style={{
-//                           color: darkTheme.colors.accent,
-//                           fontWeight: "700",
-//                           fontSize: scale(11),
-//                         }}
-//                       >
-//                         {" "}
-//                         Resend Token
-//                       </Text>
-//                     </TouchableOpacity>
-//                   </View>
-//                 </View>
-
-//                 <TouchableOpacity
-//                   style={[
-//                     styles.modalSubmitActionCTAButton,
-//                     {
-//                       backgroundColor: darkTheme.colors.accent,
-//                       marginTop: verticalScale(20),
-//                     },
-//                   ]}
-//                   onPress={handleVerifyOTP}
-//                 >
-//                   <Text
-//                     style={{
-//                       color: "#000000",
-//                       fontWeight: "700",
-//                       fontSize: scale(13),
-//                     }}
-//                   >
-//                     Confirm Authorization
-//                   </Text>
-//                 </TouchableOpacity>
-//               </View>
-//             </TouchableWithoutFeedback>
-//           </View>
-//         </TouchableWithoutFeedback>
-//       </Modal>
-//     </SafeAreaView>
-//   );
-// };
-
-// export default EditProfileScreen;
-
 const EditProfileScreen = () => {
   const { fetchLoggedInAdmin, authenticatedUser } = useAdminAuth();
   const phoneInputRef = useRef(null);
+  const timerRef = useRef(null);
 
   // Core Form Local States
   const [name, setName] = useState(authenticatedUser?.name || "");
@@ -3397,13 +2219,29 @@ const EditProfileScreen = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  // OTP Verification Sub-States
+  // OTP Verification Sub-States & Timer Matrix Setup
   const [otpCode, setOtpCode] = useState("");
+  const [countdown, setCountdown] = useState(0);
 
   const [avatarUri, setAvatarUri] = useState(
     authenticatedUser?.profile?.[0]?.url || null,
   );
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+
+  // Effect hook to process the ticking clock mechanism for the OTP screen
+  useEffect(() => {
+    if (countdown > 0) {
+      timerRef.current = setTimeout(() => {
+        setCountdown((prev) => prev - 1);
+      }, 1000);
+    } else {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    }
+
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [countdown]);
 
   const formatDisplayDate = (date) => {
     const day = String(date.getDate()).padStart(2, "0");
@@ -3436,8 +2274,9 @@ const EditProfileScreen = () => {
       return;
     }
 
+    // Updated layout utilizing the non-deprecated MediaType property configuration
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ["images"], // Can also be explicit string value syntax or ImagePicker.MediaType.IMAGES depending on precise minor SDK target
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
@@ -3452,7 +2291,6 @@ const EditProfileScreen = () => {
 
   const uploadAvatarToServer = async (asset) => {
     const extension = asset.uri.split(".").pop()?.toLowerCase();
-
     const mimeType =
       extension === "jpg" || extension === "jpeg"
         ? "image/jpeg"
@@ -3488,6 +2326,11 @@ const EditProfileScreen = () => {
       const { data } = await api.post(
         "/admin/uploadAdminProfilePicture",
         formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        },
       );
 
       if (!data.success) {
@@ -3511,25 +2354,22 @@ const EditProfileScreen = () => {
 
     try {
       if (type === "Mobile Phone") {
-        const { data } = await api.post(
-          "/admin/sendVerificationCodeForAdminMobile",
-          {
-            email: authenticatedUser?.email,
-          },
-        );
+        await api.post("/admin/sendVerificationCodeForAdminMobile", {
+          email: authenticatedUser?.email,
+        });
       } else if (type === "Email") {
-        const { data } = await api.post(
-          "/admin/sendVerificationCodeForAdminEmail",
-          {
-            email: authenticatedUser?.email,
-          },
-        );
+        await api.post("/admin/sendVerificationCodeForAdminEmail", {
+          email: authenticatedUser?.email,
+        });
       }
 
       setOtpCode("");
       setOtpError("");
       setVerificationTarget({ type, value });
       setVerificationModalVisible(true);
+
+      // Initialize the 30-second window lockout timer on modal entry
+      setCountdown(30);
     } catch (error) {
       Alert.alert(
         "Verification Failed",
@@ -3551,21 +2391,21 @@ const EditProfileScreen = () => {
           email: authenticatedUser?.email,
           verificationCode: otpCode,
         });
-
         Alert.alert("Success", data.message);
       } else {
         const { data } = await api.post("/admin/changeEmailVerifiedStatus", {
           email: authenticatedUser?.email,
           verificationCode: otpCode,
         });
-
         Alert.alert("Success", data.message);
       }
 
       setVerificationModalVisible(false);
       setOtpCode("");
+      await fetchLoggedInAdmin();
+      if (timerRef.current) clearTimeout(timerRef.current);
+      setCountdown(0);
     } catch (error) {
-      // Changed from generic alert to target modal validation lines
       setOtpError(
         error?.response?.data?.message ||
           error?.message ||
@@ -3576,16 +2416,36 @@ const EditProfileScreen = () => {
     }
   };
 
-  const handleResendOTP = () => {
-    console.log(
-      `Re-routing verification dispatch handshake token directly to: ${verificationTarget.value}`,
-    );
+  const handleResendOTP = async () => {
+    if (countdown > 0) return; // Prevent unnecessary dispatches during execution cooldown
+
+    try {
+      setOtpError("");
+      if (verificationTarget.type === "Mobile Phone") {
+        await api.post("/admin/sendVerificationCodeForAdminMobile", {
+          email: authenticatedUser?.email,
+        });
+      } else {
+        await api.post("/admin/sendVerificationCodeForAdminEmail", {
+          email: authenticatedUser?.email,
+        });
+      }
+
+      Alert.alert("Success", "A new verification code has been sent.");
+
+      setCountdown(30);
+    } catch (error) {
+      setOtpError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Failed to resend authorization token.",
+      );
+    }
   };
 
   const [savePasswordLoader, setSavePasswordLoader] = useState(false);
 
   const savePasswordHandler = async () => {
-    // Clear out standard alerts and map directly onto localized variables
     let failed = false;
     setOldPasswordError("");
     setNewPasswordError("");
@@ -3659,6 +2519,12 @@ const EditProfileScreen = () => {
       setNameError("Full Name validation error.");
       failed = true;
     }
+
+    if (name.length === 0 || name.length > 20) {
+      setNameError("Full name must be between 1 to 20 characters");
+      failed = true;
+    }
+
     if (email.trim().length === 0 || !isEmailValid) {
       setEmailError("Email address validation error.");
       failed = true;
@@ -3698,10 +2564,52 @@ const EditProfileScreen = () => {
         error?.response?.data?.message ||
         error?.message ||
         "Failed to synchronize profile adjustments with the server.";
-
       setEmailError(errorMessage);
     } finally {
       setUpdateProfileLoader(false);
+    }
+  };
+
+  // --- ADD THIS STATE & THESE HANDLERS ---
+  const [connectStripeLoading, setConnectStripeLoading] = useState(false);
+
+  const stripeConnectHandler = async () => {
+    try {
+      const onboardData = {
+        email: authenticatedUser.email, // Using your RN variable name
+        vendorAccountId: authenticatedUser.vendorAccountId,
+      };
+      setConnectStripeLoading(true);
+
+      const { data } = await api.post(
+        "/onboard-vendor-account",
+        onboardData,
+      );
+
+      if (data?.response?.url) {
+        await Linking.openURL(data.response.url);
+      }
+      setConnectStripeLoading(false);
+    } catch (error) {
+      setConnectStripeLoading(false);
+      Alert.alert(
+        "Stripe Connection Failed",
+        error?.response?.data?.response || error.message,
+      );
+    }
+  };
+
+  const loginStripeHandler = async () => {
+    try {
+      const { data } = await api.post("/vendor-loginlink", {
+        email: authenticatedUser.email,
+      });
+
+      if (data?.url) {
+        await Linking.openURL(data.url);
+      }
+    } catch (error) {
+      Alert.alert("Error", "Could not open Stripe dashboard.");
     }
   };
 
@@ -3820,7 +2728,7 @@ const EditProfileScreen = () => {
           </View>
 
           {/* 2. Stripe Integration Tile */}
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={[
               styles.premiumStripeActionTile,
               {
@@ -3841,6 +2749,57 @@ const EditProfileScreen = () => {
               <View style={styles.stripeTextStack}>
                 <Text style={styles.stripeTitleText}>
                   Stripe Merchant Integration
+                </Text>
+                <Text style={styles.stripeSubtitleText}>
+                  Status:{" "}
+                  {authenticatedUser?.vendorAccountDetails
+                    ?.vendorCardPaymentStatus || "Inactive"}
+                </Text>
+              </View>
+            </View>
+            <Ionicons
+              name="chevron-forward"
+              size={scale(14)}
+              color={darkTheme.colors.textMuted}
+            />
+          </TouchableOpacity> */}
+
+          <TouchableOpacity
+            style={[
+              styles.premiumStripeActionTile,
+              {
+                backgroundColor: darkTheme.colors.card,
+                borderColor: darkTheme.colors.border,
+              },
+            ]}
+            activeOpacity={0.8}
+            // 1. Dynamic trigger based on the vendorTransferStatus status
+            onPress={
+              authenticatedUser?.vendorAccountDetails?.vendorTransferStatus ===
+              "active"
+                ? loginStripeHandler
+                : connectStripeLoading
+                  ? () => {}
+                  : stripeConnectHandler
+            }
+          >
+            <View style={styles.stripeLeftWrapper}>
+              <View style={styles.stripeBrandIconBox}>
+                <FontAwesome5
+                  name="stripe-s"
+                  size={scale(15)}
+                  color="#635BFF"
+                />
+              </View>
+              <View style={styles.stripeTextStack}>
+                {/* 2. Dynamically updating label string just like web */}
+                <Text style={styles.stripeTitleText}>
+                  {authenticatedUser?.vendorAccountDetails
+                    ?.vendorTransferStatus === "active"
+                    ? "Login to Stripe Dashboard"
+                    : connectStripeLoading
+                      ? "Loading Setup URL..."
+                      : "Connect Your Stripe Account"}
                 </Text>
                 <Text style={styles.stripeSubtitleText}>
                   Status:{" "}
@@ -4028,9 +2987,6 @@ const EditProfileScreen = () => {
                       phoneInputRef.current?.isValidNumber(text) ?? false;
                     setIsMobileValid(valid);
                   }}
-                  onChangeFormattedText={(text) => {
-                    // console.log("Formatted:", text);
-                  }}
                   onChangeCountry={(country) => {
                     setCountryCode(country?.callingCode[0]);
                   }}
@@ -4050,10 +3006,7 @@ const EditProfileScreen = () => {
                   }}
                   textInputStyle={[
                     darkTheme.typography.bodyMain,
-                    {
-                      height: "100%",
-                      fontSize: scale(13),
-                    },
+                    { height: "100%", fontSize: scale(13) },
                   ]}
                   codeTextStyle={{
                     color: darkTheme.colors.textMain,
@@ -4524,7 +3477,7 @@ const EditProfileScreen = () => {
         </TouchableWithoutFeedback>
       </Modal>
 
-      {/* B. OTP Verification Sheet */}
+      {/* B. OTP Verification Sheet with Integrated Cooldown */}
       <Modal
         transparent={true}
         visible={verificationModalVisible}
@@ -4603,6 +3556,7 @@ const EditProfileScreen = () => {
                     ) : null}
                   </View>
 
+                  {/* UI Dynamic Interaction Row: Cooldown visual integration */}
                   <View style={styles.otpActionUtilityControlContextRow}>
                     <Text
                       style={{
@@ -4612,7 +3566,11 @@ const EditProfileScreen = () => {
                     >
                       Didn't acquire the payload?
                     </Text>
-                    <TouchableOpacity onPress={handleResendOTP}>
+                    <TouchableOpacity
+                      onPress={handleResendOTP}
+                      disabled={countdown > 0}
+                      style={{ opacity: countdown > 0 ? 0.5 : 1 }}
+                    >
                       <Text
                         style={{
                           color: darkTheme.colors.accent,
@@ -4620,8 +3578,9 @@ const EditProfileScreen = () => {
                           fontSize: scale(11),
                         }}
                       >
-                        {" "}
-                        Resend Token
+                        {countdown > 0
+                          ? ` Resend in ${countdown}s`
+                          : " Resend Token"}
                       </Text>
                     </TouchableOpacity>
                   </View>
