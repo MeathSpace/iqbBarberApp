@@ -1,8 +1,7 @@
 import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import moment from "moment"; // Premium dynamic dates calculation layer
-import { useMemo, useState } from "react";
+import moment from "moment";
+import { useState } from "react";
 import {
-  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,7 +12,8 @@ import { BarChart, LineChart } from "react-native-gifted-charts";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { scale, verticalScale } from "react-native-size-matters";
 
-import Header from "../../../../components/Header/Header"; // Adjust path as needed
+import Header from "../../../../components/Header/Header";
+import RangeCalendarModal from "../../../../components/RangeCalender"; 
 import { darkTheme } from "../../../../constants/appTheme";
 
 const TIME_FILTERS = ["Daily", "Weekly", "Monthly"];
@@ -44,61 +44,9 @@ const ChartsDetailScreen = () => {
   const [chartType, setChartType] = useState("bar");
   const [calendarVisible, setCalendarVisible] = useState(false);
 
-  // Tracking baseline date context (defaults to current date context)
-  const [currentMonthMoment, setCurrentMonthMoment] = useState(
-    moment("2026-03-01"),
-  );
+  // Date range state managed by screen
   const [startDate, setStartDate] = useState(moment("2026-03-01"));
   const [endDate, setEndDate] = useState(moment("2026-03-15"));
-
-  // Dynamic Calendar Grid Engine using Moment
-  const calendarGridData = useMemo(() => {
-    const startOfMonth = currentMonthMoment.clone().startOf("month");
-    const endOfMonth = currentMonthMoment.clone().endOf("month");
-
-    const totalDaysInMonth = currentMonthMoment.daysInMonth();
-
-    // Finds the day of week index (0 = Sun, 1 = Mon...) to establish leading buffer alignment
-    const startDayOfWeek = startOfMonth.day();
-
-    // Calculate greyed-out trailing days from previous month
-    const prevMonthMoment = currentMonthMoment.clone().subtract(1, "month");
-    const totalDaysInPrevMonth = prevMonthMoment.daysInMonth();
-    const prevPadding = [];
-    for (let i = startDayOfWeek - 1; i >= 0; i--) {
-      prevPadding.push({
-        dayNum: totalDaysInPrevMonth - i,
-        isCurrentMonth: false,
-        momentObj: prevMonthMoment.clone().date(totalDaysInPrevMonth - i),
-      });
-    }
-
-    // Build active current month day matrices
-    const currentDays = [];
-    for (let i = 1; i <= totalDaysInMonth; i++) {
-      currentDays.push({
-        dayNum: i,
-        isCurrentMonth: true,
-        momentObj: currentMonthMoment.clone().date(i),
-      });
-    }
-
-    // Calculate dynamic leading padding days from future next month to balance 7-column matrix rows
-    const absoluteTotalCells = prevPadding.length + currentDays.length;
-    const missingGridCells =
-      absoluteTotalCells % 7 === 0 ? 0 : 7 - (absoluteTotalCells % 7);
-    const nextMonthMoment = currentMonthMoment.clone().add(1, "month");
-    const nextPadding = [];
-    for (let i = 1; i <= missingGridCells; i++) {
-      nextPadding.push({
-        dayNum: i,
-        isCurrentMonth: false,
-        momentObj: nextMonthMoment.clone().date(i),
-      });
-    }
-
-    return [...prevPadding, ...currentDays, ...nextPadding];
-  }, [currentMonthMoment]);
 
   const barData = [
     {
@@ -174,33 +122,6 @@ const ChartsDetailScreen = () => {
     width: scale(barData.length * 44 + 32),
   };
 
-  const handleDayPress = (dayObj) => {
-    const targetMoment = dayObj.momentObj;
-    if (!startDate || (startDate && endDate)) {
-      setStartDate(targetMoment);
-      setEndDate(null);
-    } else if (startDate && !endDate) {
-      if (targetMoment.isBefore(startDate, "day")) {
-        setStartDate(targetMoment);
-      } else {
-        setEndDate(targetMoment);
-      }
-    }
-  };
-
-  const handlePrevMonthToggle = () => {
-    setCurrentMonthMoment((prev) => prev.clone().subtract(1, "month"));
-  };
-
-  const handleNextMonthToggle = () => {
-    setCurrentMonthMoment((prev) => prev.clone().add(1, "month"));
-  };
-
-  const formatDateLabel = (dateObj) =>
-    dateObj ? dateObj.format("DD/MM/YYYY") : "--/--/----";
-  const formatBannerLabel = (dateObj) =>
-    dateObj ? dateObj.format("DD MMMM") : "Select End Date";
-
   return (
     <SafeAreaView
       edges={["top", "right", "left"]}
@@ -215,6 +136,7 @@ const ChartsDetailScreen = () => {
         showBack={true}
       />
 
+      {/* Top Bar Filter */}
       <View style={styles.premiumMinimalistStatusBar}>
         <TouchableOpacity
           style={[
@@ -290,6 +212,7 @@ const ChartsDetailScreen = () => {
         </View>
       </View>
 
+      {/* Content Body */}
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContainer}
@@ -346,7 +269,7 @@ const ChartsDetailScreen = () => {
                   <Text key={yIdx} style={styles.fixedYAxisTextLabel}>
                     {yLabel}
                   </Text>
-                ),
+                )
               )}
             </View>
 
@@ -486,150 +409,17 @@ const ChartsDetailScreen = () => {
         </View>
       </ScrollView>
 
-      {/* Production Range Calendar Input Modal */}
-      <Modal
-        animationType="slide"
-        transparent={true}
+      {/* Extracted Custom Reusable Range Calendar Modal */}
+      <RangeCalendarModal
         visible={calendarVisible}
-        onRequestClose={() => setCalendarVisible(false)}
-      >
-        <View style={styles.modalOverlayScrim}>
-          <View
-            style={[
-              styles.calendarModalContent,
-              {
-                backgroundColor: darkTheme.colors.card,
-                borderColor: darkTheme.colors.border,
-              },
-            ]}
-          >
-            <View style={styles.modalHeaderRow}>
-              <View>
-                <Text
-                  style={[
-                    darkTheme.typography.cardTitle,
-                    { fontWeight: "700" },
-                  ]}
-                >
-                  Custom Range Picker
-                </Text>
-                <Text
-                  style={[
-                    darkTheme.typography.bodyMuted,
-                    { fontSize: scale(11), marginTop: verticalScale(2) },
-                  ]}
-                >
-                  {currentMonthMoment.format("MMMM YYYY")}
-                </Text>
-              </View>
-              <View style={styles.calendarPaginatorTrack}>
-                <TouchableOpacity
-                  onPress={handlePrevMonthToggle}
-                  style={[
-                    styles.arrowNavCircleButton,
-                    { borderColor: darkTheme.colors.border },
-                  ]}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons
-                    name="chevron-back"
-                    size={scale(14)}
-                    color={darkTheme.colors.textMain}
-                  />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={handleNextMonthToggle}
-                  style={[
-                    styles.arrowNavCircleButton,
-                    { borderColor: darkTheme.colors.border },
-                  ]}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons
-                    name="chevron-forward"
-                    size={scale(14)}
-                    color={darkTheme.colors.textMain}
-                  />
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            <View style={styles.selectionTrackPreviewBanner}>
-              <Text style={styles.previewBannerText}>
-                {formatBannerLabel(startDate)} — {formatBannerLabel(endDate)}
-              </Text>
-            </View>
-
-            <View style={styles.calendarDaysGrid}>
-              {calendarGridData.map((cell, idx) => {
-                const isCurrent = cell.isCurrentMonth;
-                const cellMoment = cell.momentObj;
-
-                const isStart =
-                  startDate && cellMoment.isSame(startDate, "day") && isCurrent;
-                const isEnd =
-                  endDate && cellMoment.isSame(endDate, "day") && isCurrent;
-                const isInRange =
-                  startDate &&
-                  endDate &&
-                  cellMoment.isBetween(startDate, endDate, "day") &&
-                  isCurrent;
-                const isSelected = isStart || isEnd;
-
-                return (
-                  <TouchableOpacity
-                    key={`cell-${idx}`}
-                    disabled={!isCurrent}
-                    activeOpacity={0.6}
-                    onPress={() => handleDayPress(cell)}
-                    style={[
-                      styles.dayGridCellNode,
-                      !isCurrent && styles.greyedOutBufferCell,
-                      isInRange && {
-                        backgroundColor: "rgba(255, 149, 0, 0.12)",
-                      },
-                      isStart && styles.startDayCellBorderRadius,
-                      isEnd && styles.endDayCellBorderRadius,
-                      isSelected && {
-                        backgroundColor: darkTheme.colors.accent,
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.calendarCellDayNumberText,
-                        {
-                          color: !isCurrent
-                            ? "rgba(255,255,255,0.2)"
-                            : isSelected
-                              ? "#000000"
-                              : darkTheme.colors.textMain,
-                        },
-                        isSelected && { fontWeight: "700" },
-                      ]}
-                    >
-                      {cell.dayNum}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-
-            <TouchableOpacity
-              style={[
-                styles.confirmSelectionActionButton,
-                { backgroundColor: darkTheme.colors.accent },
-              ]}
-              activeOpacity={0.8}
-              onPress={() => setCalendarVisible(false)}
-            >
-              <Text style={styles.confirmButtonTextLabel}>
-                Apply Range Matrix
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+        onClose={() => setCalendarVisible(false)}
+        startDate={startDate}
+        endDate={endDate}
+        onSelectRange={({ startDate: newStart, endDate: newEnd }) => {
+          setStartDate(newStart);
+          setEndDate(newEnd);
+        }}
+      />
     </SafeAreaView>
   );
 };
@@ -809,92 +599,5 @@ const styles = StyleSheet.create({
     right: scale(14),
     top: scale(14),
     opacity: 0.5,
-  },
-  modalOverlayScrim: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.75)",
-    justifyContent: "flex-end",
-  },
-  calendarModalContent: {
-    width: "100%",
-    borderTopLeftRadius: scale(16),
-    borderTopRightRadius: scale(16),
-    borderTopWidth: 1,
-    padding: scale(20),
-    paddingBottom: verticalScale(36),
-  },
-  modalHeaderRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: verticalScale(16),
-  },
-  calendarPaginatorTrack: {
-    flexDirection: "row",
-    gap: scale(6),
-  },
-  arrowNavCircleButton: {
-    width: scale(28),
-    height: scale(28),
-    borderRadius: scale(14),
-    borderWidth: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.02)",
-  },
-  selectionTrackPreviewBanner: {
-    width: "100%",
-    paddingVertical: verticalScale(10),
-    backgroundColor: "rgba(255, 149, 0, 0.06)",
-    borderRadius: scale(8),
-    alignItems: "center",
-    marginBottom: verticalScale(16),
-  },
-  previewBannerText: {
-    color: darkTheme.colors.accent,
-    fontSize: scale(13),
-    fontWeight: "700",
-  },
-  calendarDaysGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    width: "100%",
-    gap: scale(4),
-    marginBottom: verticalScale(20),
-  },
-  dayGridCellNode: {
-    width: `${100 / 7 - 1.2}%`,
-    height: scale(34),
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: verticalScale(2),
-  },
-  greyedOutBufferCell: {
-    backgroundColor: "transparent",
-  },
-  startDayCellBorderRadius: {
-    borderTopLeftRadius: scale(8),
-    borderBottomLeftRadius: scale(8),
-  },
-  endDayCellBorderRadius: {
-    borderTopRightRadius: scale(8),
-    borderBottomRightRadius: scale(8),
-  },
-  calendarCellDayNumberText: {
-    fontSize: scale(12),
-    fontWeight: "500",
-  },
-  confirmSelectionActionButton: {
-    width: "100%",
-    height: scale(44),
-    borderRadius: scale(10),
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: verticalScale(4),
-  },
-  confirmButtonTextLabel: {
-    color: "#000000",
-    fontWeight: "700",
-    fontSize: scale(13),
   },
 });

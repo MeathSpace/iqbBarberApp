@@ -1,24 +1,203 @@
-import React, { useState } from "react";
-import { Platform, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
+import { useEffect, useState } from "react";
+import {
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import Shimmer from "react-native-modern-shimmer";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { scale, verticalScale } from "react-native-size-matters";
 
-import Header from "../../../../components/Header/Header"; // Adjust relative path as needed
+import Header from "../../../../components/Header/Header";
 import { darkTheme } from "../../../../constants/appTheme";
+import { useAdminAuth } from "../../../../context/admin/AuthContext";
+import api from "../../../../utils/api";
 
-const PERCENTAGE_OPTIONS = ["10%", "20%", "30%", "50%", "100%"];
+const PERCENTAGE_OPTIONS = [10, 20, 30, 50, 100];
+
+const SKELETON_COLORS = {
+  header: {
+    baseColor: "#221f1c",
+    highlightColor: "#332e2a",
+  },
+  card: {
+    baseColor: "#1c1c1e",
+    highlightColor: "#2c2c2e",
+  },
+  typography: {
+    baseColor: "#2c2c2e",
+    highlightColor: "#3a3a3c",
+  },
+  chip: {
+    baseColor: "#2a2a2a",
+    highlightColor: "#333333",
+  },
+};
+
+const parsePercentNumber = (val) => {
+  if (val === undefined || val === null) return 10;
+  const num = parseInt(String(val).replace(/[^0-9]/g, ""), 10);
+  return isNaN(num) ? 10 : num;
+};
+
+const ScreenSkeletonView = () => {
+  return (
+    <View style={styles.contentWrapper}>
+      {[1, 2].map((key) => (
+        <View
+          key={key}
+          style={[
+            styles.settingCard,
+            {
+              backgroundColor: darkTheme.colors.card,
+              borderColor: darkTheme.colors.border,
+              borderRadius: darkTheme.layout.borderRadiusMedium,
+            },
+          ]}
+        >
+          <View style={styles.mainRow}>
+            <View style={styles.textContainer}>
+              <Shimmer
+                width={scale(130)}
+                height={verticalScale(15)}
+                borderRadius={scale(4)}
+                baseColor={SKELETON_COLORS.typography.baseColor}
+                highlightColor={SKELETON_COLORS.typography.highlightColor}
+              />
+              <Shimmer
+                width={scale(210)}
+                height={verticalScale(12)}
+                borderRadius={scale(4)}
+                style={{ marginTop: verticalScale(6) }}
+                baseColor={SKELETON_COLORS.typography.baseColor}
+                highlightColor={SKELETON_COLORS.typography.highlightColor}
+              />
+            </View>
+
+            <Shimmer
+              width={scale(44)}
+              height={verticalScale(24)}
+              borderRadius={scale(12)}
+              baseColor={SKELETON_COLORS.chip.baseColor}
+              highlightColor={SKELETON_COLORS.chip.highlightColor}
+            />
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+};
 
 const PaymentSettings = () => {
+  const { authenticatedUser } = useAdminAuth();
+  const salonId = authenticatedUser?.salonId;
+
   const [isQueuePaymentEnabled, setIsQueuePaymentEnabled] = useState(false);
-  const [queuePercentage, setQueuePercentage] = useState("10%");
+  const [queuePercentage, setQueuePercentage] = useState(10);
 
-  const [isAppointmentPaymentEnabled, setIsAppointmentPaymentEnabled] = useState(false);
-  const [appointmentPercentage, setAppointmentPercentage] = useState("10%");
+  const [isAppointmentPaymentEnabled, setIsAppointmentPaymentEnabled] =
+    useState(false);
+  const [appointmentPercentage, setAppointmentPercentage] = useState(10);
 
-  // Render method bound strictly to darkTheme tokens matching Screenshot 2026-07-05 at 4.44.09 PM.jpg
+  const [fetchPaymentLoading, setFetchPaymentLoading] = useState(true);
+
+  const fetchPaymentSettings = async () => {
+    if (!salonId) return;
+
+    try {
+      setFetchPaymentLoading(true);
+      const { data } = await api.get(
+        `/salon/getPaymentSettings?salonId=${salonId}`,
+      );
+      const settings = data?.response || [];
+
+      settings.forEach((item) => {
+        const numericPercent = parsePercentNumber(item.advancePaymentPercent);
+
+        if (item.type === "queue") {
+          setIsQueuePaymentEnabled(Boolean(item.enabled));
+          setQueuePercentage(numericPercent);
+        }
+
+        if (item.type === "appointment") {
+          setIsAppointmentPaymentEnabled(Boolean(item.enabled));
+          setAppointmentPercentage(numericPercent);
+        }
+      });
+    } catch (error) {
+      console.error("Failed to fetch payment settings:", error);
+    } finally {
+      setFetchPaymentLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPaymentSettings();
+  }, [salonId]);
+
+  const updatePaymentSettings = async ({
+    isEnabled,
+    type,
+    advancePaymentPercent,
+  }) => {
+    if (!salonId) return;
+
+    try {
+      await api.post("/salon/updatePaymentSettings", {
+        salonId,
+        isEnabled,
+        type,
+        advancePaymentPercent,
+      });
+    } catch (error) {
+      console.error("Payment settings update failed:", error);
+    }
+  };
+
+  const handleToggle = (type, enabled) => {
+    if (type === "queue") {
+      setIsQueuePaymentEnabled(enabled);
+      updatePaymentSettings({
+        isEnabled: enabled,
+        type,
+        advancePaymentPercent: queuePercentage,
+      });
+    } else {
+      setIsAppointmentPaymentEnabled(enabled);
+      updatePaymentSettings({
+        isEnabled: enabled,
+        type,
+        advancePaymentPercent: appointmentPercentage,
+      });
+    }
+  };
+
+  const handlePercentageSelect = (type, percent) => {
+    if (type === "queue") {
+      setQueuePercentage(percent);
+      updatePaymentSettings({
+        isEnabled: isQueuePaymentEnabled,
+        type,
+        advancePaymentPercent: percent,
+      });
+    } else {
+      setAppointmentPercentage(percent);
+      updatePaymentSettings({
+        isEnabled: isAppointmentPaymentEnabled,
+        type,
+        advancePaymentPercent: percent,
+      });
+    }
+  };
+
   const renderPercentageOptions = (selectedOption, onSelect) => (
     <View style={styles.advancePaymentContainer}>
-      <Text style={[darkTheme.typography.bodyMuted, styles.advancePaymentLabel]}>
+      <Text
+        style={[darkTheme.typography.bodyMuted, styles.advancePaymentLabel]}
+      >
         Advance Payment
       </Text>
       <View style={styles.percentageRow}>
@@ -32,21 +211,27 @@ const PaymentSettings = () => {
               style={[
                 styles.percentageChip,
                 {
-                  backgroundColor: isSelected ? "rgba(255, 149, 0, 0.1)" : darkTheme.colors.background,
-                  borderColor: isSelected ? darkTheme.colors.accent : darkTheme.colors.border,
-                }
+                  backgroundColor: isSelected
+                    ? "rgba(255, 149, 0, 0.1)"
+                    : darkTheme.colors.background,
+                  borderColor: isSelected
+                    ? darkTheme.colors.accent
+                    : darkTheme.colors.border,
+                },
               ]}
             >
               <Text
                 style={[
                   styles.percentageText,
                   {
-                    color: isSelected ? darkTheme.colors.accent : darkTheme.colors.textMuted,
+                    color: isSelected
+                      ? darkTheme.colors.accent
+                      : darkTheme.colors.textMuted,
                     fontWeight: isSelected ? "700" : "500",
-                  }
+                  },
                 ]}
               >
-                {option}
+                {option}%
               </Text>
             </TouchableOpacity>
           );
@@ -58,87 +243,126 @@ const PaymentSettings = () => {
   return (
     <SafeAreaView
       edges={["top", "right", "left"]}
-      style={[styles.container, { backgroundColor: darkTheme.colors.background }]}
+      style={[
+        styles.container,
+        { backgroundColor: darkTheme.colors.background },
+      ]}
     >
-      <Header 
-        title="Payment Settings" 
-        subTitle="Manage advance payment options for queue and appointments" 
-        showBack={true} 
+      <Header
+        title="Payment Settings"
+        subTitle="Manage advance payment options"
+        showBack={true}
       />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContainer}
       >
-        <View style={styles.contentWrapper}>
-          
-          {/* Queue Payment Setting */}
-          <View 
-            style={[
-              styles.settingCard, 
-              { 
-                backgroundColor: darkTheme.colors.card,
-                borderColor: darkTheme.colors.border,
-                borderRadius: darkTheme.layout.borderRadiusMedium,
-              }
-            ]}
-          >
-            <View style={styles.mainRow}>
-              <View style={styles.textContainer}>
-                <Text style={[darkTheme.typography.cardTitle, styles.settingTitle, { color: darkTheme.colors.textMain }]}>
-                  Queue Payment
-                </Text>
-                <Text style={[darkTheme.typography.bodyMuted, styles.settingDescription, { color: darkTheme.colors.textMuted }]}>
-                  Collect advance payment for walk-in queue bookings
-                </Text>
+        {fetchPaymentLoading ? (
+          <ScreenSkeletonView />
+        ) : (
+          <View style={styles.contentWrapper}>
+            <View
+              style={[
+                styles.settingCard,
+                {
+                  backgroundColor: darkTheme.colors.card,
+                  borderColor: darkTheme.colors.border,
+                  borderRadius: darkTheme.layout.borderRadiusMedium,
+                },
+              ]}
+            >
+              <View style={styles.mainRow}>
+                <View style={styles.textContainer}>
+                  <Text
+                    style={[
+                      darkTheme.typography.cardTitle,
+                      styles.settingTitle,
+                      { color: darkTheme.colors.textMain },
+                    ]}
+                  >
+                    Queue Payment
+                  </Text>
+                  <Text
+                    style={[
+                      darkTheme.typography.bodyMuted,
+                      styles.settingDescription,
+                      { color: darkTheme.colors.textMuted },
+                    ]}
+                  >
+                    Collect advance payment for walk-in queue bookings
+                  </Text>
+                </View>
+
+                <Switch
+                  value={isQueuePaymentEnabled}
+                  onValueChange={(val) => handleToggle("queue", val)}
+                  trackColor={{
+                    false: darkTheme.colors.border,
+                    true: darkTheme.colors.accent,
+                  }}
+                  thumbColor="#FFFFFF"
+                  ios_backgroundColor={darkTheme.colors.border}
+                />
               </View>
-              
-              <Switch
-                value={isQueuePaymentEnabled}
-                onValueChange={setIsQueuePaymentEnabled}
-                trackColor={{ false: darkTheme.colors.border, true: darkTheme.colors.accent }}
-                thumbColor="#FFFFFF"
-                ios_backgroundColor={darkTheme.colors.border}
-              />
+
+              {isQueuePaymentEnabled &&
+                renderPercentageOptions(queuePercentage, (percent) =>
+                  handlePercentageSelect("queue", percent),
+                )}
             </View>
 
-            {isQueuePaymentEnabled && renderPercentageOptions(queuePercentage, setQueuePercentage)}
-          </View>
+            <View
+              style={[
+                styles.settingCard,
+                {
+                  backgroundColor: darkTheme.colors.card,
+                  borderColor: darkTheme.colors.border,
+                  borderRadius: darkTheme.layout.borderRadiusMedium,
+                },
+              ]}
+            >
+              <View style={styles.mainRow}>
+                <View style={styles.textContainer}>
+                  <Text
+                    style={[
+                      darkTheme.typography.cardTitle,
+                      styles.settingTitle,
+                      { color: darkTheme.colors.textMain },
+                    ]}
+                  >
+                    Appointment Payment
+                  </Text>
+                  <Text
+                    style={[
+                      darkTheme.typography.bodyMuted,
+                      styles.settingDescription,
+                      { color: darkTheme.colors.textMuted },
+                    ]}
+                  >
+                    Collect advance payment for scheduled appointments
+                  </Text>
+                </View>
 
-          {/* Appointment Payment Setting */}
-          <View 
-            style={[
-              styles.settingCard, 
-              { 
-                backgroundColor: darkTheme.colors.card,
-                borderColor: darkTheme.colors.border,
-                borderRadius: darkTheme.layout.borderRadiusMedium,
-              }
-            ]}
-          >
-            <View style={styles.mainRow}>
-              <View style={styles.textContainer}>
-                <Text style={[darkTheme.typography.cardTitle, styles.settingTitle, { color: darkTheme.colors.textMain }]}>
-                  Appointment Payment
-                </Text>
-                <Text style={[darkTheme.typography.bodyMuted, styles.settingDescription, { color: darkTheme.colors.textMuted }]}>
-                  Collect advance payment for scheduled appointments
-                </Text>
+                <Switch
+                  value={isAppointmentPaymentEnabled}
+                  onValueChange={(val) => handleToggle("appointment", val)}
+                  trackColor={{
+                    false: darkTheme.colors.border,
+                    true: darkTheme.colors.accent,
+                  }}
+                  thumbColor="#FFFFFF"
+                  ios_backgroundColor={darkTheme.colors.border}
+                />
               </View>
-              
-              <Switch
-                value={isAppointmentPaymentEnabled}
-                onValueChange={setIsAppointmentPaymentEnabled}
-                trackColor={{ false: darkTheme.colors.border, true: darkTheme.colors.accent }}
-                thumbColor="#FFFFFF"
-                ios_backgroundColor={darkTheme.colors.border}
-              />
+
+              {isAppointmentPaymentEnabled &&
+                renderPercentageOptions(appointmentPercentage, (percent) =>
+                  handlePercentageSelect("appointment", percent),
+                )}
             </View>
-
-            {isAppointmentPaymentEnabled && renderPercentageOptions(appointmentPercentage, setAppointmentPercentage)}
           </View>
-
-        </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
