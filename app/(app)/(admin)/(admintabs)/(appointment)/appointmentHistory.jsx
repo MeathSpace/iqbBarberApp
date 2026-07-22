@@ -1,12 +1,12 @@
 import { Feather, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import moment from "moment";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   Modal,
   Platform,
   RefreshControl,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -14,6 +14,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
+import Shimmer from "react-native-modern-shimmer";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { scale, verticalScale } from "react-native-size-matters";
 
@@ -23,102 +24,157 @@ import { darkTheme } from "../../../../../constants/appTheme";
 import { useAdminAuth } from "../../../../../context/admin/AuthContext";
 import api from "../../../../../utils/api";
 
-const HISTORIC_DATA = [
-  {
-    id: "1",
-    clientName: "Shyam sharma",
-    barberName: "Bob",
-    service: "Massage",
-    price: "₹ 345",
-    date: "23/06/2026",
-    status: "Served",
-  },
-  {
-    id: "2",
-    clientName: "Abc",
-    barberName: "John Doe",
-    service: "Haircut",
-    price: "₹ 100",
-    date: "08/06/2026",
-    status: "Cancelled",
-  },
-  {
-    id: "3",
-    clientName: "Abc",
-    barberName: "John Doe",
-    service: "Massage, Haircut",
-    price: "₹ 445",
-    date: "08/06/2026",
-    status: "Cancelled",
-  },
-];
-
-const BARBER_FILTER_OPTIONS = [
-  { id: "John Doe", name: "John Doe" },
-  { id: "Bob", name: "Bob" },
-  { id: "Jazz", name: "Jazz" },
-  { id: "sun", name: "sun" },
-  { id: "Rupesh", name: "Rupesh" },
-  { id: "Appt. Barber", name: "Appt. Barber" },
-];
+// Theme tokens for multi-tone stealth dark shimmer effect
+const SKELETON_THEME = {
+  header: { baseColor: "#221f1c", highlightColor: "#332e2a" },
+  button: { baseColor: "#2a2a2a", highlightColor: "#333333" },
+  card: { baseColor: "#1c1c1e", highlightColor: "#2c2c2e" },
+  text: { baseColor: "#2c2c2e", highlightColor: "#3a3a3c" },
+};
 
 const AppointmentHistory = () => {
   const { authenticatedUser } = useAdminAuth();
+  const salonId = authenticatedUser?.salonId;
 
-  // State management
-  const [history, setHistory] = useState(HISTORIC_DATA);
-  const [searchQuery, setSearchQuery] = useState("");
+  // Screen level master loading gate to prevent UI flashing
+  const [isScreenLoading, setIsScreenLoading] = useState(true);
+
+  // Data & Pagination state
+  const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const rowsPerPage = 10;
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Calendar Modal States
   const [calendarVisible, setCalendarVisible] = useState(false);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
 
-  // Filter Modal States
+  // Barber Filter Modal States
   const [filterModalVisible, setFilterModalVisible] = useState(false);
-  const [selectedBarbers, setSelectedBarbers] = useState([]);
-  const [tempSelectedBarbers, setTempSelectedBarbers] = useState([]);
+  const [filterBarberList, setFilterBarberList] = useState([]);
+  const [selectedFilterBarber, setSelectedFilterBarber] = useState(null);
 
-  const fetchAppointmentHistory = async () => {
+  // Request Abort Controller Ref
+  const abortControllerRef = useRef(null);
+
+  // 1. Fetch Barber List for Filter Modal
+  useEffect(() => {
+    const fetchBarbers = async () => {
+      try {
+        const { data } = await api.post("/admin/getAppointmentBarbers", {
+          salonId,
+        });
+        setFilterBarberList(data?.response || []);
+      } catch (error) {
+        console.error("Error fetching barbers:", error);
+      }
+    };
+
+    fetchBarbers();
+  }, [salonId]);
+
+  // 2. Fetch Appointment History Data
+  const fetchData = async (pageNum = 1, isRefresh = false) => {
+    // Single date guard
+    if ((startDate && !endDate) || (!startDate && endDate)) {
+      return;
+    }
+
+    // Date range validation (Max 30 days)
+    if (startDate && endDate) {
+      const durationDays = endDate.diff(startDate, "days") + 1;
+      if (durationDays > 30) {
+        setStartDate(null);
+        setEndDate(null);
+        alert("Date range cannot exceed 30 days");
+        return;
+      }
+    }
+
+    // Abort active pending request if any
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    if (!isRefresh && pageNum === 1) setLoading(true);
+
     try {
+      const fromDate = startDate ? startDate.format("YYYY-MM-DD") : "";
+      const toDate = endDate ? endDate.format("YYYY-MM-DD") : "";
+
       const { data } = await api.post(
         "/appointmentHistory/getAppointmentHistoryBySalonId",
         {
-          from: startDate ? startDate.format("YYYY-MM-DD") : "",
-          to: endDate ? endDate.format("YYYY-MM-DD") : "",
-          limit: 10,
-          page: 1,
-          salonId: 1,
+          salonId,
+          barberId: selectedFilterBarber?.barberId || "",
+          from: fromDate,
+          to: toDate,
+          page: pageNum,
+          limit: rowsPerPage,
           search: searchQuery,
-          barbers: selectedBarbers,
-        }
+        },
+        { signal: controller.signal },
       );
-      console.log(data);
+
+      const newItems = data?.response || [];
+
+      setHistory((prev) => (pageNum === 1 ? newItems : [...prev, ...newItems]));
+      setHasMore(newItems.length > 0);
     } catch (error) {
-      console.log(error);
+      if (error?.name === "CanceledError" || error?.name === "AbortError")
+        return;
+      console.error("Error fetching appointment history:", error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+      setIsScreenLoading(false); // Un-gate layout after initial paint
     }
   };
 
+  // Re-fetch on filter change
   useEffect(() => {
-    fetchAppointmentHistory();
-  }, [startDate, endDate, searchQuery, selectedBarbers]);
+    setPage(1);
+    fetchData(1);
+  }, [startDate, endDate, searchQuery, selectedFilterBarber]);
 
-  // Pull-to-refresh handler
-  const onRefresh = useCallback(async () => {
+  // Handle pull-to-refresh
+  const onRefresh = useCallback(() => {
     setRefreshing(true);
-    await fetchAppointmentHistory();
-    setRefreshing(false);
-  }, [startDate, endDate, searchQuery, selectedBarbers]);
+    setPage(1);
+    fetchData(1, true);
+  }, [startDate, endDate, searchQuery, selectedFilterBarber]);
 
-  const toggleBarberSelection = (name) => {
-    setTempSelectedBarbers((prev) =>
-      prev.includes(name) ? prev.filter((item) => item !== name) : [...prev, name]
-    );
+  // Handle Infinite Scroll Load More
+  const handleLoadMore = () => {
+    if (!loading && hasMore) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchData(nextPage);
+    }
   };
 
+  // Render individual history item
   const renderHistoryItem = ({ item }) => {
-    const isServed = item.status === "Served";
+    const isServed = item?.status === "served";
+
+    const totalPrice = Array.isArray(item?.services)
+      ? item.services.reduce(
+          (sum, service) => sum + (service?.servicePrice || 0),
+          0,
+        )
+      : 0;
+
+    const serviceNames = Array.isArray(item?.services)
+      ? item.services.map((s) => s?.serviceName).join(", ")
+      : "";
 
     return (
       <View
@@ -142,16 +198,18 @@ const AppointmentHistory = () => {
             </View>
             <View style={styles.metaData}>
               <Text style={[darkTheme.typography.cardTitle, styles.clientName]}>
-                {item.clientName}
+                {item?.customerName || "N/A"}
               </Text>
               <Text style={[darkTheme.typography.bodyMuted, styles.barberText]}>
-                Stylist: {item.barberName}
+                Stylist: {item?.barberName || "N/A"}
               </Text>
-              <Text
-                style={[darkTheme.typography.bodyMuted, styles.serviceText]}
-              >
-                {item.service}
-              </Text>
+              {serviceNames ? (
+                <Text
+                  style={[darkTheme.typography.bodyMuted, styles.serviceText]}
+                >
+                  {serviceNames}
+                </Text>
+              ) : null}
             </View>
           </View>
 
@@ -163,10 +221,14 @@ const AppointmentHistory = () => {
                 { color: darkTheme.colors.accent },
               ]}
             >
-              {item.price}
+              ₹ {totalPrice}
             </Text>
             <Text style={[darkTheme.typography.bodyMuted, styles.dateText]}>
-              {item.date}
+              {item?.appointmentDate
+                ? moment(item.appointmentDate.split("T")[0]).format(
+                    "DD/MM/YYYY",
+                  )
+                : "--/--/----"}
             </Text>
           </View>
         </View>
@@ -215,13 +277,18 @@ const AppointmentHistory = () => {
                 },
               ]}
             >
-              {item.status}
+              {isServed ? "Served" : "Cancelled"}
             </Text>
           </View>
         </View>
       </View>
     );
   };
+
+  // State Gate - Render unified screen skeleton while fetching initial paint
+  if (isScreenLoading) {
+    return <ScreenSkeletonView />;
+  }
 
   return (
     <SafeAreaView
@@ -232,14 +299,14 @@ const AppointmentHistory = () => {
       ]}
     >
       <Header
-        title="Appoinment History"
+        title="Appointment History"
         subTitle="Log of past walk-in customers and arrivals"
         showBack={false}
       />
 
       <View style={styles.topContainer}>
         <View style={styles.filterActionRow}>
-          {/* Search Input Box */}
+          {/* Search Input */}
           <View
             style={[
               styles.searchInputContainer,
@@ -260,7 +327,10 @@ const AppointmentHistory = () => {
               placeholder="Search appointment..."
               placeholderTextColor={darkTheme.colors.textMuted}
               value={searchQuery}
-              onChangeText={setSearchQuery}
+              onChangeText={(text) => {
+                if (selectedFilterBarber) setSelectedFilterBarber(null);
+                setSearchQuery(text);
+              }}
               autoCapitalize="none"
               autoCorrect={false}
             />
@@ -275,17 +345,19 @@ const AppointmentHistory = () => {
             )}
           </View>
 
-          {/* Action Tools Right */}
+          {/* Controls Group */}
           <View style={styles.toolsRightGroup}>
+            {/* Calendar Button */}
             <TouchableOpacity
               activeOpacity={0.7}
               style={[
                 styles.toolButton,
                 {
                   backgroundColor: darkTheme.colors.card,
-                  borderColor: (startDate || endDate)
-                    ? darkTheme.colors.accent
-                    : darkTheme.colors.border,
+                  borderColor:
+                    startDate || endDate
+                      ? darkTheme.colors.accent
+                      : darkTheme.colors.border,
                 },
               ]}
               onPress={() => setCalendarVisible(true)}
@@ -294,23 +366,21 @@ const AppointmentHistory = () => {
                 name="calendar"
                 size={scale(14)}
                 color={
-                  (startDate || endDate)
+                  startDate || endDate
                     ? darkTheme.colors.accent
                     : darkTheme.colors.textMain
                 }
               />
             </TouchableOpacity>
 
+            {/* Filter Button */}
             <TouchableOpacity
               activeOpacity={0.8}
-              onPress={() => {
-                setTempSelectedBarbers(selectedBarbers);
-                setFilterModalVisible(true);
-              }}
+              onPress={() => setFilterModalVisible(true)}
               style={[
                 styles.filterLabelButton,
                 {
-                  backgroundColor: selectedBarbers.length > 0
+                  backgroundColor: selectedFilterBarber
                     ? darkTheme.colors.accent
                     : "rgba(255, 149, 0, 0.1)",
                   borderColor: darkTheme.colors.accent,
@@ -320,32 +390,38 @@ const AppointmentHistory = () => {
               <MaterialIcons
                 name="filter-list"
                 size={scale(15)}
-                color={selectedBarbers.length > 0 ? "#000000" : darkTheme.colors.accent}
+                color={
+                  selectedFilterBarber ? "#000000" : darkTheme.colors.accent
+                }
                 style={styles.filterIcon}
               />
               <Text
                 style={[
                   darkTheme.typography.bodyMain,
                   styles.filterButtonText,
-                  { color: selectedBarbers.length > 0 ? "#000000" : darkTheme.colors.accent },
+                  {
+                    color: selectedFilterBarber
+                      ? "#000000"
+                      : darkTheme.colors.accent,
+                  },
                 ]}
               >
-                {selectedBarbers.length > 0 ? `Filter (${selectedBarbers.length})` : "Filter"}
+                {selectedFilterBarber ? "Filtered" : "Filter"}
               </Text>
             </TouchableOpacity>
           </View>
         </View>
       </View>
 
+      {/* Main List */}
       <FlatList
         data={history}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item?._id || Math.random().toString()}
         renderItem={renderHistoryItem}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
-        maxToRenderPerBatch={10}
-        windowSize={5}
-        initialNumToRender={10}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.5}
         removeClippedSubviews={Platform.OS === "android"}
         refreshControl={
           <RefreshControl
@@ -354,6 +430,65 @@ const AppointmentHistory = () => {
             tintColor={darkTheme.colors.accent}
             colors={[darkTheme.colors.accent]}
           />
+        }
+        ListFooterComponent={
+          loading && !refreshing ? (
+            <View style={styles.loaderFooter}>
+              <ActivityIndicator size="small" color={darkTheme.colors.accent} />
+            </View>
+          ) : null
+        }
+        ListEmptyComponent={
+          !loading && (
+            <View style={styles.emptyContainer}>
+              {/* Icon Badge with Accent Badge Dot */}
+              <View
+                style={[
+                  styles.emptyIconCard,
+                  {
+                    backgroundColor: darkTheme.colors.card,
+                    borderColor: darkTheme.colors.border,
+                  },
+                ]}
+              >
+                <Ionicons
+                  name="calendar-outline"
+                  size={scale(24)}
+                  color={darkTheme.colors.textMuted}
+                />
+                {/* Accent Orange Dot Badge */}
+                <View
+                  style={[
+                    styles.emptyIconAccentDot,
+                    { backgroundColor: darkTheme.colors.accent },
+                  ]}
+                />
+              </View>
+
+              {/* Primary Title */}
+              <Text
+                style={[
+                  darkTheme.typography.cardTitle,
+                  styles.emptyTitleText,
+                  { color: darkTheme.colors.textMain },
+                ]}
+              >
+                No Bookings Scheduled
+              </Text>
+
+              {/* Muted Subtitle Explanation */}
+              <Text
+                style={[
+                  darkTheme.typography.bodyMuted,
+                  styles.emptySubtitleText,
+                  { color: darkTheme.colors.textMuted },
+                ]}
+              >
+                There are currently no appointments matching your view settings
+                or search filters.
+              </Text>
+            </View>
+          )
         }
       />
 
@@ -369,7 +504,7 @@ const AppointmentHistory = () => {
         }}
       />
 
-      {/* Custom Stylist/Barber Filter Bottom Sheet Modal */}
+      {/* Barber Filter Bottom Sheet Modal */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -388,22 +523,28 @@ const AppointmentHistory = () => {
                   },
                 ]}
               >
-                <ScrollView
+                <FlatList
+                  data={filterBarberList}
+                  keyExtractor={(item) =>
+                    item?.barberId || Math.random().toString()
+                  }
                   showsVerticalScrollIndicator={false}
                   contentContainerStyle={styles.sheetScrollContainer}
-                >
-                  {BARBER_FILTER_OPTIONS.map((barber) => {
-                    const isSelected = tempSelectedBarbers.includes(barber.id);
+                  renderItem={({ item: barber }) => {
+                    const isSelected =
+                      selectedFilterBarber?.barberId === barber?.barberId;
 
                     return (
                       <TouchableOpacity
-                        key={barber.id}
                         activeOpacity={0.7}
                         style={[
                           styles.checkboxRowItem,
                           { borderColor: darkTheme.colors.border },
                         ]}
-                        onPress={() => toggleBarberSelection(barber.id)}
+                        onPress={() => {
+                          setSearchQuery("");
+                          setSelectedFilterBarber(isSelected ? null : barber);
+                        }}
                       >
                         <View
                           style={[
@@ -435,12 +576,12 @@ const AppointmentHistory = () => {
                             },
                           ]}
                         >
-                          {barber.name}
+                          {barber?.name}
                         </Text>
                       </TouchableOpacity>
                     );
-                  })}
-                </ScrollView>
+                  }}
+                />
 
                 <View style={styles.sheetActionButtonsRow}>
                   <TouchableOpacity
@@ -449,7 +590,9 @@ const AppointmentHistory = () => {
                       { borderColor: darkTheme.colors.border },
                     ]}
                     activeOpacity={0.7}
-                    onPress={() => setTempSelectedBarbers([])}
+                    onPress={() => {
+                      setSelectedFilterBarber(null);
+                    }}
                   >
                     <Text
                       style={[
@@ -467,10 +610,7 @@ const AppointmentHistory = () => {
                       { backgroundColor: darkTheme.colors.accent },
                     ]}
                     activeOpacity={0.8}
-                    onPress={() => {
-                      setSelectedBarbers(tempSelectedBarbers);
-                      setFilterModalVisible(false);
-                    }}
+                    onPress={() => setFilterModalVisible(false)}
                   >
                     <Text style={styles.sheetCloseButtonText}>Close</Text>
                   </TouchableOpacity>
@@ -484,11 +624,189 @@ const AppointmentHistory = () => {
   );
 };
 
+const ScreenSkeletonView = () => {
+  return (
+    <SafeAreaView
+      edges={["top", "right", "left"]}
+      style={[
+        styles.container,
+        { backgroundColor: darkTheme.colors.background },
+      ]}
+    >
+      {/* Header Placeholder */}
+      <View style={styles.skeletonHeaderContainer}>
+        <Shimmer
+          width={scale(180)}
+          height={verticalScale(22)}
+          borderRadius={scale(6)}
+          baseColor={SKELETON_THEME.header.baseColor}
+          highlightColor={SKELETON_THEME.header.highlightColor}
+        />
+        <Shimmer
+          width={scale(240)}
+          height={verticalScale(12)}
+          borderRadius={scale(4)}
+          style={{ marginTop: verticalScale(6) }}
+          baseColor={SKELETON_THEME.text.baseColor}
+          highlightColor={SKELETON_THEME.text.highlightColor}
+        />
+      </View>
+
+      {/* Search & Action Bar Placeholder */}
+      <View style={styles.topContainer}>
+        <View style={styles.filterActionRow}>
+          {/* Search Input Box */}
+          <View
+            style={[
+              styles.searchInputContainer,
+              {
+                backgroundColor: darkTheme.colors.card,
+                borderColor: darkTheme.colors.border,
+              },
+            ]}
+          >
+            <Shimmer
+              width={scale(140)}
+              height={verticalScale(14)}
+              borderRadius={scale(4)}
+              baseColor={SKELETON_THEME.text.baseColor}
+              highlightColor={SKELETON_THEME.text.highlightColor}
+            />
+          </View>
+
+          {/* Action Tools Right */}
+          <View style={styles.toolsRightGroup}>
+            <Shimmer
+              width={scale(36)}
+              height={scale(36)}
+              borderRadius={scale(18)}
+              baseColor={SKELETON_THEME.button.baseColor}
+              highlightColor={SKELETON_THEME.button.highlightColor}
+            />
+            <Shimmer
+              width={scale(75)}
+              height={scale(36)}
+              borderRadius={scale(18)}
+              baseColor={SKELETON_THEME.button.baseColor}
+              highlightColor={SKELETON_THEME.button.highlightColor}
+            />
+          </View>
+        </View>
+      </View>
+
+      {/* History Cards List Placeholder */}
+      <View style={styles.listContent}>
+        {[1, 2, 3, 4].map((key) => (
+          <View
+            key={key}
+            style={[
+              styles.historyCard,
+              {
+                backgroundColor: darkTheme.colors.card,
+                borderColor: darkTheme.colors.border,
+                borderRadius: darkTheme.layout.borderRadiusLarge,
+              },
+            ]}
+          >
+            <View style={styles.cardHeader}>
+              <View style={styles.profileRow}>
+                {/* Avatar */}
+                <Shimmer
+                  width={scale(36)}
+                  height={scale(36)}
+                  borderRadius={scale(18)}
+                  baseColor={SKELETON_THEME.card.baseColor}
+                  highlightColor={SKELETON_THEME.card.highlightColor}
+                />
+                {/* Metadata */}
+                <View style={styles.metaData}>
+                  <Shimmer
+                    width={scale(120)}
+                    height={verticalScale(14)}
+                    borderRadius={scale(4)}
+                    baseColor={SKELETON_THEME.text.baseColor}
+                    highlightColor={SKELETON_THEME.text.highlightColor}
+                  />
+                  <Shimmer
+                    width={scale(90)}
+                    height={verticalScale(10)}
+                    borderRadius={scale(3)}
+                    style={{ marginTop: verticalScale(6) }}
+                    baseColor={SKELETON_THEME.text.baseColor}
+                    highlightColor={SKELETON_THEME.text.highlightColor}
+                  />
+                  <Shimmer
+                    width={scale(110)}
+                    height={verticalScale(10)}
+                    borderRadius={scale(3)}
+                    style={{ marginTop: verticalScale(4) }}
+                    baseColor={SKELETON_THEME.text.baseColor}
+                    highlightColor={SKELETON_THEME.text.highlightColor}
+                  />
+                </View>
+              </View>
+
+              {/* Price & Date */}
+              <View style={styles.priceDateBlock}>
+                <Shimmer
+                  width={scale(55)}
+                  height={verticalScale(14)}
+                  borderRadius={scale(4)}
+                  baseColor={SKELETON_THEME.header.baseColor}
+                  highlightColor={SKELETON_THEME.header.highlightColor}
+                />
+                <Shimmer
+                  width={scale(65)}
+                  height={verticalScale(10)}
+                  borderRadius={scale(3)}
+                  style={{ marginTop: verticalScale(6) }}
+                  baseColor={SKELETON_THEME.text.baseColor}
+                  highlightColor={SKELETON_THEME.text.highlightColor}
+                />
+              </View>
+            </View>
+
+            <View
+              style={[
+                styles.divider,
+                { backgroundColor: darkTheme.colors.border },
+              ]}
+            />
+
+            {/* Footer Row */}
+            <View style={styles.cardFooterRow}>
+              <Shimmer
+                width={scale(70)}
+                height={verticalScale(10)}
+                borderRadius={scale(3)}
+                baseColor={SKELETON_THEME.text.baseColor}
+                highlightColor={SKELETON_THEME.text.highlightColor}
+              />
+              <Shimmer
+                width={scale(60)}
+                height={verticalScale(20)}
+                borderRadius={darkTheme.layout.borderRadiusSmall}
+                baseColor={SKELETON_THEME.button.baseColor}
+                highlightColor={SKELETON_THEME.button.highlightColor}
+              />
+            </View>
+          </View>
+        ))}
+      </View>
+    </SafeAreaView>
+  );
+};
+
 export default AppointmentHistory;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  skeletonHeaderContainer: {
+    paddingHorizontal: darkTheme.layout.paddingHorizontal,
+    paddingTop: verticalScale(12),
+    paddingBottom: verticalScale(16),
   },
   topContainer: {
     paddingHorizontal: darkTheme.layout.paddingHorizontal,
@@ -614,6 +932,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  loaderFooter: {
+    paddingVertical: verticalScale(16),
+    alignItems: "center",
+  },
+  emptyContainer: {
+    paddingVertical: verticalScale(60),
+    alignItems: "center",
+  },
   modalOverlayScrim: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.75)",
@@ -679,5 +1005,42 @@ const styles = StyleSheet.create({
     color: "#000000",
     fontWeight: "700",
     fontSize: scale(12),
+  },
+  emptyContainer: {
+    paddingVertical: verticalScale(80),
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: scale(32),
+  },
+  emptyIconCard: {
+    width: scale(54),
+    height: scale(54),
+    borderRadius: scale(14),
+    borderWidth: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
+    marginBottom: verticalScale(16),
+  },
+  emptyIconAccentDot: {
+    position: "absolute",
+    top: scale(12),
+    right: scale(14),
+    width: scale(6),
+    height: scale(6),
+    borderRadius: scale(3),
+  },
+  emptyTitleText: {
+    fontSize: scale(14),
+    fontWeight: "700",
+    textAlign: "center",
+    marginBottom: verticalScale(6),
+  },
+  emptySubtitleText: {
+    fontSize: scale(11),
+    textAlign: "center",
+    lineHeight: scale(16),
+    maxWidth: scale(260),
+    opacity: 0.6,
   },
 });
