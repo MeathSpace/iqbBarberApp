@@ -56,6 +56,7 @@ const AdminTabLayout = () => {
         name="(queue)"
         options={{
           title: "Queue",
+          href: "/(queue)",
           tabBarIcon: ({ color, focused }) => (
             <QueueIcon color={color} size={scale(22)} focused={focused} />
           ),
