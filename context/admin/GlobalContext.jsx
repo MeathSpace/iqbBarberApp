@@ -22,8 +22,8 @@ export const GlobalProvider = ({ children }) => {
     salonBusinessType: "",
     salonCoordinates: {
       lattitude: "",
-      longitude: ""
-    }
+      longitude: "",
+    },
   });
 
   const [serviceForm, setServiceForm] = useState({
@@ -35,11 +35,18 @@ export const GlobalProvider = ({ children }) => {
     servicePrice: "",
     serviceEstimatedTime: "",
   });
-  
 
   const [servicesList, setServicesList] = useState({
     loading: false,
     data: [],
+  });
+
+  const [salonSocialLinks, setSalonSocialLinks] = useState({
+    website: "",
+    facebook: "",
+    instagram: "",
+    twitter: "",
+    tiktok: "",
   });
 
   return (
@@ -55,6 +62,8 @@ export const GlobalProvider = ({ children }) => {
         setServiceForm,
         servicesList,
         setServicesList,
+        salonSocialLinks,
+        setSalonSocialLinks,
       }}
     >
       {children}

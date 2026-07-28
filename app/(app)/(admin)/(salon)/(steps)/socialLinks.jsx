@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   StyleSheet,
   Text,
@@ -15,24 +15,32 @@ import { FontAwesome, FontAwesome6, AntDesign, Feather } from "@expo/vector-icon
 
 import Header from "../../../../../components/Header/Header"; // Adjust path dynamically
 import { darkTheme } from "../../../../../constants/appTheme";
+import { useAdminGlobal } from "../../../../../context/admin/GlobalContext";
 
 const SocialLinks = () => {
-  // Balanced local string variable state tracks for every link field input
-  const [website, setWebsite] = useState("");
-  const [facebook, setFacebook] = useState("");
-  const [instagram, setInstagram] = useState("");
-  const [twitter, setTwitter] = useState("");
-  const [tiktok, setTiktok] = useState("");
+  // Directly consume and update the global state object
+  const { salonSocialLinks, setSalonSocialLinks } = useAdminGlobal();
+
+  // Helper function to update a single key in the global state object
+  const updateSocialLink = (key, value) => {
+    setSalonSocialLinks((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
 
   const handleFinishConfiguration = () => {
-    const socialPayload = {
-      website: website.trim(),
-      facebook: facebook.trim(),
-      instagram: instagram.trim(),
-      twitter: twitter.trim(),
-      tiktok: tiktok.trim(),
+    // Trim values on submission if needed
+    const trimmedPayload = {
+      website: (salonSocialLinks?.website || "").trim(),
+      facebook: (salonSocialLinks?.facebook || "").trim(),
+      instagram: (salonSocialLinks?.instagram || "").trim(),
+      twitter: (salonSocialLinks?.twitter || "").trim(),
+      tiktok: (salonSocialLinks?.tiktok || "").trim(),
     };
-    console.log("Submit captured social profile URLs matrix payload:", socialPayload);
+
+    setSalonSocialLinks(trimmedPayload);
+    console.log("Submitted global state payload:", trimmedPayload);
   };
 
   return (
@@ -59,8 +67,8 @@ const SocialLinks = () => {
                 </View>
                 <TextInput
                   style={[styles.luxuryTextInputInstance, { color: darkTheme.colors.textMain }]}
-                  value={website}
-                  onChangeText={setWebsite}
+                  value={salonSocialLinks?.website || ""}
+                  onChangeText={(val) => updateSocialLink("website", val)}
                   placeholder="https://www.salon.com/"
                   placeholderTextColor={darkTheme.colors.textMuted}
                   autoCapitalize="none"
@@ -79,8 +87,8 @@ const SocialLinks = () => {
                 </View>
                 <TextInput
                   style={[styles.luxuryTextInputInstance, { color: darkTheme.colors.textMain }]}
-                  value={facebook}
-                  onChangeText={setFacebook}
+                  value={salonSocialLinks?.facebook || ""}
+                  onChangeText={(val) => updateSocialLink("facebook", val)}
                   placeholder="https://www.facebook.com/salon/"
                   placeholderTextColor={darkTheme.colors.textMuted}
                   autoCapitalize="none"
@@ -99,8 +107,8 @@ const SocialLinks = () => {
                 </View>
                 <TextInput
                   style={[styles.luxuryTextInputInstance, { color: darkTheme.colors.textMain }]}
-                  value={instagram}
-                  onChangeText={setInstagram}
+                  value={salonSocialLinks?.instagram || ""}
+                  onChangeText={(val) => updateSocialLink("instagram", val)}
                   placeholder="https://www.instagram.com/salon/"
                   placeholderTextColor={darkTheme.colors.textMuted}
                   autoCapitalize="none"
@@ -119,8 +127,8 @@ const SocialLinks = () => {
                 </View>
                 <TextInput
                   style={[styles.luxuryTextInputInstance, { color: darkTheme.colors.textMain }]}
-                  value={twitter}
-                  onChangeText={setTwitter}
+                  value={salonSocialLinks?.twitter || ""}
+                  onChangeText={(val) => updateSocialLink("twitter", val)}
                   placeholder="https://x.com/Salon"
                   placeholderTextColor={darkTheme.colors.textMuted}
                   autoCapitalize="none"
@@ -139,8 +147,8 @@ const SocialLinks = () => {
                 </View>
                 <TextInput
                   style={[styles.luxuryTextInputInstance, { color: darkTheme.colors.textMain }]}
-                  value={tiktok}
-                  onChangeText={setTiktok}
+                  value={salonSocialLinks?.tiktok || ""}
+                  onChangeText={(val) => updateSocialLink("tiktok", val)}
                   placeholder="https://www.tiktok.com/salon/"
                   placeholderTextColor={darkTheme.colors.textMuted}
                   autoCapitalize="none"
