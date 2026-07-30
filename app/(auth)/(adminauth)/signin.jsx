@@ -1,4 +1,3 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
@@ -85,6 +84,7 @@ const SignIn = () => {
       const payload = { email, password };
 
       const { data } = await api.post("/admin/login", payload);
+      console.log(data);
 
       await SecureStore.setItemAsync("adminRefreshToken", data.accessToken);
       await SecureStore.setItemAsync("adminEmail", data?.foundAdmin?.email);

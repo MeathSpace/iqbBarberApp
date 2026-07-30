@@ -1,6 +1,6 @@
 import PhoneInput from "@linhnguyen96114/react-native-phone-input";
 import { useRouter } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -12,10 +12,11 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { scale, verticalScale } from "react-native-size-matters";
+import { scale } from "react-native-size-matters";
 
 // Core Architecture & Design Pattern Imports
 import Header from "../../../../../components/Header/Header";
+import SalonProgressBar from "../../../../../components/Progess/SalonProgessBar";
 import { darkTheme } from "../../../../../constants/appTheme";
 import { useAdminGlobal } from "../../../../../context/admin/GlobalContext";
 
@@ -25,12 +26,8 @@ const SalonInfoStep = () => {
   const router = useRouter();
   const { salonInfo, setSalonInfo } = useAdminGlobal();
 
-  // Phone Input Reference & Country Code State
   const phoneInputRef = useRef(null);
-  const [countryCca2, setCountryCca2] = useState("GB");
   const [isPhoneValid, setIsPhoneValid] = useState(false);
-
-  // Field Specific Error States
   const [errors, setErrors] = useState({
     salonName: "",
     salonEmail: "",
@@ -38,7 +35,7 @@ const SalonInfoStep = () => {
     phoneNumber: "",
   });
 
-  // Live Phone Validation Hook
+  // Live Phone Validation
   useEffect(() => {
     if (salonInfo?.phoneNumber && phoneInputRef.current) {
       const valid = phoneInputRef.current.isValidNumber(salonInfo.phoneNumber);
@@ -51,19 +48,9 @@ const SalonInfoStep = () => {
     }
   }, [salonInfo?.phoneNumber]);
 
-  // Handler to update specific fields in global context and reset error
   const handleInputChange = (key, value) => {
-    setSalonInfo((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
-
-    if (errors[key]) {
-      setErrors((prev) => ({
-        ...prev,
-        [key]: "",
-      }));
-    }
+    setSalonInfo((prev) => ({ ...prev, [key]: value }));
+    if (errors[key]) setErrors((prev) => ({ ...prev, [key]: "" }));
   };
 
   const validateForm = () => {
@@ -75,32 +62,22 @@ const SalonInfoStep = () => {
       phoneNumber: "",
     };
 
-    // 1. Salon Name Validation
     if (!salonInfo?.salonName?.trim()) {
       newErrors.salonName = "Salon name is required.";
       isValid = false;
     }
-
-    // 2. Salon Email Validation
-    if (!salonInfo?.salonEmail?.trim()) {
-      newErrors.salonEmail = "Salon email is required.";
-      isValid = false;
-    } else if (!EMAIL_REGEX.test(salonInfo.salonEmail.trim())) {
+    if (
+      !salonInfo?.salonEmail?.trim() ||
+      !EMAIL_REGEX.test(salonInfo.salonEmail.trim())
+    ) {
       newErrors.salonEmail = "Please enter a valid email address.";
       isValid = false;
     }
-
-    // 3. Description Validation
     if (!salonInfo?.description?.trim()) {
       newErrors.description = "Salon description is required.";
       isValid = false;
     }
-
-    // 4. Phone Number Validation
-    if (!salonInfo?.phoneNumber?.trim()) {
-      newErrors.phoneNumber = "Phone number is required.";
-      isValid = false;
-    } else if (!isPhoneValid) {
+    if (!salonInfo?.phoneNumber?.trim() || !isPhoneValid) {
       newErrors.phoneNumber = "Please enter a valid phone number.";
       isValid = false;
     }
@@ -110,12 +87,7 @@ const SalonInfoStep = () => {
   };
 
   const handleNextStep = () => {
-    if (!validateForm()) {
-      return;
-    }
-
-    // Proceed to Step 2
-    router.push("/businessInformation");
+    if (validateForm()) router.push("/businessInformation");
   };
 
   return (
@@ -140,21 +112,11 @@ const SalonInfoStep = () => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContainer}
         >
-          {/* Multi-Step Horizontal Linear Progress Bar */}
-          <View style={styles.progressTrack}>
-            <View
-              style={[
-                styles.progressFill,
-                { backgroundColor: darkTheme.colors.accent },
-              ]}
-            />
-            <View style={styles.progressEmpty} />
-            <View style={styles.progressEmpty} />
-            <View style={styles.progressEmpty} />
-          </View>
+
+          <SalonProgressBar currentStep={1} totalSteps={5} />
 
           <View style={styles.formContainer}>
-            {/* Input Group: Salon Name */}
+            {/* Salon Name */}
             <View style={styles.inputGroup}>
               <Text style={darkTheme.typography.inputLabel}>Salon Name</Text>
               <TextInput
@@ -172,14 +134,13 @@ const SalonInfoStep = () => {
                 placeholderTextColor={darkTheme.colors.textMuted}
                 value={salonInfo?.salonName || ""}
                 onChangeText={(text) => handleInputChange("salonName", text)}
-                autoCapitalize="words"
               />
               {errors.salonName ? (
                 <Text style={styles.errorText}>{errors.salonName}</Text>
               ) : null}
             </View>
 
-            {/* Input Group: Salon Email */}
+            {/* Email */}
             <View style={styles.inputGroup}>
               <Text style={darkTheme.typography.inputLabel}>Salon Email</Text>
               <TextInput
@@ -205,7 +166,7 @@ const SalonInfoStep = () => {
               ) : null}
             </View>
 
-            {/* Input Group: Description */}
+            {/* Description */}
             <View style={styles.inputGroup}>
               <Text style={darkTheme.typography.inputLabel}>Description</Text>
               <TextInput
@@ -225,14 +186,13 @@ const SalonInfoStep = () => {
                 onChangeText={(text) => handleInputChange("description", text)}
                 multiline={true}
                 numberOfLines={4}
-                textAlignVertical="top"
               />
               {errors.description ? (
                 <Text style={styles.errorText}>{errors.description}</Text>
               ) : null}
             </View>
 
-            {/* Input Group: Phone Number */}
+            {/* Phone Number */}
             <View style={styles.inputGroup}>
               <Text style={darkTheme.typography.inputLabel}>Phone Number</Text>
               <View
@@ -249,15 +209,18 @@ const SalonInfoStep = () => {
                 <PhoneInput
                   ref={phoneInputRef}
                   value={salonInfo?.phoneNumber || ""}
-                  defaultCode={countryCca2}
+                  defaultCode={salonInfo?.countryCca2}
                   withDarkTheme={true}
                   onChangeText={(text) =>
                     handleInputChange("phoneNumber", text)
                   }
                   onChangeCountry={(country) => {
-                    if (country?.cca2) {
-                      setCountryCca2(country.cca2);
-                    }
+                    setSalonInfo((prev) => ({
+                      ...prev,
+                      countryCode:
+                        country?.callingCode?.[0] || prev.countryCode,
+                      countryCca2: country?.cca2 || prev.countryCca2,
+                    }));
                   }}
                   containerStyle={styles.phoneContainer}
                   textContainerStyle={styles.phoneTextContainer}
@@ -278,7 +241,6 @@ const SalonInfoStep = () => {
             </View>
           </View>
 
-          {/* Submission Trigger */}
           <TouchableOpacity
             style={[
               styles.nextButton,
@@ -287,7 +249,6 @@ const SalonInfoStep = () => {
                 height: darkTheme.layout.buttonHeight,
               },
             ]}
-            activeOpacity={0.8}
             onPress={handleNextStep}
           >
             <Text style={[darkTheme.typography.btnText, { color: "#000000" }]}>
@@ -303,70 +264,37 @@ const SalonInfoStep = () => {
 export default SalonInfoStep;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  keyboardContainer: {
-    flex: 1,
-  },
-  scrollContainer: {
-    paddingHorizontal: darkTheme.layout.paddingHorizontal,
-    paddingBottom: verticalScale(32),
-  },
-  progressTrack: {
-    flexDirection: "row",
-    width: "100%",
-    height: verticalScale(4),
-    backgroundColor: "#1C1C1E",
-    borderRadius: darkTheme.layout.borderRadiusSmall,
-    marginBottom: verticalScale(24),
-    gap: scale(4),
-  },
-  progressFill: {
-    flex: 1,
-    height: "100%",
-    borderRadius: scale(2),
-  },
-  progressEmpty: {
-    flex: 1,
-    height: "100%",
-    backgroundColor: "#1C1C1E",
-    borderRadius: scale(2),
-  },
-  formContainer: {
-    gap: verticalScale(18),
-    marginBottom: verticalScale(32),
-  },
-  inputGroup: {
-    width: "100%",
-  },
+  container: { flex: 1 },
+  keyboardContainer: { flex: 1 },
+  scrollContainer: { paddingHorizontal: 20, paddingBottom: 32 },
+  formContainer: { gap: 18, marginBottom: 32 },
+  inputGroup: { width: "100%" },
   textInput: {
     width: "100%",
-    height: darkTheme.layout.componentHeight,
-    borderRadius: darkTheme.layout.borderRadiusMedium,
+    height: 50,
+    borderRadius: 8,
     borderWidth: 1,
-    paddingHorizontal: scale(14),
-    fontSize: scale(14),
-    fontWeight: "400",
-    marginTop: verticalScale(6),
+    paddingHorizontal: 14,
+    fontSize: 14,
+    marginTop: 6,
   },
   textAreaInput: {
     width: "100%",
-    height: verticalScale(100),
-    borderRadius: darkTheme.layout.borderRadiusMedium,
+    height: 100,
+    borderRadius: 8,
     borderWidth: 1,
-    paddingHorizontal: scale(14),
-    paddingVertical: verticalScale(12),
-    fontSize: scale(14),
-    fontWeight: "400",
-    marginTop: verticalScale(6),
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 14,
+    marginTop: 6,
+    textAlignVertical: "top",
   },
   phoneInputWrapper: {
     width: "100%",
-    height: darkTheme.layout.componentHeight,
-    borderRadius: darkTheme.layout.borderRadiusMedium,
+    height: 50,
+    borderRadius: 8,
     borderWidth: 1,
-    marginTop: verticalScale(6),
+    marginTop: 6,
     overflow: "hidden",
   },
   phoneContainer: {
@@ -374,22 +302,12 @@ const styles = StyleSheet.create({
     height: "100%",
     backgroundColor: "transparent",
   },
-  phoneTextContainer: {
-    backgroundColor: "transparent",
-    paddingVertical: 0,
-  },
-  phoneFlagAlignment: {
-    width: scale(24),
-    height: scale(16),
-  },
-  errorText: {
-    color: "#EF4444",
-    fontSize: scale(11),
-    marginTop: verticalScale(4),
-  },
+  phoneTextContainer: { backgroundColor: "transparent", paddingVertical: 0 },
+  phoneFlagAlignment: { width: 24, height: 16 },
+  errorText: { color: "#EF4444", fontSize: 11, marginTop: 4 },
   nextButton: {
     width: "100%",
-    borderRadius: darkTheme.layout.borderRadiusMedium,
+    borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
   },

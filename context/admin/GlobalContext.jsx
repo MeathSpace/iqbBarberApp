@@ -12,10 +12,12 @@ export const GlobalProvider = ({ children }) => {
   });
 
   const [salonInfo, setSalonInfo] = useState({
-    salonName: "cas",
-    salonEmail: "ac@yopmail.com",
-    description: "svsdv descp",
-    phoneNumber: "1234567890",
+    salonName: "",
+    salonEmail: "",
+    description: "",
+    phoneNumber: "",
+    countryCode: "44",
+    countryCca2: "GB"
   });
 
   const [salonBusinessInfo, setSalonBusinessInfo] = useState({
@@ -41,6 +43,11 @@ export const GlobalProvider = ({ children }) => {
     data: [],
   });
 
+  const [salonImages, setSalonImages] = useState({
+    salonLogo: "",
+    salonGallery: [],
+  });
+
   const [salonSocialLinks, setSalonSocialLinks] = useState({
     website: "",
     facebook: "",
@@ -64,6 +71,8 @@ export const GlobalProvider = ({ children }) => {
         setServicesList,
         salonSocialLinks,
         setSalonSocialLinks,
+        salonImages,
+        setSalonImages
       }}
     >
       {children}

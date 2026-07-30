@@ -1,29 +1,28 @@
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Image,
-  KeyboardAvoidingView,
-  Platform,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-// ✅ Correct default import
 import Shimmer from "react-native-modern-shimmer";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { scale, verticalScale } from "react-native-size-matters";
 
 import Header from "../../../../../components/Header/Header";
+import SalonProgressBar from "../../../../../components/Progess/SalonProgessBar";
 import { darkTheme } from "../../../../../constants/appTheme";
-import { useAdminAuth } from "../../../../../context/admin/AuthContext";
-import api from "../../../../../utils/api";
+import { useAdminGlobal } from "../../../../../context/admin/GlobalContext";
 
-// Custom Stealth Dark Palette Tokens for Shimmer
+// Allowed extensions for salon images
+const ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "heic", "heif"];
+
+// Custom Dark Palette Tokens for Shimmer
 const SKELETON_THEME = {
   header: { baseColor: "#221f1c", highlightColor: "#332e2a" },
   button: { baseColor: "#2a2a2a", highlightColor: "#333333" },
@@ -31,7 +30,7 @@ const SKELETON_THEME = {
   line: { baseColor: "#2c2c2e", highlightColor: "#3a3a3c" },
 };
 
-// Component-Level Unified Custom Skeleton View
+// Skeleton Loader Component
 const ScreenSkeletonView = () => (
   <ScrollView
     contentContainerStyle={styles.scrollContentTrack}
@@ -158,67 +157,18 @@ const ScreenSkeletonView = () => (
 
 const Gallery = () => {
   const router = useRouter();
-  const { authenticatedUser } = useAdminAuth();
+  const { salonImages, setSalonImages } = useAdminGlobal();
+  const [isScreenLoading] = useState(false);
 
-  const salonId = authenticatedUser?.salonId || 1;
-  const [salonLogoUri, setSalonLogoUri] = useState("");
-  const [galleryImages, setGalleryImages] = useState([]);
+  // Helper to validate file extensions
+  const isValidImageExtension = (uri) => {
+    if (!uri) return false;
+    const cleanUri = uri.split("?")[0]; // handle any query parameters
+    const extension = cleanUri.split(".").pop()?.toLowerCase();
+    return ALLOWED_EXTENSIONS.includes(extension);
+  };
 
-  // Full Screen Skeleton Loader State
-  const [isScreenLoading, setIsScreenLoading] = useState(true);
-
-  // Individual Action Loader States
-  const [uploadingLogo, setUploadingLogo] = useState(false);
-  const [uploadingGallery, setUploadingGallery] = useState(false);
-  const [updatingGalleryId, setUpdatingGalleryId] = useState(null);
-
-  // Fetch initial salon data
-  useEffect(() => {
-    let isMounted = true;
-
-    const fetchDefaultSalon = async () => {
-      try {
-        setIsScreenLoading(true);
-        const { data } = await api.post("/admin/getDefaultSalonByAdmin", {
-          adminEmail: authenticatedUser?.email,
-        });
-
-        if (!isMounted) return;
-
-        // Extract Salon Logo
-        const logoUrl = data?.response?.salonLogo?.[0]?.url || "";
-        setSalonLogoUri(logoUrl);
-
-        // Map Backend Schema -> Front-End Schema
-        const rawGallery = data?.gallery || data?.response?.gallery || [];
-        const normalizedGallery = rawGallery.map((img) => ({
-          id: img._id || String(Date.now()),
-          uri: img.url,
-          public_id: img.public_id,
-        }));
-
-        setGalleryImages(normalizedGallery);
-      } catch (error) {
-        console.error("Error fetching salon data:", error);
-      } finally {
-        if (isMounted) {
-          setIsScreenLoading(false);
-        }
-      }
-    };
-
-    if (authenticatedUser?.email) {
-      fetchDefaultSalon();
-    } else {
-      setIsScreenLoading(false);
-    }
-
-    return () => {
-      isMounted = false;
-    };
-  }, [authenticatedUser?.email]);
-
-  // Centralized image picker helper
+  // Centralized image picker helper with extension validation
   const requestAndPickImage = async (options = {}) => {
     const permissionResult =
       await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -240,46 +190,24 @@ const Gallery = () => {
       return null;
     }
 
-    return result.assets;
-  };
+    // Filter assets by valid image extension
+    const validAssets = result.assets.filter((asset) =>
+      isValidImageExtension(asset.uri),
+    );
 
-  // API 1: Upload Salon Logo (POST /salon/uploadSalonLogo)
-  const uploadSalonLogoToBackend = async (uri) => {
-    if (!salonId) {
-      Alert.alert("Error", "Salon ID is missing. Cannot upload logo.");
-      return;
-    }
-
-    try {
-      setUploadingLogo(true);
-      const formData = new FormData();
-      formData.append("salonId", Number(salonId));
-
-      const filename = uri.split("/").pop() || "salon-logo.jpg";
-      const match = /\.(\w+)$/.exec(filename);
-      const type = match ? `image/${match[1]}` : `image/jpeg`;
-
-      formData.append("salonLogo", {
-        uri: Platform.OS === "ios" ? uri.replace("file://", "") : uri,
-        name: filename,
-        type,
-      });
-
-      const response = await api.post("/salon/uploadSalonLogo", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-    } catch (error) {
-      console.error("Error uploading logo:", error?.response || error);
+    if (validAssets.length < result.assets.length) {
       Alert.alert(
-        "Upload Failed",
-        error?.response?.data?.message || "Could not upload salon logo.",
+        "Invalid File Type",
+        `Only ${ALLOWED_EXTENSIONS.join(", ").toUpperCase()} formats are supported. Unsupported files were excluded.`,
       );
-    } finally {
-      setUploadingLogo(false);
     }
+
+    if (validAssets.length === 0) return null;
+
+    return validAssets;
   };
 
-  // Pick Salon Logo
+  // 1. Pick/Upload Salon Logo
   const pickSalonLogoAsset = async () => {
     const assets = await requestAndPickImage({
       allowsEditing: true,
@@ -289,39 +217,14 @@ const Gallery = () => {
 
     if (assets && assets[0]?.uri) {
       const selectedUri = assets[0].uri;
-      setSalonLogoUri(selectedUri);
-      await uploadSalonLogoToBackend(selectedUri);
+      setSalonImages((prev) => ({
+        ...prev,
+        salonLogo: selectedUri,
+      }));
     }
   };
 
-  // API 2: Upload Single Showcase Gallery Image (POST /salon/uploadSalonImage)
-  const uploadGalleryImageToBackend = async (uri) => {
-    if (!salonId) {
-      Alert.alert("Error", "Salon ID is missing.");
-      return null;
-    }
-
-    const formData = new FormData();
-    formData.append("salonId", Number(salonId));
-
-    const filename = uri.split("/").pop() || "gallery-image.jpg";
-    const match = /\.(\w+)$/.exec(filename);
-    const type = match ? `image/${match[1]}` : `image/jpeg`;
-
-    formData.append("gallery", {
-      uri: Platform.OS === "ios" ? uri.replace("file://", "") : uri,
-      name: filename,
-      type,
-    });
-
-    const response = await api.post("/salon/uploadSalonImage", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-
-    return response.data;
-  };
-
-  // Selection & Upload: Showcase Gallery Assets
+  // 2. Add New Showcase Gallery Asset(s)
   const pickShowcaseGalleryAsset = async () => {
     const assets = await requestAndPickImage({
       allowsEditing: false,
@@ -332,45 +235,19 @@ const Gallery = () => {
 
     if (!assets || assets.length === 0) return;
 
-    try {
-      setUploadingGallery(true);
-      const newUploadedItems = [];
+    const newPickedItems = assets.map((asset) => ({
+      id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+      uri: asset.uri,
+    }));
 
-      for (const asset of assets) {
-        try {
-          const resData = await uploadGalleryImageToBackend(asset.uri);
-          const uploadedImgObj = resData?.image || resData?.data || resData;
-
-          newUploadedItems.push({
-            id: uploadedImgObj?._id || uploadedImgObj?.id || String(Date.now()),
-            uri: uploadedImgObj?.url || asset.uri,
-            public_id: uploadedImgObj?.public_id || "",
-          });
-        } catch (singleUploadErr) {
-          console.error("Failed to upload image:", singleUploadErr);
-        }
-      }
-
-      if (newUploadedItems.length > 0) {
-        setGalleryImages((prev) => [...prev, ...newUploadedItems]);
-      }
-    } catch (error) {
-      console.error(
-        "Error uploading gallery image(s):",
-        error?.response || error,
-      );
-      Alert.alert(
-        "Upload Failed",
-        error?.response?.data?.message || "Could not upload gallery image(s).",
-      );
-    } finally {
-      setUploadingGallery(false);
-    }
+    setSalonImages((prev) => ({
+      ...prev,
+      salonGallery: [...(prev?.salonGallery || []), ...newPickedItems],
+    }));
   };
 
-  // API 3: Update Individual Gallery Asset (PUT /salon/updateSalonImages)
-  // API 3: Update Individual Gallery Asset (PUT /salon/updateSalonImages)
-  const handleUpdateGalleryImage = async (image) => {
+  // 3. Edit / Reselect Individual Gallery Image
+  const handleUpdateGalleryImage = async (targetImage) => {
     const assets = await requestAndPickImage({
       allowsEditing: true,
       quality: 0.8,
@@ -380,62 +257,16 @@ const Gallery = () => {
 
     const newUri = assets[0].uri;
 
-    try {
-      setUpdatingGalleryId(image.id);
-
-      const formData = new FormData();
-      formData.append("salonId", Number(salonId));
-      formData.append("id", String(image.id));
-      formData.append("public_imgid", String(image.public_id || ""));
-
-      const filename = newUri.split("/").pop() || "gallery-image.jpg";
-      const match = /\.(\w+)$/.exec(filename);
-      const type = match ? `image/${match[1]}` : `image/jpeg`;
-
-      formData.append("gallery", {
-        uri: Platform.OS === "ios" ? newUri.replace("file://", "") : newUri,
-        name: filename,
-        type,
-      });
-
-      const response = await api.put("/salon/updateSalonImages", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      // Extract response payload according to server schema
-      const updatedData = response?.data?.response;
-      const updatedUrl = updatedData?.url || newUri;
-      const updatedId = updatedData?._id || image.id;
-      const updatedPublicId = updatedData?.public_id || image.public_id;
-
-      // Update local state with the NEW id, public_id, and url from server
-      setGalleryImages((prev) =>
-        prev.map((img) =>
-          img.id === image.id
-            ? {
-                ...img,
-                id: updatedId,
-                uri: updatedUrl,
-                public_id: updatedPublicId,
-              }
-            : img,
-        ),
-      );
-
-      Alert.alert("Success", "Gallery image updated successfully!");
-    } catch (error) {
-      console.error("Error updating image:", error?.response || error);
-      Alert.alert(
-        "Update Failed",
-        error?.response?.data?.message || "Could not update gallery image.",
-      );
-    } finally {
-      setUpdatingGalleryId(null);
-    }
+    setSalonImages((prev) => ({
+      ...prev,
+      salonGallery: (prev?.salonGallery || []).map((img) =>
+        img.id === targetImage.id ? { ...img, uri: newUri } : img,
+      ),
+    }));
   };
 
-  // API 4: Delete Individual Gallery Image (DELETE /salon/deleteSalonImages)
-  const handleRemoveGalleryImage = async (image) => {
+  // 4. Remove Individual Gallery Image
+  const handleRemoveGalleryImage = (targetImage) => {
     Alert.alert(
       "Confirm Delete",
       "Are you sure you want to remove this image from the gallery?",
@@ -444,36 +275,20 @@ const Gallery = () => {
         {
           text: "Delete",
           style: "destructive",
-          onPress: async () => {
-            try {
-              setUpdatingGalleryId(image.id);
-
-              if (image.id && !image.id.startsWith("local-")) {
-                await api.delete("/salon/deleteSalonImages", {
-                  data: {
-                    img_id: String(image.id),
-                    public_id: String(image.public_id || ""),
-                  },
-                });
-              }
-
-              setGalleryImages((prev) =>
-                prev.filter((img) => img.id !== image.id),
-              );
-            } catch (error) {
-              console.error("Error deleting image:", error?.response || error);
-              Alert.alert(
-                "Delete Failed",
-                error?.response?.data?.message || "Could not remove image.",
-              );
-            } finally {
-              setUpdatingGalleryId(null);
-            }
+          onPress: () => {
+            setSalonImages((prev) => ({
+              ...prev,
+              salonGallery: (prev?.salonGallery || []).filter(
+                (img) => img.id !== targetImage.id,
+              ),
+            }));
           },
         },
       ],
     );
   };
+
+  const galleryList = salonImages?.salonGallery || [];
 
   return (
     <SafeAreaView
@@ -486,206 +301,181 @@ const Gallery = () => {
       <Header
         title="Gallery"
         subTitle="Configure active salon display assets"
-        showBack={false}
+        showBack={true}
       />
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{ flex: 1 }}
-      >
-        {isScreenLoading ? (
-          <ScreenSkeletonView />
-        ) : (
-          <ScrollView
-            contentContainerStyle={styles.scrollContentTrack}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-          >
-            <View style={styles.internalFormFieldsEnclosure}>
-              {/* Salon Logo Section */}
+      {isScreenLoading ? (
+        <ScreenSkeletonView />
+      ) : (
+        <ScrollView
+          contentContainerStyle={styles.scrollContentTrack}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <SalonProgressBar currentStep={4} totalSteps={5} />
+          <View style={styles.internalFormFieldsEnclosure}>
+            {/* Salon Logo Section */}
+            <View
+              style={[
+                styles.uploadSectionRowUnit,
+                {
+                  backgroundColor: darkTheme.colors.card,
+                  borderColor: darkTheme.colors.border,
+                },
+              ]}
+            >
+              <View style={styles.uploadRowLeftTextGroup}>
+                <Text style={styles.uploadRowMainLabel}>
+                  Upload your salon's logo
+                </Text>
+                <TouchableOpacity
+                  style={styles.premiumActionUploadBtn}
+                  activeOpacity={0.75}
+                  onPress={pickSalonLogoAsset}
+                >
+                  <Text
+                    style={[
+                      styles.premiumActionUploadBtnText,
+                      { color: darkTheme.colors.textMain },
+                    ]}
+                  >
+                    Upload
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
               <View
                 style={[
-                  styles.uploadSectionRowUnit,
-                  {
-                    backgroundColor: darkTheme.colors.card,
-                    borderColor: darkTheme.colors.border,
-                  },
+                  styles.squareLogoPreviewContainerBox,
+                  { borderColor: "rgba(255,255,255,0.05)" },
                 ]}
               >
-                <View style={styles.uploadRowLeftTextGroup}>
-                  <Text style={styles.uploadRowMainLabel}>
-                    Upload your salon's logo
-                  </Text>
-                  <TouchableOpacity
-                    style={styles.premiumActionUploadBtn}
-                    activeOpacity={0.75}
-                    onPress={pickSalonLogoAsset}
-                    disabled={uploadingLogo}
-                  >
-                    <Text
-                      style={[
-                        styles.premiumActionUploadBtnText,
-                        { color: darkTheme.colors.textMain },
-                      ]}
-                    >
-                      {uploadingLogo ? "Uploading..." : "Upload"}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
+                {salonImages?.salonLogo ? (
+                  <Image
+                    source={{ uri: salonImages.salonLogo }}
+                    style={styles.embeddedPreviewImageInstance}
+                  />
+                ) : (
+                  <View style={styles.iconPlaceholderBox} />
+                )}
+              </View>
+            </View>
 
+            {/* Showcase Gallery Section */}
+            <View
+              style={[
+                styles.uploadSectionRowUnit,
+                {
+                  backgroundColor: darkTheme.colors.card,
+                  borderColor: darkTheme.colors.border,
+                  marginTop: verticalScale(14),
+                },
+              ]}
+            >
+              <View style={styles.uploadRowLeftTextGroup}>
+                <Text style={styles.uploadRowMainLabel}>
+                  Select high-quality images to showcase your salon.
+                </Text>
+                <TouchableOpacity
+                  style={styles.premiumActionUploadBtn}
+                  activeOpacity={0.75}
+                  onPress={pickShowcaseGalleryAsset}
+                >
+                  <Text
+                    style={[
+                      styles.premiumActionUploadBtnText,
+                      { color: darkTheme.colors.textMain },
+                    ]}
+                  >
+                    Upload
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {galleryList.length === 0 && (
                 <View
                   style={[
                     styles.squareLogoPreviewContainerBox,
                     { borderColor: "rgba(255,255,255,0.05)" },
                   ]}
-                >
-                  {uploadingLogo ? (
-                    <ActivityIndicator
-                      size="small"
-                      color={darkTheme.colors.accent}
-                    />
-                  ) : salonLogoUri ? (
-                    <Image
-                      source={{ uri: salonLogoUri }}
-                      style={styles.embeddedPreviewImageInstance}
-                    />
-                  ) : (
-                    <View style={styles.iconPlaceholderBox} />
-                  )}
-                </View>
-              </View>
-
-              {/* Showcase Gallery Section */}
-              <View
-                style={[
-                  styles.uploadSectionRowUnit,
-                  {
-                    backgroundColor: darkTheme.colors.card,
-                    borderColor: darkTheme.colors.border,
-                    marginTop: verticalScale(14),
-                  },
-                ]}
-              >
-                <View style={styles.uploadRowLeftTextGroup}>
-                  <Text style={styles.uploadRowMainLabel}>
-                    Select high-quality images to showcase your salon.
-                  </Text>
-                  <TouchableOpacity
-                    style={styles.premiumActionUploadBtn}
-                    activeOpacity={0.75}
-                    onPress={pickShowcaseGalleryAsset}
-                    disabled={uploadingGallery}
-                  >
-                    <Text
-                      style={[
-                        styles.premiumActionUploadBtnText,
-                        { color: darkTheme.colors.textMain },
-                      ]}
-                    >
-                      {uploadingGallery ? "Uploading..." : "Upload"}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-
-                {galleryImages.length === 0 && (
-                  <View
-                    style={[
-                      styles.squareLogoPreviewContainerBox,
-                      { borderColor: "rgba(255,255,255,0.05)" },
-                    ]}
-                  />
-                )}
-              </View>
-
-              {/* Gallery Deck */}
-              {galleryImages.length > 0 && (
-                <View style={styles.galleryShowcasePreviewVerticalDeckGrid}>
-                  {galleryImages.map((image) => {
-                    const isBusy = updatingGalleryId === image.id;
-
-                    return (
-                      <View
-                        key={image.id}
-                        style={[
-                          styles.galleryShowcaseImageCardFrame,
-                          {
-                            backgroundColor: darkTheme.colors.card,
-                            borderColor: darkTheme.colors.border,
-                          },
-                        ]}
-                      >
-                        <View style={{ position: "relative" }}>
-                          <Image
-                            source={{ uri: image.uri }}
-                            style={styles.galleryPreviewImageInstance}
-                          />
-                          {isBusy && (
-                            <View style={styles.overlayLoaderBox}>
-                              <ActivityIndicator
-                                size="small"
-                                color={darkTheme.colors.accent}
-                              />
-                            </View>
-                          )}
-                        </View>
-
-                        <View style={styles.cardActionsHeaderTrackRow}>
-                          <TouchableOpacity
-                            style={styles.innerRowActionTriggerCTAButtonBox}
-                            activeOpacity={0.75}
-                            onPress={() => handleUpdateGalleryImage(image)}
-                            disabled={isBusy}
-                          >
-                            <Text
-                              style={[
-                                styles.innerRowActionButtonTextLabel,
-                                { color: darkTheme.colors.textMain },
-                              ]}
-                            >
-                              Edit Image
-                            </Text>
-                          </TouchableOpacity>
-
-                          <TouchableOpacity
-                            style={[
-                              styles.innerRowActionTriggerCTAButtonBox,
-                              styles.deleteActionBtn,
-                            ]}
-                            activeOpacity={0.75}
-                            onPress={() => handleRemoveGalleryImage(image)}
-                            disabled={isBusy}
-                          >
-                            <Text
-                              style={[
-                                styles.innerRowActionButtonTextLabel,
-                                { color: "#FF3B30" },
-                              ]}
-                            >
-                              Delete Image
-                            </Text>
-                          </TouchableOpacity>
-                        </View>
-                      </View>
-                    );
-                  })}
-                </View>
+                />
               )}
-
-              {/* Continue Action */}
-              <TouchableOpacity
-                style={[
-                  styles.masterSubmitActionBtnNode,
-                  { backgroundColor: darkTheme.colors.accent },
-                ]}
-                activeOpacity={0.85}
-                onPress={() => router.push("/socialLinks")}
-              >
-                <Text style={styles.masterSubmitActionBtnText}>Continue</Text>
-              </TouchableOpacity>
             </View>
-          </ScrollView>
-        )}
-      </KeyboardAvoidingView>
+
+            {/* Gallery Deck */}
+            {galleryList.length > 0 && (
+              <View style={styles.galleryShowcasePreviewVerticalDeckGrid}>
+                {galleryList.map((image) => (
+                  <View
+                    key={image.id}
+                    style={[
+                      styles.galleryShowcaseImageCardFrame,
+                      {
+                        backgroundColor: darkTheme.colors.card,
+                        borderColor: darkTheme.colors.border,
+                      },
+                    ]}
+                  >
+                    <View style={{ position: "relative" }}>
+                      <Image
+                        source={{ uri: image.uri }}
+                        style={styles.galleryPreviewImageInstance}
+                      />
+                    </View>
+
+                    <View style={styles.cardActionsHeaderTrackRow}>
+                      <TouchableOpacity
+                        style={styles.innerRowActionTriggerCTAButtonBox}
+                        activeOpacity={0.75}
+                        onPress={() => handleUpdateGalleryImage(image)}
+                      >
+                        <Text
+                          style={[
+                            styles.innerRowActionButtonTextLabel,
+                            { color: darkTheme.colors.textMain },
+                          ]}
+                        >
+                          Edit Image
+                        </Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={[
+                          styles.innerRowActionTriggerCTAButtonBox,
+                          styles.deleteActionBtn,
+                        ]}
+                        activeOpacity={0.75}
+                        onPress={() => handleRemoveGalleryImage(image)}
+                      >
+                        <Text
+                          style={[
+                            styles.innerRowActionButtonTextLabel,
+                            { color: "#FF3B30" },
+                          ]}
+                        >
+                          Delete Image
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {/* Continue Action */}
+            <TouchableOpacity
+              style={[
+                styles.masterSubmitActionBtnNode,
+                { backgroundColor: darkTheme.colors.accent },
+              ]}
+              activeOpacity={0.85}
+              onPress={() => router.push("/socialLinks")}
+            >
+              <Text style={styles.masterSubmitActionBtnText}>Continue</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 };
@@ -773,13 +563,6 @@ const styles = StyleSheet.create({
     height: verticalScale(154),
     borderRadius: scale(4),
     resizeMode: "cover",
-  },
-  overlayLoaderBox: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    borderRadius: scale(4),
-    justifyContent: "center",
-    alignItems: "center",
   },
   cardActionsHeaderTrackRow: {
     flexDirection: "row",

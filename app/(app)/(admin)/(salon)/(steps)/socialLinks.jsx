@@ -1,27 +1,50 @@
-import React from "react";
 import {
+  AntDesign,
+  Feather,
+  FontAwesome,
+  FontAwesome6,
+  Ionicons,
+} from "@expo/vector-icons";
+import { useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
   StyleSheet,
   Text,
-  View,
-  TouchableOpacity,
-  ScrollView,
   TextInput,
-  Platform,
-  KeyboardAvoidingView,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { scale, verticalScale } from "react-native-size-matters";
-import { FontAwesome, FontAwesome6, AntDesign, Feather } from "@expo/vector-icons";
 
-import Header from "../../../../../components/Header/Header"; // Adjust path dynamically
+import { useRouter } from "expo-router";
+import Header from "../../../../../components/Header/Header";
+import SalonProgressBar from "../../../../../components/Progess/SalonProgessBar";
 import { darkTheme } from "../../../../../constants/appTheme";
+import { useAdminAuth } from "../../../../../context/admin/AuthContext";
 import { useAdminGlobal } from "../../../../../context/admin/GlobalContext";
+import api from "../../../../../utils/api";
 
 const SocialLinks = () => {
-  // Directly consume and update the global state object
-  const { salonSocialLinks, setSalonSocialLinks } = useAdminGlobal();
+  const { authenticatedUser } = useAdminAuth();
+  const router = useRouter();
 
-  // Helper function to update a single key in the global state object
+  const {
+    salonSocialLinks,
+    setSalonSocialLinks,
+    salonInfo,
+    salonBusinessInfo,
+    serviceForm,
+    servicesList,
+    salonImages,
+  } = useAdminGlobal();
+  const [isModalVisible, setIsModalVisible] = useState(false);
+
   const updateSocialLink = (key, value) => {
     setSalonSocialLinks((prev) => ({
       ...prev,
@@ -30,7 +53,6 @@ const SocialLinks = () => {
   };
 
   const handleFinishConfiguration = () => {
-    // Trim values on submission if needed
     const trimmedPayload = {
       website: (salonSocialLinks?.website || "").trim(),
       facebook: (salonSocialLinks?.facebook || "").trim(),
@@ -40,33 +62,174 @@ const SocialLinks = () => {
     };
 
     setSalonSocialLinks(trimmedPayload);
-    console.log("Submitted global state payload:", trimmedPayload);
+    // Open the confirmation modal
+    setIsModalVisible(true);
+  };
+
+  const uploadSalonLogo = async (salonId) => {
+    if (!salonImages?.salonLogo) return;
+
+    const formData = new FormData();
+
+    formData.append("salonId", String(salonId));
+    formData.append("salonLogo", {
+      uri: salonImages.salonLogo,
+      name: "salon_logo.jpg",
+      type: "image/jpeg",
+    });
+
+    await api.post("/salon/uploadSalonLogo", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  };
+
+  const uploadSalonGallery = async (salonId) => {
+    if (!salonImages?.salonGallery || salonImages.salonGallery.length === 0)
+      return;
+
+    const formData = new FormData();
+
+    formData.append("salonId", String(salonId));
+
+    salonImages.salonGallery.forEach((image, index) => {
+      formData.append("gallery", {
+        uri: image.uri,
+        name: `gallery_${index}.jpg`,
+        type: "image/jpeg",
+      });
+    });
+
+    await api.post("/salon/uploadSalonImage", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  };
+
+  const [salonConfirmLoader, setSalonConfirmLoader] = useState(false);
+
+  const handleConfirmCreate = async () => {
+    const salondata = {
+      adminEmail: authenticatedUser?.email,
+      salonEmail: salonInfo?.salonEmail,
+      salonDesc: salonInfo?.description,
+      salonName: salonInfo?.salonName,
+      // Address & Location
+      address: "B-12, Kalyani Main Road",
+      location: {
+        type: "Point",
+        coordinates: {
+          longitude: 88.4335,
+          latitude: 22.9765,
+        },
+      },
+      country: "India",
+      city: "Kalyani",
+      timeZone: "Asia/Kolkata",
+      postCode: "741235",
+
+      contactTel: Number(salonInfo?.phoneNumber),
+      countryCode: Number(salonInfo?.countryCode),
+      countryCca2: salonInfo?.countryCca2,
+      salonType: salonBusinessInfo?.salonBusinessType,
+      webLink: salonSocialLinks?.website,
+      fbLink: salonSocialLinks?.facebook,
+      instraLink: salonSocialLinks?.instagram,
+      twitterLink: salonSocialLinks?.twitter,
+      tiktokLink: salonSocialLinks?.tiktok,
+      services: servicesList?.data,
+    };
+
+    try {
+      setSalonConfirmLoader(true);
+
+      const { data } = await api.post("/salon/createSalonByAdmin", salondata);
+
+      const salonId = data?.response?.salonId;
+
+      if (!salonId) {
+        throw new Error("Salon ID not returned");
+      }
+
+      await uploadSalonLogo(salonId);
+
+      await uploadSalonGallery(salonId);
+
+      Alert.alert("Success", data?.message || "Salon created successfully.", [
+        {
+          text: "OK",
+          onPress: () => router.push("/(salon)"),
+        },
+      ]);
+    } catch (error) {
+      console.error(
+        "Create Salon Error:",
+        error?.response?.data || error?.message || error,
+      );
+
+      Alert.alert(
+        "Error",
+        error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          "Something went wrong while creating the salon. Please try again.",
+      );
+    } finally {
+      setSalonConfirmLoader(false);
+    }
   };
 
   return (
     <SafeAreaView
       edges={["top", "right", "left"]}
-      style={[styles.container, { backgroundColor: darkTheme.colors.background }]}
+      style={[
+        styles.container,
+        { backgroundColor: darkTheme.colors.background },
+      ]}
     >
-      <Header title="Social Links" subTitle="Configure customer facing platform hooks" showBack={false} />
+      <Header
+        title="Social Links"
+        subTitle="Configure customer facing platform hooks"
+        showBack={true}
+      />
 
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
-        <ScrollView 
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <ScrollView
           contentContainerStyle={styles.scrollContentTrack}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <View style={styles.internalFormFieldsEnclosure}>
+          <SalonProgressBar currentStep={5} totalSteps={5} />
 
+          <View style={styles.internalFormFieldsEnclosure}>
             {/* Field Block Module: Website */}
             <View style={styles.inputLayoutContainerGroup}>
               <Text style={styles.premiumFieldLabelMicro}>WEBSITE URL</Text>
-              <View style={[styles.inlineInputWithIconWrapper, { backgroundColor: darkTheme.colors.card, borderColor: darkTheme.colors.border }]}>
+              <View
+                style={[
+                  styles.inlineInputWithIconWrapper,
+                  {
+                    backgroundColor: darkTheme.colors.card,
+                    borderColor: darkTheme.colors.border,
+                  },
+                ]}
+              >
                 <View style={styles.leftIconPrefixFrame}>
-                  <Feather name="globe" size={scale(14)} color="rgba(255,255,255,0.4)" />
+                  <Feather
+                    name="globe"
+                    size={scale(14)}
+                    color="rgba(255,255,255,0.4)"
+                  />
                 </View>
                 <TextInput
-                  style={[styles.luxuryTextInputInstance, { color: darkTheme.colors.textMain }]}
+                  style={[
+                    styles.luxuryTextInputInstance,
+                    { color: darkTheme.colors.textMain },
+                  ]}
                   value={salonSocialLinks?.website || ""}
                   onChangeText={(val) => updateSocialLink("website", val)}
                   placeholder="https://www.salon.com/"
@@ -80,13 +243,30 @@ const SocialLinks = () => {
 
             {/* Field Block Module: Facebook */}
             <View style={styles.inputLayoutContainerGroup}>
-              <Text style={styles.premiumFieldLabelMicro}>FACEBOOK PROFILE</Text>
-              <View style={[styles.inlineInputWithIconWrapper, { backgroundColor: darkTheme.colors.card, borderColor: darkTheme.colors.border }]}>
+              <Text style={styles.premiumFieldLabelMicro}>
+                FACEBOOK PROFILE
+              </Text>
+              <View
+                style={[
+                  styles.inlineInputWithIconWrapper,
+                  {
+                    backgroundColor: darkTheme.colors.card,
+                    borderColor: darkTheme.colors.border,
+                  },
+                ]}
+              >
                 <View style={styles.leftIconPrefixFrame}>
-                  <FontAwesome name="facebook" size={scale(15)} color="rgba(255,255,255,0.4)" />
+                  <FontAwesome
+                    name="facebook"
+                    size={scale(15)}
+                    color="rgba(255,255,255,0.4)"
+                  />
                 </View>
                 <TextInput
-                  style={[styles.luxuryTextInputInstance, { color: darkTheme.colors.textMain }]}
+                  style={[
+                    styles.luxuryTextInputInstance,
+                    { color: darkTheme.colors.textMain },
+                  ]}
                   value={salonSocialLinks?.facebook || ""}
                   onChangeText={(val) => updateSocialLink("facebook", val)}
                   placeholder="https://www.facebook.com/salon/"
@@ -100,13 +280,30 @@ const SocialLinks = () => {
 
             {/* Field Block Module: Instagram */}
             <View style={styles.inputLayoutContainerGroup}>
-              <Text style={styles.premiumFieldLabelMicro}>INSTAGRAM HANDLE</Text>
-              <View style={[styles.inlineInputWithIconWrapper, { backgroundColor: darkTheme.colors.card, borderColor: darkTheme.colors.border }]}>
+              <Text style={styles.premiumFieldLabelMicro}>
+                INSTAGRAM HANDLE
+              </Text>
+              <View
+                style={[
+                  styles.inlineInputWithIconWrapper,
+                  {
+                    backgroundColor: darkTheme.colors.card,
+                    borderColor: darkTheme.colors.border,
+                  },
+                ]}
+              >
                 <View style={styles.leftIconPrefixFrame}>
-                  <AntDesign name="instagram" size={scale(15)} color="rgba(255,255,255,0.4)" />
+                  <AntDesign
+                    name="instagram"
+                    size={scale(15)}
+                    color="rgba(255,255,255,0.4)"
+                  />
                 </View>
                 <TextInput
-                  style={[styles.luxuryTextInputInstance, { color: darkTheme.colors.textMain }]}
+                  style={[
+                    styles.luxuryTextInputInstance,
+                    { color: darkTheme.colors.textMain },
+                  ]}
                   value={salonSocialLinks?.instagram || ""}
                   onChangeText={(val) => updateSocialLink("instagram", val)}
                   placeholder="https://www.instagram.com/salon/"
@@ -120,16 +317,33 @@ const SocialLinks = () => {
 
             {/* Field Block Module: X / Twitter */}
             <View style={styles.inputLayoutContainerGroup}>
-              <Text style={styles.premiumFieldLabelMicro}>X (FORMERLY TWITTER)</Text>
-              <View style={[styles.inlineInputWithIconWrapper, { backgroundColor: darkTheme.colors.card, borderColor: darkTheme.colors.border }]}>
+              <Text style={styles.premiumFieldLabelMicro}>
+                X (FORMERLY TWITTER)
+              </Text>
+              <View
+                style={[
+                  styles.inlineInputWithIconWrapper,
+                  {
+                    backgroundColor: darkTheme.colors.card,
+                    borderColor: darkTheme.colors.border,
+                  },
+                ]}
+              >
                 <View style={styles.leftIconPrefixFrame}>
-                  <FontAwesome6 name="x-twitter" size={scale(13)} color="rgba(255,255,255,0.4)" />
+                  <FontAwesome6
+                    name="x-twitter"
+                    size={scale(13)}
+                    color="rgba(255,255,255,0.4)"
+                  />
                 </View>
                 <TextInput
-                  style={[styles.luxuryTextInputInstance, { color: darkTheme.colors.textMain }]}
+                  style={[
+                    styles.luxuryTextInputInstance,
+                    { color: darkTheme.colors.textMain },
+                  ]}
                   value={salonSocialLinks?.twitter || ""}
                   onChangeText={(val) => updateSocialLink("twitter", val)}
-                  placeholder="https://x.com/Salon"
+                  placeholder="https://x.com/salon"
                   placeholderTextColor={darkTheme.colors.textMuted}
                   autoCapitalize="none"
                   keyboardType="url"
@@ -141,12 +355,27 @@ const SocialLinks = () => {
             {/* Field Block Module: TikTok */}
             <View style={styles.inputLayoutContainerGroup}>
               <Text style={styles.premiumFieldLabelMicro}>TIKTOK CHANNEL</Text>
-              <View style={[styles.inlineInputWithIconWrapper, { backgroundColor: darkTheme.colors.card, borderColor: darkTheme.colors.border }]}>
+              <View
+                style={[
+                  styles.inlineInputWithIconWrapper,
+                  {
+                    backgroundColor: darkTheme.colors.card,
+                    borderColor: darkTheme.colors.border,
+                  },
+                ]}
+              >
                 <View style={styles.leftIconPrefixFrame}>
-                  <FontAwesome6 name="tiktok" size={scale(13)} color="rgba(255,255,255,0.4)" />
+                  <FontAwesome6
+                    name="tiktok"
+                    size={scale(13)}
+                    color="rgba(255,255,255,0.4)"
+                  />
                 </View>
                 <TextInput
-                  style={[styles.luxuryTextInputInstance, { color: darkTheme.colors.textMain }]}
+                  style={[
+                    styles.luxuryTextInputInstance,
+                    { color: darkTheme.colors.textMain },
+                  ]}
                   value={salonSocialLinks?.tiktok || ""}
                   onChangeText={(val) => updateSocialLink("tiktok", val)}
                   placeholder="https://www.tiktok.com/salon/"
@@ -158,18 +387,111 @@ const SocialLinks = () => {
               </View>
             </View>
 
-            {/* Master Submission Workflow Operational Trigger Button */}
-            <TouchableOpacity 
-              style={[styles.masterFinishActionBtnNode, { backgroundColor: darkTheme.colors.accent }]}
+            {/* Master Submission Button */}
+            <TouchableOpacity
+              style={[
+                styles.masterFinishActionBtnNode,
+                { backgroundColor: darkTheme.colors.accent },
+              ]}
               activeOpacity={0.85}
               onPress={handleFinishConfiguration}
             >
-              <Text style={styles.masterFinishActionBtnText}>Finish</Text>
+              <Text style={styles.masterFinishActionBtnText}>Finish Setup</Text>
             </TouchableOpacity>
-
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <Modal
+        visible={isModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setIsModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View
+            style={[
+              styles.modalCard,
+              {
+                backgroundColor: darkTheme.colors.card,
+                borderColor: darkTheme.colors.border,
+              },
+            ]}
+          >
+
+            <View
+              style={[
+                styles.modalIconBadge,
+                { backgroundColor: "rgba(255, 149, 0, 0.12)" },
+              ]}
+            >
+              <Ionicons
+                name="checkmark-circle-outline"
+                size={scale(28)}
+                color={darkTheme.colors.accent}
+              />
+            </View>
+
+            <Text
+              style={[styles.modalTitle, { color: darkTheme.colors.textMain }]}
+            >
+              You're All Set!
+            </Text>
+
+            <Text
+              style={[
+                styles.modalSubText,
+                { color: darkTheme.colors.textMuted },
+              ]}
+            >
+              Ready to get started? Tap{" "}
+              <Text
+                style={{ color: darkTheme.colors.accent, fontWeight: "700" }}
+              >
+                Create Salon
+              </Text>{" "}
+              to publish your profile and go live.
+            </Text>
+
+            <View style={styles.modalActionRow}>
+              <TouchableOpacity
+                style={[
+                  styles.modalCancelBtn,
+                  { borderColor: darkTheme.colors.border },
+                ]}
+                activeOpacity={0.8}
+                onPress={() => setIsModalVisible(false)}
+              >
+                <Text
+                  style={[
+                    styles.modalCancelBtnText,
+                    { color: darkTheme.colors.textMain },
+                  ]}
+                >
+                  Back
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.modalConfirmBtn,
+                  { backgroundColor: darkTheme.colors.accent },
+                ]}
+                activeOpacity={0.85}
+                onPress={handleConfirmCreate}
+                disabled={salonConfirmLoader}
+              >
+                {salonConfirmLoader ? (
+                  <ActivityIndicator color="#000" />
+                ) : (
+                  <Text style={styles.modalConfirmBtnText}>Create Salon</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
     </SafeAreaView>
   );
 };
@@ -235,6 +557,75 @@ const styles = StyleSheet.create({
     color: "#000000",
     fontWeight: "700",
     fontSize: scale(12),
+  },
+
+  /* Modal Styles */
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.75)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: scale(20),
+  },
+  modalCard: {
+    width: "100%",
+    maxWidth: scale(340),
+    borderRadius: scale(12),
+    borderWidth: 1,
+    padding: scale(20),
+    alignItems: "center",
+  },
+  modalIconBadge: {
+    width: scale(52),
+    height: scale(52),
+    borderRadius: scale(26),
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: verticalScale(12),
+  },
+  modalTitle: {
+    fontSize: scale(16),
+    fontWeight: "700",
+    marginBottom: verticalScale(8),
+    textAlign: "center",
+  },
+  modalSubText: {
+    fontSize: scale(12.5),
+    lineHeight: scale(18),
+    textAlign: "center",
+    marginBottom: verticalScale(20),
+  },
+  modalActionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
+    gap: scale(10),
+  },
+  modalCancelBtn: {
+    flex: 1,
+    height: scale(38),
+    borderRadius: scale(6),
+    borderWidth: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
+  },
+  modalCancelBtnText: {
+    fontSize: scale(12),
+    fontWeight: "600",
+  },
+  modalConfirmBtn: {
+    flex: 1,
+    height: scale(38),
+    borderRadius: scale(6),
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalConfirmBtnText: {
+    color: "#000000",
+    fontSize: scale(12),
+    fontWeight: "700",
   },
 });
 
