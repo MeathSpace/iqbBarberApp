@@ -18,7 +18,7 @@ import {
   CameraIcon,       
 } from "../../../../constants/icons";
 
-const CreateSalonScreen = () => {
+const EditSalonScreen = () => {
   const router = useRouter();
 
   const stepsData = [
@@ -54,7 +54,7 @@ const CreateSalonScreen = () => {
       style={[styles.container, { backgroundColor: darkTheme.colors.background }]}
     >
       <Header 
-        title={"Add New Salon"} 
+        title={"Edit Your Salon"} 
         subTitle={"Follow the steps to create a salon"} 
         showBack={true} 
       />
@@ -121,7 +121,7 @@ const CreateSalonScreen = () => {
           ]}
           activeOpacity={0.8}
           onPress={() => {
-            router.push("/(createSteps)/salonInfo")
+            router.push("/(editSteps)/salonInfo")
           }}
         >
           <Text style={[darkTheme.typography.btnText, { color: "#000000" }]}>
@@ -133,7 +133,7 @@ const CreateSalonScreen = () => {
   );
 };
 
-export default CreateSalonScreen;
+export default EditSalonScreen;
 
 const styles = StyleSheet.create({
   container: {

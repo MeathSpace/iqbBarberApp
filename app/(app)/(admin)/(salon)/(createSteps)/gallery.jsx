@@ -20,7 +20,7 @@ import { darkTheme } from "../../../../../constants/appTheme";
 import { useAdminGlobal } from "../../../../../context/admin/GlobalContext";
 
 // Allowed extensions for salon images
-const ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "webp", "heic", "heif"];
+const ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "webp"];
 
 // Custom Dark Palette Tokens for Shimmer
 const SKELETON_THEME = {

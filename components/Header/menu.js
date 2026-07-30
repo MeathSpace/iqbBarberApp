@@ -48,6 +48,13 @@ export const MENU_ITEMS = [
         iconName: "add-circle-outline",
         route: "/(admin)/(salon)/createSalon",
       },
+      {
+        key: "edit-salon",
+        label: "Edit Salon",
+        iconFamily: "Ionicons",
+        iconName: "add-circle-outline",
+        route: "/(admin)/(salon)/editSalon",
+      },
     ],
   },
   {
