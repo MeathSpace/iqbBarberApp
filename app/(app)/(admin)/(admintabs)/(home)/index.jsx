@@ -2031,18 +2031,35 @@ import { useAdminAuth } from "../../../../../context/admin/AuthContext";
 import { useAdminGlobal } from "../../../../../context/admin/GlobalContext";
 import api from "../../../../../utils/api";
 
+const SKELETON_THEME = {
+  header: {
+    baseColor: "#221f1c",
+    highlightColor: "#332e2a",
+  },
+  button: {
+    baseColor: "#2a2a2a",
+    highlightColor: "#333333",
+  },
+  card: {
+    baseColor: "#1c1c1e",
+    highlightColor: "#2c2c2e",
+  },
+  text: {
+    baseColor: "#2c2c2e",
+    highlightColor: "#3a3a3c",
+  },
+};
+
 const Dashboard = () => {
   const { currentSalon } = useAdminGlobal();
   const { authenticatedUser } = useAdminAuth();
 
-  // Input & Update Status States
   const [isEditingInfo, setIsEditingInfo] = useState(false);
   const [salonDescription, setSalonDescription] = useState("");
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isSalonMissing, setIsSalonMissing] = useState(false);
 
-  // Server data states
   const [barbersData, setBarberData] = useState({ loading: false, data: [] });
   const [queuelistData, setQueuelistData] = useState({
     loading: false,
@@ -2050,11 +2067,6 @@ const Dashboard = () => {
   });
   const [reportData, setReportData] = useState({ loading: false, data: null });
 
-  // Reusable styling references for consistent dark-theme shimmers
-  // Change these colors right here:
-  const darkShimmerColors = ["#121214", "#1a1a1c", "#121214"];
-
-  // Global screen loading check to prevent layout flashing
   const isScreenLoading =
     barbersData.loading ||
     queuelistData.loading ||
@@ -2069,7 +2081,6 @@ const Dashboard = () => {
     }, [authenticatedUser]),
   );
 
-  // Sync profile details when context loads
   useFocusEffect(
     useCallback(() => {
       if (currentSalon?.data?.salonInfo) {
@@ -2078,7 +2089,6 @@ const Dashboard = () => {
     }, [currentSalon?.data?.salonInfo]),
   );
 
-  // Consolidated parallel API initiator
   const fetchDashboardData = useCallback(async () => {
     const salonId = authenticatedUser?.salonId;
     if (!salonId || salonId === "0") return;
@@ -2165,44 +2175,65 @@ const Dashboard = () => {
   );
   const isTrendFall = queueReport?.queueTrend === "Fall";
 
-  // Entire page Skeleton layout matching exact structure of the dashboard components
+
   const ScreenSkeletonView = () => (
     <ScrollView
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.scrollContainer}
     >
-      {/* Profile Skeleton */}
+
       <View style={styles.editorialHeaderBlock}>
-        <Shimmer
-          style={{
-            width: scale(140),
-            height: verticalScale(18),
-            borderRadius: 4,
-            marginBottom: verticalScale(10),
-          }}
-          // color={darkShimmerColors}
-        />
+        <View style={styles.editorialRow}>
+          <Shimmer
+            style={{
+              width: scale(140),
+              height: verticalScale(18),
+              borderRadius: 4,
+            }}
+            baseColor={SKELETON_THEME.header.baseColor}
+            highlightColor={SKELETON_THEME.header.highlightColor}
+          />
+          <Shimmer
+            style={{
+              width: scale(75),
+              height: verticalScale(18),
+              borderRadius: scale(6),
+            }}
+            baseColor={SKELETON_THEME.button.baseColor}
+            highlightColor={SKELETON_THEME.button.highlightColor}
+          />
+        </View>
         <View style={{ gap: verticalScale(6) }}>
           <Shimmer
             style={{
               width: "100%",
-              height: verticalScale(14),
-              borderRadius: 4,
+              height: verticalScale(13),
+              borderRadius: 3,
             }}
-            // color={darkShimmerColors}
+            baseColor={SKELETON_THEME.text.baseColor}
+            highlightColor={SKELETON_THEME.text.highlightColor}
           />
           <Shimmer
-            style={{ width: "95%", height: verticalScale(14), borderRadius: 4 }}
-            // color={darkShimmerColors}
+            style={{
+              width: "92%",
+              height: verticalScale(13),
+              borderRadius: 3,
+            }}
+            baseColor={SKELETON_THEME.text.baseColor}
+            highlightColor={SKELETON_THEME.text.highlightColor}
           />
           <Shimmer
-            style={{ width: "70%", height: verticalScale(14), borderRadius: 4 }}
-            // color={darkShimmerColors}
+            style={{
+              width: "65%",
+              height: verticalScale(13),
+              borderRadius: 3,
+            }}
+            baseColor={SKELETON_THEME.text.baseColor}
+            highlightColor={SKELETON_THEME.text.highlightColor}
           />
         </View>
       </View>
 
-      {/* Grid Split Skeleton */}
       <View style={styles.splitGridRow}>
         <View
           style={[
@@ -2213,28 +2244,43 @@ const Dashboard = () => {
             },
           ]}
         >
+          <View style={styles.compactMetricHeader}>
+            <Shimmer
+              style={{
+                width: scale(70),
+                height: verticalScale(10),
+                borderRadius: 3,
+              }}
+              baseColor={SKELETON_THEME.text.baseColor}
+              highlightColor={SKELETON_THEME.text.highlightColor}
+            />
+            <Shimmer
+              style={{
+                width: scale(14),
+                height: scale(14),
+                borderRadius: scale(7),
+              }}
+              baseColor={SKELETON_THEME.text.baseColor}
+              highlightColor={SKELETON_THEME.text.highlightColor}
+            />
+          </View>
           <Shimmer
             style={{
-              width: scale(80),
-              height: verticalScale(10),
-              borderRadius: 3,
-            }}
-            color={darkShimmerColors}
-          />
-          <Shimmer
-            style={{
-              width: scale(60),
+              width: scale(55),
               height: verticalScale(22),
               marginVertical: verticalScale(6),
               borderRadius: 4,
             }}
-            color={darkShimmerColors}
+            baseColor={SKELETON_THEME.header.baseColor}
+            highlightColor={SKELETON_THEME.header.highlightColor}
           />
           <Shimmer
-            style={{ width: "100%", height: verticalScale(4), borderRadius: 2 }}
-            color={darkShimmerColors}
+            style={{ width: "100%", height: scale(4), borderRadius: scale(2) }}
+            baseColor={SKELETON_THEME.text.baseColor}
+            highlightColor={SKELETON_THEME.text.highlightColor}
           />
         </View>
+
         <View
           style={[
             styles.compactDataCard,
@@ -2244,35 +2290,48 @@ const Dashboard = () => {
             },
           ]}
         >
+          <View style={styles.compactMetricHeader}>
+            <Shimmer
+              style={{
+                width: scale(75),
+                height: verticalScale(10),
+                borderRadius: 3,
+              }}
+              baseColor={SKELETON_THEME.text.baseColor}
+              highlightColor={SKELETON_THEME.text.highlightColor}
+            />
+            <Shimmer
+              style={{
+                width: scale(14),
+                height: scale(14),
+                borderRadius: scale(7),
+              }}
+              baseColor={SKELETON_THEME.text.baseColor}
+              highlightColor={SKELETON_THEME.text.highlightColor}
+            />
+          </View>
+          <Shimmer
+            style={{
+              width: scale(65),
+              height: verticalScale(22),
+              marginVertical: verticalScale(6),
+              borderRadius: 4,
+            }}
+            baseColor={SKELETON_THEME.header.baseColor}
+            highlightColor={SKELETON_THEME.header.highlightColor}
+          />
           <Shimmer
             style={{
               width: scale(80),
               height: verticalScale(10),
               borderRadius: 3,
             }}
-            color={darkShimmerColors}
-          />
-          <Shimmer
-            style={{
-              width: scale(50),
-              height: verticalScale(22),
-              marginVertical: verticalScale(6),
-              borderRadius: 4,
-            }}
-            color={darkShimmerColors}
-          />
-          <Shimmer
-            style={{
-              width: scale(75),
-              height: verticalScale(10),
-              borderRadius: 3,
-            }}
-            color={darkShimmerColors}
+            baseColor={SKELETON_THEME.text.baseColor}
+            highlightColor={SKELETON_THEME.text.highlightColor}
           />
         </View>
       </View>
 
-      {/* Live Queue Skeleton */}
       <View
         style={[
           styles.spotlightQueueCard,
@@ -2289,15 +2348,17 @@ const Dashboard = () => {
               height: verticalScale(12),
               borderRadius: 3,
             }}
-            color={darkShimmerColors}
+            baseColor={SKELETON_THEME.header.baseColor}
+            highlightColor={SKELETON_THEME.header.highlightColor}
           />
           <Shimmer
             style={{
               width: scale(50),
               height: verticalScale(16),
-              borderRadius: 10,
+              borderRadius: scale(20),
             }}
-            color={darkShimmerColors}
+            baseColor={SKELETON_THEME.button.baseColor}
+            highlightColor={SKELETON_THEME.button.highlightColor}
           />
         </View>
         <View style={styles.spotlightProfileRow}>
@@ -2307,24 +2368,27 @@ const Dashboard = () => {
               height: scale(42),
               borderRadius: scale(12),
             }}
-            color={darkShimmerColors}
+            baseColor={SKELETON_THEME.card.baseColor}
+            highlightColor={SKELETON_THEME.card.highlightColor}
           />
-          <View style={{ flex: 1, gap: verticalScale(4) }}>
+          <View style={{ flex: 1, gap: verticalScale(5) }}>
             <Shimmer
               style={{
-                width: scale(120),
-                height: verticalScale(16),
+                width: scale(130),
+                height: verticalScale(15),
                 borderRadius: 4,
               }}
-              color={darkShimmerColors}
+              baseColor={SKELETON_THEME.text.baseColor}
+              highlightColor={SKELETON_THEME.text.highlightColor}
             />
             <Shimmer
               style={{
-                width: scale(80),
-                height: verticalScale(12),
+                width: scale(85),
+                height: verticalScale(11),
                 borderRadius: 3,
               }}
-              color={darkShimmerColors}
+              baseColor={SKELETON_THEME.text.baseColor}
+              highlightColor={SKELETON_THEME.text.highlightColor}
             />
           </View>
           <View style={{ alignItems: "center", gap: verticalScale(4) }}>
@@ -2332,31 +2396,33 @@ const Dashboard = () => {
               style={{
                 width: scale(24),
                 height: verticalScale(18),
-                borderRadius: 4,
+                borderRadius: 3,
               }}
-              color={darkShimmerColors}
+              baseColor={SKELETON_THEME.header.baseColor}
+              highlightColor={SKELETON_THEME.header.highlightColor}
             />
             <Shimmer
               style={{
-                width: scale(35),
+                width: scale(38),
                 height: verticalScale(8),
                 borderRadius: 2,
               }}
-              color={darkShimmerColors}
+              baseColor={SKELETON_THEME.text.baseColor}
+              highlightColor={SKELETON_THEME.text.highlightColor}
             />
           </View>
         </View>
       </View>
 
-      {/* Barbers Track Skeleton */}
       <View style={styles.sectionHeaderSpacing}>
         <Shimmer
           style={{
-            width: scale(100),
+            width: scale(110),
             height: verticalScale(14),
             borderRadius: 4,
           }}
-          color={darkShimmerColors}
+          baseColor={SKELETON_THEME.header.baseColor}
+          highlightColor={SKELETON_THEME.header.highlightColor}
         />
         <View style={{ flexDirection: "row", gap: scale(12) }}>
           {[...Array(5)].map((_, i) => (
@@ -2365,23 +2431,28 @@ const Dashboard = () => {
               style={{ alignItems: "center", gap: verticalScale(6) }}
             >
               <Shimmer
-                width={scale(46)}
-                height={scale(46)}
-                borderRadius={scale(23)}
-                color={darkShimmerColors}
+                style={{
+                  width: scale(46),
+                  height: scale(46),
+                  borderRadius: scale(23),
+                }}
+                baseColor={SKELETON_THEME.card.baseColor}
+                highlightColor={SKELETON_THEME.card.highlightColor}
               />
               <Shimmer
-                width={scale(35)}
-                height={verticalScale(10)}
-                borderRadius={3}
-                color={darkShimmerColors}
+                style={{
+                  width: scale(36),
+                  height: verticalScale(10),
+                  borderRadius: 3,
+                }}
+                baseColor={SKELETON_THEME.text.baseColor}
+                highlightColor={SKELETON_THEME.text.highlightColor}
               />
             </View>
           ))}
         </View>
       </View>
 
-      {/* Chart Skeleton */}
       <View
         style={[
           styles.premiumCard,
@@ -2396,11 +2467,12 @@ const Dashboard = () => {
         <View style={{ gap: verticalScale(4) }}>
           <Shimmer
             style={{
-              width: scale(140),
+              width: scale(150),
               height: verticalScale(14),
               borderRadius: 4,
             }}
-            color={darkShimmerColors}
+            baseColor={SKELETON_THEME.header.baseColor}
+            highlightColor={SKELETON_THEME.header.highlightColor}
           />
           <Shimmer
             style={{
@@ -2408,7 +2480,8 @@ const Dashboard = () => {
               height: verticalScale(10),
               borderRadius: 3,
             }}
-            color={darkShimmerColors}
+            baseColor={SKELETON_THEME.text.baseColor}
+            highlightColor={SKELETON_THEME.text.highlightColor}
           />
         </View>
         <View
@@ -2428,7 +2501,8 @@ const Dashboard = () => {
                 height: verticalScale(h),
                 borderRadius: 4,
               }}
-              color={darkShimmerColors}
+              baseColor={SKELETON_THEME.card.baseColor}
+              highlightColor={SKELETON_THEME.card.highlightColor}
             />
           ))}
         </View>
@@ -2496,7 +2570,7 @@ const Dashboard = () => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContainer}
         >
-          {/* 1. Immersive Salon Info Section */}
+         
           <View style={styles.editorialHeaderBlock}>
             <View style={styles.editorialRow}>
               <Text
@@ -2595,7 +2669,6 @@ const Dashboard = () => {
             )}
           </View>
 
-          {/* 2. Compact Performance Quick-Metrics Split Row */}
           <View style={styles.splitGridRow}>
             <View
               style={[
@@ -2663,7 +2736,6 @@ const Dashboard = () => {
             </View>
           </View>
 
-          {/* 3. Live Queue Card */}
           <View
             style={[
               styles.spotlightQueueCard,
@@ -2725,7 +2797,6 @@ const Dashboard = () => {
             </View>
           </View>
 
-          {/* 4. Barbers Horizontal Deck */}
           <View style={styles.sectionHeaderSpacing}>
             <Text
               style={[
@@ -2786,7 +2857,6 @@ const Dashboard = () => {
             </ScrollView>
           </View>
 
-          {/* 5. Analytics Overview Container */}
           {appointmentChartData.length > 0 ? (
             <View
               style={[
@@ -2902,6 +2972,13 @@ const styles = StyleSheet.create({
     lineHeight: scale(19),
     opacity: 0.7,
     letterSpacing: -0.1,
+  },
+  seeMoreToggleContainer: {
+    marginTop: verticalScale(4),
+  },
+  seeMoreText: {
+    fontSize: scale(11.5),
+    fontWeight: "600",
   },
   premiumInlineInput: {
     fontSize: scale(12.5),
@@ -3073,17 +3150,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "rgba(255,255,255,0.8)",
   },
-  absoluteStatusDot: {
-    position: "absolute",
-    right: scale(1),
-    bottom: scale(1),
-    width: scale(9),
-    height: scale(9),
-    borderRadius: scale(4.5),
-    backgroundColor: "#34C759",
-    borderWidth: 1.5,
-    borderColor: "#1C1C1E",
-  },
   minimalStaffLabel: {
     fontSize: scale(10.5),
     fontWeight: "500",
@@ -3112,7 +3178,6 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.3)",
     fontSize: scale(9),
   },
-  // --- PREMIUM ZERO STATE MODAL LAYER STYLES ---
   modalBlurOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.85)",
@@ -3166,5 +3231,3 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 });
-
-// ... styles object remains unchanged ...
