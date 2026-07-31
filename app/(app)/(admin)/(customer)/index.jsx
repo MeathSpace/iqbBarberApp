@@ -684,7 +684,6 @@ const CustomerListScreen = () => {
       <View style={styles.topContainer}>
         <View style={styles.toolsControlActionRow}>
           <View style={styles.toolsLeftGroup}>
-            {/* Master Select Toggle */}
             <TouchableOpacity
               style={[
                 styles.toolButton,
@@ -713,7 +712,7 @@ const CustomerListScreen = () => {
               />
             </TouchableOpacity>
 
-            {/* Email Button */}
+  
             <TouchableOpacity
               disabled={selectedCustomerIds.length === 0 && !isMasterSelected}
               style={[
@@ -737,7 +736,6 @@ const CustomerListScreen = () => {
               />
             </TouchableOpacity>
 
-            {/* Notification Button */}
             <TouchableOpacity
               disabled={selectedCustomerIds.length === 0 && !isMasterSelected}
               style={[
