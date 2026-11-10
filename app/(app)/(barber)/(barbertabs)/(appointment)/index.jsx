@@ -1,54 +1,99 @@
-import React, { useState, useMemo } from "react";
-import { FlatList, Platform, StyleSheet, Text, TextInput, View, TouchableOpacity, ScrollView, Modal, Pressable } from "react-native";
+import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useFocusEffect } from "expo-router";
+import moment from "moment";
+import { useCallback, useMemo, useState } from "react";
+import { ActivityIndicator, Alert, FlatList, Modal, Platform, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { scale, verticalScale } from "react-native-size-matters";
-import { Ionicons, Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 
-import BarberHeader from "../../../../../components/Header/BarberHeader"; 
+import BarberHeader from "../../../../../components/Header/BarberHeader";
 import { darkTheme } from "../../../../../constants/appTheme";
-
-// Comprehensive 14-Day Dataset Matrix
-const DATA_TIMELINE = [
-  { id: "d1", dayName: "Mo", dayNum: "29", monthLabel: "June 2026", dateStr: "Jun 29, Monday", weekIndex: 0 },
-  { id: "d2", dayName: "Tu", dayNum: "30", monthLabel: "June 2026", dateStr: "Jun 30, Tuesday", weekIndex: 0 },
-  { id: "d3", dayName: "We", dayNum: "01", monthLabel: "July 2026", dateStr: "Jul 01, Wednesday", weekIndex: 0 },
-  { id: "d4", dayName: "Th", dayNum: "02", monthLabel: "July 2026", dateStr: "Jul 02, Thursday", weekIndex: 0 },
-  { id: "d5", dayName: "Fr", dayNum: "03", monthLabel: "July 2026", dateStr: "Jul 03, Friday", weekIndex: 0 },
-  { id: "d6", dayName: "Sa", dayNum: "04", monthLabel: "July 2026", dateStr: "Jul 04, Saturday", weekIndex: 0 },
-  { id: "d7", dayName: "Su", dayNum: "05", monthLabel: "July 2026", dateStr: "Jul 05, Sunday", weekIndex: 0 },
-  { id: "d8", dayName: "Mo", dayNum: "06", monthLabel: "July 2026", dateStr: "Jul 06, Monday", weekIndex: 1 },
-  { id: "d9", dayName: "Tu", dayNum: "07", monthLabel: "July 2026", dateStr: "Jul 07, Tuesday", weekIndex: 1 },
-  { id: "d10", dayName: "We", dayNum: "08", monthLabel: "July 2026", dateStr: "Jul 08, Wednesday", weekIndex: 1 },
-  { id: "d11", dayName: "Th", dayNum: "09", monthLabel: "July 2026", dateStr: "Jul 09, Thursday", weekIndex: 1 },
-  { id: "d12", dayName: "Fr", dayNum: "10", monthLabel: "July 2026", dateStr: "Jul 10, Friday", weekIndex: 1 },
-  { id: "d13", dayName: "Sa", dayNum: "11", monthLabel: "July 2026", dateStr: "Jul 11, Saturday", weekIndex: 1 },
-  { id: "d14", dayName: "Su", dayNum: "12", monthLabel: "July 2026", dateStr: "Jul 12, Sunday", weekIndex: 1 },
-];
-
-const APPOINTMENT_DATA = [
-  { id: "1", targetDateId: "d1", clientName: "Arghya 12", email: "arghya@yopmail.com", stylist: "John Doe", timeSlot: "15:20 - 15:40", service: "Haircut", price: "₹ 100", phone: "+916291059885" },
-  { id: "2", targetDateId: "d1", clientName: "Shyam Sharma", email: "shyam@yopmail.com", stylist: "Bob", timeSlot: "16:00 - 16:30", service: "Massage", price: "₹ 345", phone: "+919876543210" },
-];
+import { useBarberAuth } from "../../../../../context/barber/AuthContext";
+import api from "../../../../../utils/api";
 
 const AppointmentsDashboard = () => {
+  const { authenticatedUser } = useBarberAuth();
+  const [dateTimeline] = useState(() => {
+    const today = moment().startOf("day");
+    return Array.from({ length: 14 }, (_, index) => {
+      const date = today.clone().add(index, "days");
+      return {
+        id: date.format("YYYY-MM-DD"),
+        dayName: date.format("dd"),
+        dayNum: date.format("DD"),
+        monthLabel: date.format("MMMM YYYY"),
+        dateStr: date.format("MMM DD, dddd"),
+        fullDate: date.format("YYYY-MM-DD"),
+        weekIndex: Math.floor(index / 7),
+      };
+    });
+  });
   const [currentWeek, setCurrentWeek] = useState(0);
-  const [selectedDay, setSelectedDay] = useState(DATA_TIMELINE[0]);
+  const [selectedDay, setSelectedDay] = useState(dateTimeline[0]);
   const [searchQuery, setSearchQuery] = useState("");
-  
+  const [appointments, setAppointments] = useState([]);
+  const [appointmentsLoading, setAppointmentsLoading] = useState(false);
+  const [appointmentActionLoading, setAppointmentActionLoading] = useState(false);
+
   // Modal Sheet Interaction States
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
 
   // Filters timeline segments by sliding window week index
   const visibleDays = useMemo(() => {
-    return DATA_TIMELINE.filter(day => day.weekIndex === currentWeek);
-  }, [currentWeek]);
+    return dateTimeline.filter((day) => day.weekIndex === currentWeek);
+  }, [currentWeek, dateTimeline]);
+
+  const loadAppointments = useCallback(async () => {
+    const salonId = authenticatedUser?.salonId;
+    const barberId = authenticatedUser?.barberId;
+    if (!salonId || !barberId || !selectedDay?.fullDate) {
+      setAppointments([]);
+      return;
+    }
+
+    setAppointmentsLoading(true);
+    try {
+      const { data } = await api.post(
+        "/appointments/getAppointmentListByBarberIdAppointmentDate",
+        { salonId, barberId, appointmentDate: selectedDay.fullDate },
+      );
+      const appointmentGroups = Array.isArray(data?.response) ? data.response : [];
+      const appointmentItems = appointmentGroups.flatMap((group) => group?.appointments || []);
+      setAppointments(appointmentItems.map((appointment) => {
+        const services = appointment.services || [];
+        const price = services.reduce((total, service) => total + Number(service.servicePrice || 0), 0);
+        return {
+          ...appointment,
+          id: appointment._id,
+          clientName: appointment.customerName || "Customer",
+          email: appointment.customerEmail || "",
+          stylist: authenticatedUser.name || "Assigned barber",
+          timeSlot: appointment.timeSlots || [appointment.startTime, appointment.endTime].filter(Boolean).join(" - "),
+          service: services.map((service) => service.serviceName).filter(Boolean).join(", ") || "Service",
+          price: `₹ ${price}`,
+          phone: [appointment.countryCode, appointment.mobileNumber].filter(Boolean).join(" "),
+        };
+      }));
+    } catch (error) {
+      console.error("Failed to fetch barber appointments:", error?.response?.data || error.message);
+      setAppointments([]);
+    } finally {
+      setAppointmentsLoading(false);
+    }
+  }, [authenticatedUser, selectedDay?.fullDate]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadAppointments();
+    }, [loadAppointments]),
+  );
 
   // Interactive Chevron State Shifter Actions
   const handleNextWeek = () => {
     if (currentWeek < 1) {
       setCurrentWeek(prev => prev + 1);
-      const nextWeekMatch = DATA_TIMELINE.find(day => day.weekIndex === currentWeek + 1);
+      const nextWeekMatch = dateTimeline.find(day => day.weekIndex === currentWeek + 1);
       if (nextWeekMatch) setSelectedDay(nextWeekMatch);
     }
   };
@@ -56,16 +101,14 @@ const AppointmentsDashboard = () => {
   const handlePrevWeek = () => {
     if (currentWeek > 0) {
       setCurrentWeek(prev => prev - 1);
-      const prevWeekMatch = DATA_TIMELINE.find(day => day.weekIndex === currentWeek - 1);
+      const prevWeekMatch = dateTimeline.find(day => day.weekIndex === currentWeek - 1);
       if (prevWeekMatch) setSelectedDay(prevWeekMatch);
     }
   };
 
-  const currentAppointments = APPOINTMENT_DATA.filter(item => 
-    item.targetDateId === selectedDay.id &&
-    (item.stylist.toLowerCase().includes(searchQuery.toLowerCase()) ||
-     item.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-     item.service.toLowerCase().includes(searchQuery.toLowerCase()))
+  const currentAppointments = appointments.filter((item) =>
+    [item.stylist, item.clientName, item.service]
+      .some((value) => value?.toLowerCase().includes(searchQuery.toLowerCase())),
   );
 
   const handleCardPress = (appointment) => {
@@ -73,12 +116,55 @@ const AppointmentsDashboard = () => {
     setModalVisible(true);
   };
 
-  const handleServeAction = () => {
-    setModalVisible(false);
+  const handleServeAction = async () => {
+    if (!selectedAppointment?._id || appointmentActionLoading) return;
+    setAppointmentActionLoading(true);
+    try {
+      await api.post("/appointments/barberServedAppointment", {
+        salonId: authenticatedUser?.salonId,
+        barberId: authenticatedUser?.barberId,
+        _id: selectedAppointment._id,
+        appointmentDate: selectedDay.fullDate,
+      });
+      setModalVisible(false);
+      setSelectedAppointment(null);
+      await loadAppointments();
+    } catch (error) {
+      Alert.alert("Could not mark appointment served", error?.response?.data?.message || "Please try again.");
+    } finally {
+      setAppointmentActionLoading(false);
+    }
   };
 
   const handleCancelAction = () => {
-    setModalVisible(false);
+    if (!selectedAppointment?._id || appointmentActionLoading) return;
+    Alert.alert("Cancel appointment?", "This will cancel the selected appointment.", [
+      { text: "Keep appointment", style: "cancel" },
+      {
+        text: "Cancel appointment",
+        style: "destructive",
+        onPress: async () => {
+          setAppointmentActionLoading(true);
+          try {
+            await api.post("/appointments/barberCancelAppointment", {
+              salonId: authenticatedUser?.salonId,
+              barberId: authenticatedUser?.barberId,
+              idsToCancel: [selectedAppointment._id],
+              appointmentDate: selectedDay.fullDate,
+              subject: "Appointment cancelled",
+              body: "Your appointment has been cancelled by the barber.",
+            });
+            setModalVisible(false);
+            setSelectedAppointment(null);
+            await loadAppointments();
+          } catch (error) {
+            Alert.alert("Could not cancel appointment", error?.response?.data?.message || "Please try again.");
+          } finally {
+            setAppointmentActionLoading(false);
+          }
+        },
+      },
+    ]);
   };
 
   const renderAppointmentCard = ({ item }) => (
@@ -169,15 +255,15 @@ const AppointmentsDashboard = () => {
             {selectedDay.monthLabel}
           </Text>
           <View style={styles.monthToggleChevrons}>
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={handlePrevWeek}
               disabled={currentWeek === 0}
               style={[styles.chevronButton, currentWeek === 0 && { opacity: 0.2 }]}
             >
               <Ionicons name="chevron-back" size={scale(13)} color="#FFFFFF" />
             </TouchableOpacity>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               onPress={handleNextWeek}
               disabled={currentWeek === 1}
               style={[styles.chevronButton, currentWeek === 1 && { opacity: 0.2 }]}
@@ -260,19 +346,22 @@ const AppointmentsDashboard = () => {
         initialNumToRender={10}
         removeClippedSubviews={Platform.OS === "android"}
         ListEmptyComponent={
-          /* Ultra-Sleek Minimal Luxury Placeholder State Banner */
-          <View style={styles.luxuryEmptyStateBox}>
-            <View style={styles.glassCircleWrapper}>
-              <MaterialCommunityIcons name="calendar-blank-outline" size={scale(24)} color="rgba(255,255,255,0.15)" />
-              <View style={[styles.miniStatusOrbitDot, { backgroundColor: darkTheme.colors.accent }]} />
+          appointmentsLoading ? (
+            <ActivityIndicator color={darkTheme.colors.accent} style={{ marginTop: verticalScale(40) }} />
+          ) : (
+            <View style={styles.luxuryEmptyStateBox}>
+              <View style={styles.glassCircleWrapper}>
+                <MaterialCommunityIcons name="calendar-blank-outline" size={scale(24)} color="rgba(255,255,255,0.15)" />
+                <View style={[styles.miniStatusOrbitDot, { backgroundColor: darkTheme.colors.accent }]} />
+              </View>
+              <Text style={[darkTheme.typography.cardTitle, styles.luxuryEmptyTitle]}>
+                No Bookings Scheduled
+              </Text>
+              <Text style={[darkTheme.typography.bodyMuted, styles.luxuryEmptySubtitle]}>
+                No appointments are scheduled for this date.
+              </Text>
             </View>
-            <Text style={[darkTheme.typography.cardTitle, styles.luxuryEmptyTitle]}>
-              No Bookings Scheduled
-            </Text>
-            <Text style={[darkTheme.typography.bodyMuted, styles.luxuryEmptySubtitle]}>
-              This timeline anchor is currently clear. Incoming client queue metrics will sync here in real time.
-            </Text>
-          </View>
+          )
         }
       />
 
@@ -283,11 +372,11 @@ const AppointmentsDashboard = () => {
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <Pressable 
-          style={styles.modalOverlay} 
+        <Pressable
+          style={styles.modalOverlay}
           onPress={() => setModalVisible(false)}
         >
-          <Pressable 
+          <Pressable
             style={[styles.modalContentPane, { backgroundColor: darkTheme.colors.card, borderColor: darkTheme.colors.border }]}
             pointerEvents="box-none"
           >
@@ -306,8 +395,8 @@ const AppointmentsDashboard = () => {
                       {selectedAppointment.email} • {selectedAppointment.phone}
                     </Text>
                   </View>
-                  <TouchableOpacity 
-                    style={styles.modalCloseIconCircle} 
+                  <TouchableOpacity
+                    style={styles.modalCloseIconCircle}
                     onPress={() => setModalVisible(false)}
                   >
                     <Ionicons name="close" size={scale(16)} color={darkTheme.colors.textMuted} />
@@ -613,7 +702,7 @@ const styles = StyleSheet.create({
     opacity: 0.35,
     paddingHorizontal: scale(12),
   },
-  
+
   // Bottom Modal Component Matrix Layout Style Definitions
   modalOverlay: {
     flex: 1,

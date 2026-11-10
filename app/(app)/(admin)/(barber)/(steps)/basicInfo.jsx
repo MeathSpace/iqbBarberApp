@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import { useRouter } from "expo-router";
+import { useState } from "react";
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -11,9 +13,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { scale, verticalScale } from "react-native-size-matters";
-import { useRouter } from "expo-router";
-import Progess from "../../../../../components/Progess/Progess";
 import Header from "../../../../../components/Header/Header";
+import Progess from "../../../../../components/Progess/Progess";
 import { darkTheme } from "../../../../../constants/appTheme";
 import { CameraIcon } from "../../../../../constants/icons";
 
@@ -25,10 +26,12 @@ const BasicInfo = () => {
     fullName: "",
     nickname: "",
     email: "",
+    countryCode: "91",
     mobileNumber: "",
     dobDay: "",
     dobMonth: "",
     dobYear: "",
+    barberExp: "",
   });
 
   const updateFields = (fields) => {
@@ -36,8 +39,15 @@ const BasicInfo = () => {
   };
 
   const handleNextStep = () => {
-    // Navigates to your separate second step page (selectServices.jsx)
-    router.push("/selectServices");
+    if (!formData.fullName.trim() || !formData.nickname.trim() || !formData.email.trim() || !formData.mobileNumber.trim()) {
+      Alert.alert("Missing information", "Name, nickname, email, and mobile number are required.");
+      return;
+    }
+
+    router.push({
+      pathname: "/(steps)/selectServices",
+      params: formData,
+    });
   };
 
   return (
@@ -64,7 +74,7 @@ const BasicInfo = () => {
         >
           <View style={styles.stepContainer}>
             <Progess />
-            
+
             {/* Photo Upload */}
             <View style={styles.photoUploadContainer}>
               <TouchableOpacity
@@ -140,6 +150,25 @@ const BasicInfo = () => {
               </View>
 
               <View style={styles.inputGroup}>
+                <Text style={darkTheme.typography.inputLabel}>Country Code *</Text>
+                <TextInput
+                  style={[
+                    styles.textInput,
+                    {
+                      backgroundColor: darkTheme.colors.card,
+                      borderColor: darkTheme.colors.border,
+                      color: darkTheme.colors.textMain,
+                    },
+                  ]}
+                  placeholder="91"
+                  placeholderTextColor={darkTheme.colors.textMuted}
+                  value={formData.countryCode}
+                  onChangeText={(val) => updateFields({ countryCode: val.replace(/\D/g, "") })}
+                  keyboardType="number-pad"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
                 <Text style={darkTheme.typography.inputLabel}>Mobile Number *</Text>
                 <TextInput
                   style={[
@@ -150,11 +179,29 @@ const BasicInfo = () => {
                       color: darkTheme.colors.textMain,
                     },
                   ]}
-                  placeholder="+1 (555) 000-0000"
+                  placeholder="9876543210"
                   placeholderTextColor={darkTheme.colors.textMuted}
                   value={formData.mobileNumber}
-                  onChangeText={(val) => updateFields({ mobileNumber: val })}
+                  onChangeText={(val) => updateFields({ mobileNumber: val.replace(/\D/g, "") })}
                   keyboardType="phone-pad"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={darkTheme.typography.inputLabel}>Experience</Text>
+                <TextInput
+                  style={[
+                    styles.textInput,
+                    {
+                      backgroundColor: darkTheme.colors.card,
+                      borderColor: darkTheme.colors.border,
+                      color: darkTheme.colors.textMain,
+                    },
+                  ]}
+                  placeholder="Years of experience"
+                  placeholderTextColor={darkTheme.colors.textMuted}
+                  value={formData.barberExp}
+                  onChangeText={(val) => updateFields({ barberExp: val })}
                 />
               </View>
 

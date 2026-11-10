@@ -59,17 +59,18 @@
       "@react-native-community/datetimepicker",
       "expo-secure-store",
       "expo-web-browser",
-      "expo-localization"
+      "expo-localization",
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
     },
-    "owner": "sagnikn00",
+    "owner": "iqb_expo",
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "0fd2cec0-9c6a-48c4-862a-50d8f1dd83a5"
+        "projectId": "28c00329-0998-43f6-83c9-71cb5b9becf7"
       }
     }
   }

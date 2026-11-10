@@ -1,39 +1,78 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   FlatList,
+  Modal,
   Platform,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
-  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { scale, verticalScale } from "react-native-size-matters";
 
-import BarberHeader from "../../../../../components/Header/BarberHeader"; 
+import BarberHeader from "../../../../../components/Header/BarberHeader";
 import { darkTheme } from "../../../../../constants/appTheme";
-
-const LIVE_QUEUE_DATA = [
-  { id: "1", clientName: "Shyam Sharma", barberName: "John Doe", status: "Next", position: "1", ewt: "0 mins" },
-  { id: "2", clientName: "Aditya Verma", barberName: "Alex Crew", status: "Waiting", position: "2", ewt: "15 mins" },
-  { id: "3", clientName: "Rahul Mishra", barberName: "John Doe", status: "Waiting", position: "3", ewt: "30 mins" },
-  { id: "4", clientName: "Michael Chang", barberName: "Sarah Connor", status: "Waiting", position: "4", ewt: "45 mins" },
-  { id: "5", clientName: "Rohan Das", barberName: "Alex Crew", status: "Waiting", position: "5", ewt: "60 mins" },
-  { id: "6", clientName: "Vikram Malhotra", barberName: "John Doe", status: "Waiting", position: "6", ewt: "75 mins" },
-  { id: "7", clientName: "David Miller", barberName: "Sarah Connor", status: "Waiting", position: "7", ewt: "90 mins" },
-  { id: "8", clientName: "Aman Preet", barberName: "Alex Crew", status: "Waiting", position: "8", ewt: "105 mins" },
-  { id: "9", clientName: "George William", barberName: "John Doe", status: "Waiting", position: "9", ewt: "120 mins" },
-  { id: "10", clientName: "Kabir Soni", barberName: "Sarah Connor", status: "Waiting", position: "10", ewt: "135 mins" },
-];
+import { useBarberAuth } from "../../../../../context/barber/AuthContext";
+import api from "../../../../../utils/api";
 
 const QueueList = () => {
-  const [queue] = useState(LIVE_QUEUE_DATA);
+  const { authenticatedUser } = useBarberAuth();
+  const [queue, setQueue] = useState([]);
+  const [queueLoading, setQueueLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  
   const [selectedQueueItem, setSelectedQueueItem] = useState(null);
+  const [queueActionLoading, setQueueActionLoading] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      const salonId = authenticatedUser?.salonId;
+      const barberId = authenticatedUser?.barberId;
+      if (!salonId || !barberId) {
+        setQueue([]);
+        return;
+      }
+
+      let isCurrent = true;
+      const fetchQueue = async () => {
+        setQueueLoading(true);
+        try {
+          const { data } = await api.get("/queue/getQlistByBarberId", {
+            params: { salonId, barberId, page: 1, search: searchQuery },
+          });
+          const items = Array.isArray(data?.response) ? data.response : [];
+          if (isCurrent) {
+            setQueue(items.map((item) => ({
+              ...item,
+              id: item._id,
+              clientName: item.customerName || "Customer",
+              barberName: item.barberName || authenticatedUser?.name || "Assigned barber",
+              status: Number(item.qPosition) === 1 ? "Next" : "Waiting",
+              position: String(item.qPosition ?? "-"),
+              ewt: item.customerEWT == null ? "" : `${item.customerEWT} mins`,
+            })));
+          }
+        } catch (error) {
+          if (isCurrent) {
+            console.error("Failed to fetch barber queue:", error?.response?.data || error.message);
+            setQueue([]);
+          }
+        } finally {
+          if (isCurrent) setQueueLoading(false);
+        }
+      };
+
+      fetchQueue();
+      return () => {
+        isCurrent = false;
+      };
+    }, [authenticatedUser, searchQuery]),
+  );
 
   const filteredQueue = queue.filter(
     (item) =>
@@ -45,9 +84,60 @@ const QueueList = () => {
     setSelectedQueueItem(item);
   };
 
+  const getQueueActionPayload = (item) => ({
+    adminEmail: authenticatedUser?.email,
+    barberId: item?.barberId || authenticatedUser?.barberId,
+    salonId: authenticatedUser?.salonId,
+    services: item?.services || [],
+    _id: item?._id,
+  });
+
   const handleServeClient = () => {
-    console.log(`Serving customer: ${selectedQueueItem?.clientName}`);
-    setSelectedQueueItem(null);
+    if (!selectedQueueItem || queueActionLoading) return;
+    Alert.alert("Serve customer?", `Mark ${selectedQueueItem.clientName} as served?`, [
+      { text: "Keep waiting", style: "cancel" },
+      {
+        text: "Serve",
+        onPress: async () => {
+          setQueueActionLoading(true);
+          try {
+            await api.post("/queue/barberServedQueue", {
+              ...getQueueActionPayload(selectedQueueItem),
+              servedByEmail: authenticatedUser?.email,
+            });
+            setQueue((items) => items.filter((item) => item._id !== selectedQueueItem._id));
+            setSelectedQueueItem(null);
+          } catch (error) {
+            Alert.alert("Could not serve customer", error?.response?.data?.message || "Please try again.");
+          } finally {
+            setQueueActionLoading(false);
+          }
+        },
+      },
+    ]);
+  };
+
+  const handleCancelClient = () => {
+    if (!selectedQueueItem || queueActionLoading) return;
+    Alert.alert("Cancel queue entry?", `Remove ${selectedQueueItem.clientName} from the queue?`, [
+      { text: "Keep waiting", style: "cancel" },
+      {
+        text: "Cancel entry",
+        style: "destructive",
+        onPress: async () => {
+          setQueueActionLoading(true);
+          try {
+            await api.post("/queue/cancelQ", getQueueActionPayload(selectedQueueItem));
+            setQueue((items) => items.filter((item) => item._id !== selectedQueueItem._id));
+            setSelectedQueueItem(null);
+          } catch (error) {
+            Alert.alert("Could not cancel queue entry", error?.response?.data?.message || "Please try again.");
+          } finally {
+            setQueueActionLoading(false);
+          }
+        },
+      },
+    ]);
   };
 
   const renderQueueItem = ({ item }) => {
@@ -134,20 +224,20 @@ const QueueList = () => {
               {item.status.toUpperCase()}
             </Text>
           </View>
-          
+
           {item.ewt && (
             <View style={styles.timeRow}>
               {!isNext && (
-                <Ionicons 
-                  name="time-outline" 
-                  size={scale(11)} 
-                  color={darkTheme.colors.textMuted} 
+                <Ionicons
+                  name="time-outline"
+                  size={scale(11)}
+                  color={darkTheme.colors.textMuted}
                 />
               )}
-              <Text 
+              <Text
                 style={[
-                  darkTheme.typography.bodyMuted, 
-                  styles.cardEwtText, 
+                  darkTheme.typography.bodyMuted,
+                  styles.cardEwtText,
                   { color: isNext ? darkTheme.colors.accent : darkTheme.colors.textMain }
                 ]}
               >
@@ -210,29 +300,33 @@ const QueueList = () => {
         showsVerticalScrollIndicator={false}
         maxToRenderPerBatch={10}
         windowSize={5}
-        initialNumToRender={10} 
+        initialNumToRender={10}
         removeClippedSubviews={Platform.OS === "android"}
         ListEmptyComponent={
-          <Text style={[darkTheme.typography.bodyMuted, styles.emptyText]}>
-            No customers found in active queue
-          </Text>
+          queueLoading ? (
+            <ActivityIndicator color={darkTheme.colors.accent} style={styles.emptyText} />
+          ) : (
+            <Text style={[darkTheme.typography.bodyMuted, styles.emptyText]}>
+              No customers found in active queue
+            </Text>
+          )
         }
       />
 
       {/* Slide-from-Bottom Action Sheet Modal */}
-      <Modal 
-        animationType="slide" 
-        transparent={true} 
+      <Modal
+        animationType="slide"
+        transparent={true}
         visible={selectedQueueItem !== null}
         onRequestClose={() => setSelectedQueueItem(null)}
       >
-        <TouchableOpacity 
-          style={styles.modalOverlayScrim} 
-          activeOpacity={1} 
+        <TouchableOpacity
+          style={styles.modalOverlayScrim}
+          activeOpacity={1}
           onPress={() => setSelectedQueueItem(null)}
         >
           {/* Action sheet box snaps directly to the bottom area */}
-          <View 
+          <View
             style={[styles.actionSheetBox, { backgroundColor: darkTheme.colors.card, borderColor: darkTheme.colors.border }]}
             onStartShouldSetResponder={() => true} // Prevents click-through dismissal on the box itself
           >
@@ -255,8 +349,8 @@ const QueueList = () => {
             {/* Structured Theme Actions Row */}
             <View style={styles.actionSheetRow}>
               {/* Confirm / Serve Action Button */}
-              <TouchableOpacity 
-                style={[styles.modalActionButton, { backgroundColor: darkTheme.colors.accent, borderRadius: darkTheme.layout.borderRadiusMedium }]} 
+              <TouchableOpacity
+                style={[styles.modalActionButton, { backgroundColor: darkTheme.colors.accent, borderRadius: darkTheme.layout.borderRadiusMedium }]}
                 onPress={handleServeClient}
                 activeOpacity={0.8}
               >
@@ -266,21 +360,22 @@ const QueueList = () => {
               </TouchableOpacity>
 
               {/* Dismiss / Cancel Action Button */}
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[
-                  styles.modalActionButton, 
-                  { 
-                    backgroundColor: "rgba(255, 59, 48, 0.08)", 
-                    borderWidth: 1, 
+                  styles.modalActionButton,
+                  {
+                    backgroundColor: "rgba(255, 59, 48, 0.08)",
+                    borderWidth: 1,
                     borderColor: "rgba(255, 59, 48, 0.2)",
-                    borderRadius: darkTheme.layout.borderRadiusMedium 
+                    borderRadius: darkTheme.layout.borderRadiusMedium
                   }
-                ]} 
-                onPress={() => setSelectedQueueItem(null)}
+                ]}
+                onPress={handleCancelClient}
                 activeOpacity={0.8}
+                disabled={queueActionLoading}
               >
                 <Text style={[darkTheme.typography.btnText, { color: "#FF3B30", fontWeight: "700" }]}>
-                  Cancel
+                  Cancel Queue Entry
                 </Text>
               </TouchableOpacity>
             </View>
@@ -296,7 +391,7 @@ export default QueueList;
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1, 
+    flex: 1,
   },
   topContainer: {
     paddingHorizontal: darkTheme.layout.paddingHorizontal,
@@ -308,14 +403,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: scale(8),
     paddingHorizontal: scale(12),
-    height: darkTheme.layout.componentHeight || verticalScale(40), 
+    height: darkTheme.layout.componentHeight || verticalScale(40),
   },
   searchIcon: {
     marginRight: scale(8),
   },
   searchField: {
     flex: 1,
-    paddingVertical: 0, 
+    paddingVertical: 0,
   },
   listContent: {
     paddingHorizontal: darkTheme.layout.paddingHorizontal,
@@ -328,7 +423,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 1,
     paddingHorizontal: scale(14),
-    height: verticalScale(68), 
+    height: verticalScale(68),
   },
   cardLeft: {
     flexDirection: "row",
@@ -384,7 +479,7 @@ const styles = StyleSheet.create({
     marginTop: verticalScale(40),
     fontSize: scale(13),
   },
-  
+
   /* Slide Up Action Sheet Style Configurations */
   modalOverlayScrim: {
     flex: 1,
