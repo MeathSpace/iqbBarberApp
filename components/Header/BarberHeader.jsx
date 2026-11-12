@@ -1,7 +1,8 @@
 import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter, useSegments } from "expo-router";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Animated,
   Dimensions,
   Modal,
@@ -14,9 +15,11 @@ import {
   View,
 } from "react-native";
 import { scale, verticalScale } from "react-native-size-matters";
+import { Toast } from "toastify-react-native";
 
 import { darkTheme } from "../../constants/appTheme";
 import { useBarberAuth } from "../../context/barber/AuthContext";
+import api from "../../utils/api";
 
 const { width, height } = Dimensions.get("window");
 const DRAWER_WIDTH = width * 0.72;
@@ -107,7 +110,12 @@ const MENU_ITEMS = [
 ];
 
 const BarberHeader = ({ title, subTitle, showBack = false }) => {
-  const { userLogut } = useBarberAuth()
+  const {
+    logout,
+    authenticatedUser,
+    setAuthenticatedUser,
+    fetchLoggedInBarber,
+  } = useBarberAuth();
   const router = useRouter();
   const segments = useSegments();
   const [menuVisible, setMenuVisible] = useState(false);
@@ -116,8 +124,92 @@ const BarberHeader = ({ title, subTitle, showBack = false }) => {
   const [expandedSections, setExpandedSections] = useState({});
 
   // Status Switch States
-  const [isClockedIn, setIsClockedIn] = useState(false);
-  const [isOnline, setIsOnline] = useState(false);
+  const [isClockedIn, setIsClockedIn] = useState(
+    Boolean(authenticatedUser?.isClockedIn),
+  );
+  const [isOnline, setIsOnline] = useState(
+    Boolean(authenticatedUser?.isOnline),
+  );
+  const [clockLoading, setClockLoading] = useState(false);
+  const [onlineLoading, setOnlineLoading] = useState(false);
+
+  useEffect(() => {
+    if (authenticatedUser) {
+      setIsClockedIn(Boolean(authenticatedUser?.isClockedIn));
+      setIsOnline(Boolean(authenticatedUser?.isOnline));
+    }
+  }, [authenticatedUser]);
+
+  const handleToggleClockedIn = async () => {
+    if (clockLoading || !authenticatedUser?.barberId) return;
+    const nextClockedIn = !isClockedIn;
+    const prevClockedIn = isClockedIn;
+    const prevOnline = isOnline;
+
+    setIsClockedIn(nextClockedIn);
+    if (!nextClockedIn) {
+      setIsOnline(false);
+    }
+
+    try {
+      setClockLoading(true);
+      const { data } = await api.post("/barber/changeBarberClockedInStatus", {
+        salonId: authenticatedUser?.salonId,
+        barberId: authenticatedUser?.barberId,
+        isClockedIn: nextClockedIn,
+      });
+
+      if (data?.response) {
+        setAuthenticatedUser((prev) => ({ ...prev, ...data.response }));
+        setIsClockedIn(Boolean(data.response.isClockedIn ?? nextClockedIn));
+        setIsOnline(Boolean(data.response.isOnline));
+      }
+      Toast.success(
+        data?.message ||
+          (nextClockedIn ? "You are clocked in" : "You are clocked out"),
+      );
+      fetchLoggedInBarber();
+    } catch (error) {
+      setIsClockedIn(prevClockedIn);
+      setIsOnline(prevOnline);
+      Toast.error(
+        error?.response?.data?.message || "Failed to update clocked-in status",
+      );
+    } finally {
+      setClockLoading(false);
+    }
+  };
+
+  const handleToggleOnline = async () => {
+    if (onlineLoading || !authenticatedUser?.barberId) return;
+    const nextOnline = !isOnline;
+    const prevOnline = isOnline;
+
+    setIsOnline(nextOnline);
+
+    try {
+      setOnlineLoading(true);
+      const { data } = await api.post("/barber/changeBarberOnlineStatus", {
+        salonId: authenticatedUser?.salonId,
+        barberId: authenticatedUser?.barberId,
+        isOnline: nextOnline,
+      });
+
+      if (data?.response) {
+        setAuthenticatedUser((prev) => ({ ...prev, ...data.response }));
+        setIsOnline(Boolean(data.response.isOnline ?? nextOnline));
+      }
+      Toast.success(data?.message || "Barber online status updated");
+      fetchLoggedInBarber();
+    } catch (error) {
+      setIsOnline(prevOnline);
+      Toast.error(
+        error?.response?.data?.message || "Failed to update online status",
+      );
+    } finally {
+      setOnlineLoading(false);
+    }
+  };
 
   const slideAnim = useRef(new Animated.Value(DRAWER_WIDTH)).current;
   const bottomSheetAnim = useRef(new Animated.Value(height)).current;
@@ -171,7 +263,9 @@ const BarberHeader = ({ title, subTitle, showBack = false }) => {
   };
 
   const logoutPressed = () => {
-    userLogut();
+    closeMenu(() => {
+      logout();
+    });
   };
 
   const handleNavigation = (route) => {
@@ -516,18 +610,26 @@ const BarberHeader = ({ title, subTitle, showBack = false }) => {
                 {/* Clock In / Out Toggle Item */}
                 <TouchableOpacity
                   activeOpacity={0.8}
-                  onPress={() => setIsClockedIn(!isClockedIn)}
+                  disabled={clockLoading}
+                  onPress={handleToggleClockedIn}
                   style={styles.toggleRowItem}
                 >
                   <View style={styles.toggleLeftBlock}>
                     <View style={styles.toggleIconFrame}>
-                      <Feather
-                        name="clock"
-                        size={scale(13)}
-                        color={
-                          isClockedIn ? "#4CD964" : darkTheme.colors.textMuted
-                        }
-                      />
+                      {clockLoading ? (
+                        <ActivityIndicator
+                          size="small"
+                          color={darkTheme.colors.accent}
+                        />
+                      ) : (
+                        <Feather
+                          name="clock"
+                          size={scale(13)}
+                          color={
+                            isClockedIn ? "#4CD964" : darkTheme.colors.textMuted
+                          }
+                        />
+                      )}
                     </View>
                     <Text
                       style={[
@@ -564,18 +666,26 @@ const BarberHeader = ({ title, subTitle, showBack = false }) => {
                 {/* Online / Offline Toggle Item */}
                 <TouchableOpacity
                   activeOpacity={0.8}
-                  onPress={() => setIsOnline(!isOnline)}
+                  disabled={onlineLoading}
+                  onPress={handleToggleOnline}
                   style={styles.toggleRowItem}
                 >
                   <View style={styles.toggleLeftBlock}>
                     <View style={styles.toggleIconFrame}>
-                      <Ionicons
-                        name="radio-button-on"
-                        size={scale(13)}
-                        color={
-                          isOnline ? "#4CD964" : darkTheme.colors.textMuted
-                        }
-                      />
+                      {onlineLoading ? (
+                        <ActivityIndicator
+                          size="small"
+                          color={darkTheme.colors.accent}
+                        />
+                      ) : (
+                        <Ionicons
+                          name="radio-button-on"
+                          size={scale(13)}
+                          color={
+                            isOnline ? "#4CD964" : darkTheme.colors.textMuted
+                          }
+                        />
+                      )}
                     </View>
                     <Text
                       style={[

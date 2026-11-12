@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   Keyboard,
   Modal,
   Platform,
@@ -9,24 +10,27 @@ import {
   TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  useColorScheme,
   View,
 } from "react-native";
 import PhoneInput from "@linhnguyen96114/react-native-phone-input";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { scale, verticalScale } from "react-native-size-matters";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Toast } from "toastify-react-native";
 
 import { CalendarIcon, LeftArrowIcon } from "../../../constants/icons";
 import i18n from "../../src/localization/i18n";
 import { darkTheme } from "../../../constants/appTheme";
+import { useBarberAuth } from "../../../context/barber/AuthContext";
+import api from "../../../utils/api";
 
 const AccountDetails = () => {
   const baseContent = i18n.t("auth.barberauth.accountDetails");
   const router = useRouter();
-  const colorScheme = useColorScheme();
+  const { email: paramEmail } = useLocalSearchParams();
+  const { authenticatedUser } = useBarberAuth();
 
   const [name, setName] = useState("");
   const [gender, setGender] = useState("");
@@ -34,9 +38,46 @@ const AccountDetails = () => {
   const [calenderModal, setCalenderModal] = useState(false);
   const [date, setDate] = useState(new Date());
   const [value, setValue] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleAccountDetail = () => {
-    router.push("/signupotp");
+  const targetEmail = paramEmail || authenticatedUser?.email || "";
+
+  const handleAccountDetail = async () => {
+    try {
+      setLoading(true);
+      const formattedDob = selectedDate
+        ? selectedDate.split("/").reverse().join("-")
+        : "";
+      await api.put("/barber/updateBarberInfo", {
+        email: targetEmail,
+        name: name.trim(),
+        dateOfBirth: formattedDob,
+        mobileNumber: value ? Number(String(value).replace(/\D/g, "")) : "",
+        gender,
+      });
+
+      if (targetEmail) {
+        try {
+          await api.post("/barber/sendVerificationCodeForBarberEmail", {
+            email: targetEmail,
+          });
+        } catch (err) {
+          console.log("OTP send warning:", err);
+        }
+      }
+
+      Toast.success("Account details updated");
+      router.push({
+        pathname: "/signupotp",
+        params: { email: targetEmail },
+      });
+    } catch (error) {
+      Toast.error(
+        error?.response?.data?.message || "Failed to update account details",
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   const formatDate = (d) => {
@@ -85,6 +126,7 @@ const AccountDetails = () => {
           </View>
           
           <TouchableOpacity
+            onPress={() => router.push("/signin")}
             style={[
               styles.skipBtn,
               { 
@@ -241,7 +283,11 @@ const AccountDetails = () => {
           </View>
 
           {/* Form Action Submit Button */}
-          <TouchableOpacity onPress={handleAccountDetail} activeOpacity={0.8}>
+          <TouchableOpacity
+            onPress={handleAccountDetail}
+            activeOpacity={0.8}
+            disabled={loading}
+          >
             <LinearGradient
               colors={[darkTheme.colors.accent, darkTheme.colors.accent]}
               style={[
@@ -252,9 +298,13 @@ const AccountDetails = () => {
                 },
               ]}
             >
-              <Text style={[darkTheme.typography.btnText, { color: "#000000" }]}>
-                {baseContent.mobileNumber.update}
-              </Text>
+              {loading ? (
+                <ActivityIndicator size="small" color="#000000" />
+              ) : (
+                <Text style={[darkTheme.typography.btnText, { color: "#000000" }]}>
+                  {baseContent.mobileNumber.update}
+                </Text>
+              )}
             </LinearGradient>
           </TouchableOpacity>
         </View>

@@ -1,40 +1,228 @@
-import React from "react";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
+  Animated,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
+import { BarChart } from "react-native-gifted-charts";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { scale, verticalScale } from "react-native-size-matters";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-// Native interactive charting engine components
-import { BarChart } from "react-native-gifted-charts";
 
-import BarberHeader from "../../../../../components/Header/BarberHeader"; // Adjust path as needed
+import BarberHeader from "../../../../../components/Header/BarberHeader";
 import { darkTheme } from "../../../../../constants/appTheme";
+import { useBarberAuth } from "../../../../../context/barber/AuthContext";
+import api from "../../../../../utils/api";
+
+const Shimmer = ({ width, height, borderRadius = 6, style }) => {
+  const shimmerAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.timing(shimmerAnim, {
+        toValue: 1,
+        duration: 1300,
+        useNativeDriver: true,
+      }),
+    ).start();
+  }, [shimmerAnim]);
+
+  const translateX = shimmerAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-250, 250],
+  });
+
+  return (
+    <View
+      style={[
+        {
+          width,
+          height,
+          borderRadius,
+          backgroundColor: "rgba(255, 255, 255, 0.04)",
+          overflow: "hidden",
+        },
+        style,
+      ]}
+    >
+      <Animated.View
+        style={[
+          StyleSheet.absoluteFill,
+          {
+            transform: [{ translateX }],
+          },
+        ]}
+      >
+        <LinearGradient
+          colors={[
+            "transparent",
+            "rgba(255, 255, 255, 0.12)",
+            "rgba(255, 255, 255, 0.18)",
+            "rgba(255, 255, 255, 0.12)",
+            "transparent",
+          ]}
+          start={{ x: 0, y: 0.5 }}
+          end={{ x: 1, y: 0.5 }}
+          style={{ flex: 1, width: "100%" }}
+        />
+      </Animated.View>
+    </View>
+  );
+};
 
 const Dashboard = () => {
+  const router = useRouter();
+  const { authenticatedUser } = useBarberAuth();
+
+  const salonId = authenticatedUser?.salonId;
+  const barberId = authenticatedUser?.barberId;
+
+  const [dashboardReport, setDashboardReport] = useState(null);
+  const [liveQueueList, setLiveQueueList] = useState([]);
+  const [todayAppointments, setTodayAppointments] = useState({
+    totalCount: 0,
+    appointments: [],
+  });
+  const [salonInfo, setSalonInfo] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchDashboardData = useCallback(
+    async (isRefresh = false) => {
+      if (!salonId || !barberId) return;
+
+      try {
+        if (isRefresh) {
+          setRefreshing(true);
+        } else {
+          setLoading(true);
+        }
+
+        const [reportRes, queueRes, todayApptRes, salonInfoRes] =
+          await Promise.allSettled([
+            api.post("/reports/getnewbarberdashboardReports", {
+              salonId,
+              barberId,
+            }),
+            api.get(
+              `/queue/getQlistByBarberId?salonId=${salonId}&barberId=${barberId}&page=1&search=`,
+            ),
+            api.post("/appointments/getAllAppointmentsByBarberForToday", {
+              salonId,
+              barberId,
+            }),
+            api.post("/barber/getSalonInfoBySalonId", {
+              salonId,
+            }),
+          ]);
+
+        if (
+          reportRes.status === "fulfilled" &&
+          reportRes.value?.data?.response
+        ) {
+          setDashboardReport(reportRes.value.data.response);
+        }
+
+        if (queueRes.status === "fulfilled") {
+          setLiveQueueList(queueRes.value?.data?.response || []);
+        }
+
+        if (
+          todayApptRes.status === "fulfilled" &&
+          todayApptRes.value?.data?.response
+        ) {
+          setTodayAppointments({
+            totalCount: todayApptRes.value.data.response.totalCount ?? 0,
+            appointments: todayApptRes.value.data.response.appointments || [],
+          });
+        }
+
+        if (salonInfoRes.status === "fulfilled") {
+          const info = salonInfoRes.value?.data?.response;
+          if (typeof info === "string") {
+            setSalonInfo(info);
+          } else if (info?.salonInfo) {
+            setSalonInfo(info.salonInfo);
+          }
+        }
+      } catch (error) {
+        console.log("Error fetching barber dashboard:", error);
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [salonId, barberId],
+  );
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
+  const queueMetrics = dashboardReport?.queue || {};
+  const appointmentMetrics = dashboardReport?.appointment || {};
+
+  const isQueueRise = queueMetrics?.queueTrend === "Rise";
+  const queuePercentChange = Number(
+    queueMetrics?.percentageChangelast30Days ?? 0,
+  );
+  const servedQueuePct = Number(queueMetrics?.servedHistoryPercentage ?? 50);
+  const cancelledQueuePct = Number(
+    queueMetrics?.cancelledHistoryPercentage ?? 50,
+  );
+
+  const totalApptCount = Number(
+    appointmentMetrics?.totalAppointmentHistoryCount ?? 0,
+  );
+  const servedApptCount = Number(
+    appointmentMetrics?.servedAppointmenthistoryCount ?? 0,
+  );
+  const cancelledApptCount = Number(
+    appointmentMetrics?.cancelledAppointmentHistoryCount ?? 0,
+  );
+
+  const chartMaxValue = Math.max(
+    totalApptCount,
+    servedApptCount,
+    cancelledApptCount,
+    3,
+  );
+
   const appointmentChartData = [
     {
-      value: 1,
+      value: totalApptCount,
       label: "Total",
       frontColor: darkTheme.colors.accent,
-      topLabelComponent: () => <Text style={styles.chartTopLabel}>1</Text>,
+      topLabelComponent: () => (
+        <Text style={styles.chartTopLabel}>{totalApptCount}</Text>
+      ),
     },
     {
-      value: 1,
+      value: servedApptCount,
       label: "Served",
       frontColor: "#34C759",
-      topLabelComponent: () => <Text style={styles.chartTopLabel}>1</Text>,
+      topLabelComponent: () => (
+        <Text style={styles.chartTopLabel}>{servedApptCount}</Text>
+      ),
     },
     {
-      value: 0,
+      value: cancelledApptCount,
       label: "Canceled",
       frontColor: "#FF3B30",
-      topLabelComponent: () => <Text style={styles.chartTopLabel}>0</Text>,
+      topLabelComponent: () => (
+        <Text style={styles.chartTopLabel}>{cancelledApptCount}</Text>
+      ),
     },
   ];
+
+  const upNextCustomer = liveQueueList?.[0] || null;
+  const nextAppt = todayAppointments?.appointments?.[0] || null;
 
   return (
     <SafeAreaView
@@ -53,6 +241,14 @@ const Dashboard = () => {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContainer}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => fetchDashboardData(true)}
+            tintColor={darkTheme.colors.accent}
+            colors={[darkTheme.colors.accent]}
+          />
+        }
       >
         {/* 1. Compact Performance Quick-Metrics Split Row */}
         <View style={styles.splitGridRow}>
@@ -67,26 +263,57 @@ const Dashboard = () => {
           >
             <View style={styles.compactMetricHeader}>
               <Text style={styles.miniCapsTitle}>QUEUE HISTORY</Text>
-              <Ionicons name="trending-down" size={scale(14)} color="#FF3B30" />
+              <Ionicons
+                name={isQueueRise ? "trending-up" : "trending-down"}
+                size={scale(14)}
+                color={isQueueRise ? "#34C759" : "#FF3B30"}
+              />
             </View>
-            <Text style={styles.massiveMetricText}>-97.6%</Text>
+            {loading ? (
+              <Shimmer
+                width={scale(80)}
+                height={verticalScale(22)}
+                style={{ marginVertical: verticalScale(6) }}
+              />
+            ) : (
+              <Text style={styles.massiveMetricText}>
+                {isQueueRise ? "+" : "-"}
+                {Math.abs(queuePercentChange)}%
+              </Text>
+            )}
             <View style={styles.miniProgressTrack}>
               <View
                 style={[
                   styles.miniProgressFill,
-                  { width: "50%", backgroundColor: "#34C759" },
+                  {
+                    width: `${
+                      servedQueuePct + cancelledQueuePct > 0
+                        ? servedQueuePct
+                        : 50
+                    }%`,
+                    backgroundColor: "#34C759",
+                  },
                 ]}
               />
               <View
                 style={[
                   styles.miniProgressFill,
-                  { width: "50%", backgroundColor: "#FF3B30" },
+                  {
+                    width: `${
+                      servedQueuePct + cancelledQueuePct > 0
+                        ? cancelledQueuePct
+                        : 50
+                    }%`,
+                    backgroundColor: "#FF3B30",
+                  },
                 ]}
               />
             </View>
           </View>
 
-          <View
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() => router.push("/(barbertabs)/(appointment)")}
             style={[
               styles.compactDataCard,
               {
@@ -96,21 +323,32 @@ const Dashboard = () => {
             ]}
           >
             <View style={styles.compactMetricHeader}>
-              <Text style={styles.miniCapsTitle}>FLOOR CAPACITY</Text>
+              <Text style={styles.miniCapsTitle}>TODAY BOOKINGS</Text>
               <Ionicons
-                name="people-outline"
+                name="calendar-outline"
                 size={scale(14)}
                 color={darkTheme.colors.accent}
               />
             </View>
-            <Text style={styles.massiveMetricText}>
-              7 <Text style={styles.metricUnit}>Staff</Text>
+            {loading ? (
+              <Shimmer
+                width={scale(70)}
+                height={verticalScale(22)}
+                style={{ marginVertical: verticalScale(6) }}
+              />
+            ) : (
+              <Text style={styles.massiveMetricText}>
+                {todayAppointments?.totalCount ?? 0}{" "}
+                <Text style={styles.metricUnit}>Appts</Text>
+              </Text>
+            )}
+            <Text style={styles.metricContextHint}>
+              {liveQueueList.length} in live queue
             </Text>
-            <Text style={styles.metricContextHint}>Active floor roster</Text>
-          </View>
+          </TouchableOpacity>
         </View>
 
-        {/* NEW ADDITION: Shift Status Banner (Fulfills visual composition & adds contextual value) */}
+        {/* Shift Status Banner */}
         <View
           style={[
             styles.statusBannerCard,
@@ -124,19 +362,42 @@ const Dashboard = () => {
             <MaterialCommunityIcons
               name="clock-check-outline"
               size={scale(16)}
-              color="#34C759"
+              color={
+                authenticatedUser?.isClockedIn
+                  ? "#34C759"
+                  : darkTheme.colors.textMuted
+              }
             />
-            <Text style={[styles.statusBannerTitle, { color: darkTheme.colors.textMain }]}>
-              Shift Profile: Active
+            <Text
+              style={[
+                styles.statusBannerTitle,
+                { color: darkTheme.colors.textMain },
+              ]}
+            >
+              Shift Profile:{" "}
+              {authenticatedUser?.isClockedIn
+                ? authenticatedUser?.isOnline
+                  ? "Online"
+                  : "Clocked In"
+                : "Offline"}
             </Text>
           </View>
-          <Text style={[styles.statusBannerRightText, { color: darkTheme.colors.accent }]}>
-            Next Open Slot: 2:45 PM
+          <Text
+            style={[
+              styles.statusBannerRightText,
+              { color: darkTheme.colors.accent },
+            ]}
+          >
+            {nextAppt?.startTime
+              ? `Next Appt: ${nextAppt.startTime}`
+              : `Queue EWT: ${authenticatedUser?.barberEWT ?? 0}m`}
           </Text>
         </View>
 
         {/* 2. High-Fidelity Queue Spotlight Focus Box */}
-        <View
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={() => router.push("/(barbertabs)/(queue)")}
           style={[
             styles.spotlightQueueCard,
             {
@@ -148,50 +409,86 @@ const Dashboard = () => {
           <View style={styles.spotlightBadgeRow}>
             <View style={styles.liveIndicatorContainer}>
               <View style={styles.pulseDot} />
-              <Text style={styles.liveIndicatorText}>LIVE QUEUE STATUS</Text>
+              <Text style={styles.liveIndicatorText}>
+                LIVE QUEUE STATUS ({liveQueueList.length})
+              </Text>
             </View>
             <View style={styles.nextPillContainer}>
-              <Text style={styles.nextPillText}>UP NEXT</Text>
+              <Text style={styles.nextPillText}>
+                {upNextCustomer
+                  ? `POS #${upNextCustomer.qPosition ?? 1}`
+                  : "IDLE"}
+              </Text>
             </View>
           </View>
 
-          <View style={styles.spotlightProfileRow}>
-            <View
-              style={[
-                styles.spotlightAvatarBox,
-                { backgroundColor: "rgba(255,149,0,0.08)" },
-              ]}
-            >
-              <Ionicons
-                name="flash"
-                size={scale(18)}
-                color={darkTheme.colors.accent}
+          {loading ? (
+            <View style={styles.spotlightProfileRow}>
+              <Shimmer
+                width={scale(42)}
+                height={scale(42)}
+                borderRadius={scale(12)}
               />
+              <View style={{ flex: 1, gap: verticalScale(6) }}>
+                <Shimmer width={scale(120)} height={verticalScale(14)} />
+                <Shimmer width={scale(90)} height={verticalScale(10)} />
+              </View>
             </View>
-            <View style={{ flex: 1 }}>
-              <Text
+          ) : (
+            <View style={styles.spotlightProfileRow}>
+              <View
                 style={[
-                  styles.spotlightClientName,
-                  { color: darkTheme.colors.textMain },
+                  styles.spotlightAvatarBox,
+                  { backgroundColor: "rgba(255,149,0,0.08)" },
                 ]}
               >
-                Shyam Sharma
-              </Text>
-              <Text
-                style={[
-                  darkTheme.typography.bodyMuted,
-                  styles.spotlightStylistSub,
-                ]}
-              >
-                Assigned: Stylist John Doe
-              </Text>
+                <Ionicons
+                  name="flash"
+                  size={scale(18)}
+                  color={darkTheme.colors.accent}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={[
+                    styles.spotlightClientName,
+                    { color: darkTheme.colors.textMain },
+                  ]}
+                >
+                  {upNextCustomer
+                    ? upNextCustomer.customerName
+                    : "No Customer in Queue"}
+                </Text>
+                <Text
+                  style={[
+                    darkTheme.typography.bodyMuted,
+                    styles.spotlightStylistSub,
+                  ]}
+                  numberOfLines={1}
+                >
+                  {upNextCustomer
+                    ? upNextCustomer.services
+                        ?.map((s) => s.serviceName)
+                        .join(", ") ||
+                      `Assigned: ${
+                        upNextCustomer.barberName || authenticatedUser?.name
+                      }`
+                    : `Assigned: ${authenticatedUser?.name || "Barber"}`}
+                </Text>
+              </View>
+              <View style={styles.timeAlignmentColumn}>
+                <Text style={styles.timeValueText}>
+                  {upNextCustomer
+                    ? (upNextCustomer.customerEWT ??
+                      upNextCustomer.serviceEWT ??
+                      "--")
+                    : "--"}
+                </Text>
+                <Text style={styles.timeLabelText}>EST. MINS</Text>
+              </View>
             </View>
-            <View style={styles.timeAlignmentColumn}>
-              <Text style={styles.timeValueText}>--</Text>
-              <Text style={styles.timeLabelText}>EST. MINS</Text>
-            </View>
-          </View>
-        </View>
+          )}
+        </TouchableOpacity>
 
         {/* 3. Analytics Overview Container */}
         <View
@@ -219,7 +516,8 @@ const Dashboard = () => {
                 styles.chartSubtitleLabel,
               ]}
             >
-              Dynamic active logs • Last 7 days
+              Dynamic active logs •{" "}
+              {appointmentMetrics?.dateFormat || "Last 7 days"}
             </Text>
           </View>
 
@@ -230,7 +528,7 @@ const Dashboard = () => {
               spacing={scale(32)}
               roundedTop
               noOfSections={3}
-              maxValue={3}
+              maxValue={chartMaxValue}
               isAnimated
               yAxisThickness={0}
               xAxisThickness={1}
@@ -243,6 +541,51 @@ const Dashboard = () => {
             />
           </View>
         </View>
+
+        {/* Salon Announcement Card (when available) */}
+        {Boolean(salonInfo) && (
+          <View
+            style={[
+              styles.premiumCard,
+              {
+                backgroundColor: darkTheme.colors.card,
+                borderColor: "rgba(255,255,255,0.06)",
+              },
+            ]}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: scale(8),
+                marginBottom: verticalScale(8),
+              }}
+            >
+              <Ionicons
+                name="megaphone-outline"
+                size={scale(15)}
+                color={darkTheme.colors.accent}
+              />
+              <Text
+                style={[
+                  darkTheme.typography.cardTitle,
+                  styles.sectionTitleLabel,
+                  { color: darkTheme.colors.textMain },
+                ]}
+              >
+                Salon Announcement
+              </Text>
+            </View>
+            <Text
+              style={[
+                darkTheme.typography.bodyMuted,
+                { fontSize: scale(12), lineHeight: verticalScale(18) },
+              ]}
+            >
+              {salonInfo}
+            </Text>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

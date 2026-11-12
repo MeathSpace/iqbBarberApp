@@ -2,6 +2,7 @@ import { Feather, Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
+  Alert,
   FlatList,
   Image,
   StyleSheet,
@@ -118,6 +119,7 @@ const SalonsScreen = () => {
   });
 
   const [expandedSalonId, setExpandedSalonId] = useState(null);
+  const [onlineStatusLoadingId, setOnlineStatusLoadingId] = useState(null);
 
   useEffect(() => {
     if (authenticatedUser?.salonId) {
@@ -144,6 +146,37 @@ const SalonsScreen = () => {
 
   const toggleSettings = (salonId) => {
     setExpandedSalonId((prev) => (prev === salonId ? null : salonId));
+  };
+
+  const toggleSalonOnlineStatus = async (salon) => {
+    const salonId = Number(salon.salonId);
+    if (!Number.isFinite(salonId) || onlineStatusLoadingId === salonId) return;
+
+    const isOnline = !Boolean(salon.isOnline);
+    setOnlineStatusLoadingId(salonId);
+    try {
+      const { data } = await api.post("/salon/changeSalonOnlineStatus", {
+        salonId,
+        isOnline,
+      });
+      const updatedSalon = data?.response;
+
+      setSalonsState((prev) => ({
+        ...prev,
+        data: prev.data.map((item) =>
+          Number(item.salonId) === salonId
+            ? { ...item, ...(updatedSalon || {}), isOnline }
+            : item,
+        ),
+      }));
+    } catch (error) {
+      Alert.alert(
+        "Could not update salon status",
+        error?.response?.data?.message || "Please try again.",
+      );
+    } finally {
+      setOnlineStatusLoadingId(null);
+    }
   };
 
   if (salonsState.loading) {
@@ -240,7 +273,14 @@ const SalonsScreen = () => {
         {/* Distinct Status Indicators */}
         <View style={styles.statusContainer}>
           {/* 1. Online/Offline (Green / Red) */}
-          <View style={styles.statusItem}>
+          <TouchableOpacity
+            style={styles.statusItem}
+            activeOpacity={0.75}
+            disabled={onlineStatusLoadingId === Number(salon.salonId)}
+            onPress={() => toggleSalonOnlineStatus(salon)}
+            accessibilityRole="button"
+            accessibilityLabel={`Set ${salon.salonName} ${isOnline ? "offline" : "online"}`}
+          >
             <View
               style={[
                 styles.iconCircle,
@@ -264,9 +304,11 @@ const SalonsScreen = () => {
                 { color: isOnline ? "#10B981" : "#F43F5E" },
               ]}
             >
-              {isOnline ? "Online" : "Offline"}
+              {onlineStatusLoadingId === Number(salon.salonId)
+                ? "Updating..."
+                : isOnline ? "Online" : "Offline"}
             </Text>
-          </View>
+          </TouchableOpacity>
 
           {/* 2. Appointment Status (Teal / Neutral Muted) */}
           <View style={styles.statusItem}>

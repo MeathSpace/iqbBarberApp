@@ -148,6 +148,7 @@ const AppointmentsDashboard = () => {
         }
       };
 
+
       if (authenticatedUser?.salonId) {
         fetchAppointments();
       }

@@ -1,71 +1,160 @@
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router";
+import moment from "moment";
 import { useCallback, useState } from "react";
-import { ActivityIndicator, FlatList, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  FlatList,
+  Platform,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { scale, verticalScale } from "react-native-size-matters";
 
-import moment from "moment";
 import BarberHeader from "../../../../../components/Header/BarberHeader";
+import RangeCalendarModal from "../../../../../components/RangeCalender";
 import { darkTheme } from "../../../../../constants/appTheme";
 import { useBarberAuth } from "../../../../../context/barber/AuthContext";
 import api from "../../../../../utils/api";
 
 const AppointmentHistory = () => {
   const { authenticatedUser } = useBarberAuth();
+  const salonId = authenticatedUser?.salonId;
+  const barberId = authenticatedUser?.barberId;
+
   const [history, setHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
 
-  useFocusEffect(
-    useCallback(() => {
-      const salonId = authenticatedUser?.salonId;
-      const barberId = authenticatedUser?.barberId;
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [calendarVisible, setCalendarVisible] = useState(false);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+
+  const mapItem = useCallback(
+    (item) => {
+      const services = item.services || [];
+      const price = services.reduce(
+        (total, service) => total + Number(service.servicePrice || 0),
+        0,
+      );
+      const rawStatus = item.status || "Pending";
+      const normalizedStatus =
+        rawStatus.toLowerCase() === "served"
+          ? "Served"
+          : rawStatus.toLowerCase() === "cancelled" ||
+              rawStatus.toLowerCase() === "canceled"
+            ? "Cancelled"
+            : rawStatus;
+
+      return {
+        ...item,
+        id: item._id,
+        clientName: item.customerName || "Customer",
+        barberName: item.barberName || authenticatedUser?.name || "Barber",
+        service:
+          services
+            .map((service) => service.serviceName)
+            .filter(Boolean)
+            .join(", ") || "Service",
+        price: `₹ ${price}`,
+        date: item.appointmentDate
+          ? moment(item.appointmentDate).format("DD/MM/YYYY")
+          : "",
+        status: normalizedStatus,
+      };
+    },
+    [authenticatedUser?.name],
+  );
+
+  const fetchHistory = useCallback(
+    async ({
+      pageNum = 1,
+      isRefresh = false,
+      searchVal = searchQuery,
+      fromDate = startDate,
+      toDate = endDate,
+    } = {}) => {
       if (!salonId || !barberId) {
         setHistory([]);
         return;
       }
 
-      let isCurrent = true;
-      const fetchHistory = async () => {
-        setHistoryLoading(true);
-        try {
-          const { data } = await api.post(
-            "/appointmentHistory/getAppointmentHistoryByBarberIdSalonId",
-            { salonId, barberId, page: 1, limit: 10 },
-          );
-          const items = Array.isArray(data?.response) ? data.response : [];
-          if (isCurrent) {
-            setHistory(items.map((item) => {
-              const services = item.services || [];
-              const price = services.reduce((total, service) => total + Number(service.servicePrice || 0), 0);
-              return {
-                ...item,
-                id: item._id,
-                clientName: item.customerName || "Customer",
-                barberName: item.barberName || authenticatedUser.name || "Barber",
-                service: services.map((service) => service.serviceName).filter(Boolean).join(", ") || "Service",
-                price: `₹ ${price}`,
-                date: item.appointmentDate ? moment(item.appointmentDate).format("DD/MM/YYYY") : "",
-                status: item.status || "Pending",
-              };
-            }));
-          }
-        } catch (error) {
-          if (isCurrent) {
-            console.error("Failed to fetch barber appointment history:", error?.response?.data || error.message);
-            setHistory([]);
-          }
-        } finally {
-          if (isCurrent) setHistoryLoading(false);
+      try {
+        if (isRefresh) {
+          setRefreshing(true);
+        } else if (pageNum === 1) {
+          setHistoryLoading(true);
+        } else {
+          setLoadingMore(true);
         }
-      };
 
-      fetchHistory();
-      return () => {
-        isCurrent = false;
-      };
-    }, [authenticatedUser]),
+        const payload = {
+          salonId,
+          barberId,
+          page: pageNum,
+          limit: 10,
+          search: searchVal.trim(),
+          ...(fromDate ? { from: fromDate.format("YYYY-MM-DD") } : {}),
+          ...(toDate ? { to: toDate.format("YYYY-MM-DD") } : {}),
+        };
+
+        const { data } = await api.post(
+          "/appointmentHistory/getAppointmentHistoryByBarberIdSalonId",
+          payload,
+        );
+        const items = Array.isArray(data?.response) ? data.response : [];
+        const mapped = items.map(mapItem);
+
+        if (pageNum === 1) {
+          setHistory(mapped);
+        } else {
+          setHistory((prev) => [...prev, ...mapped]);
+        }
+
+        setPage(pageNum);
+        setHasMore(items.length >= 10);
+      } catch (error) {
+        console.error(
+          "Failed to fetch barber appointment history:",
+          error?.response?.data || error.message,
+        );
+        if (pageNum === 1) {
+          setHistory([]);
+        }
+      } finally {
+        setHistoryLoading(false);
+        setRefreshing(false);
+        setLoadingMore(false);
+      }
+    },
+    [salonId, barberId, searchQuery, startDate, endDate, mapItem],
   );
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchHistory({ pageNum: 1 });
+    }, [fetchHistory]),
+  );
+
+  const handleRefresh = useCallback(() => {
+    fetchHistory({ pageNum: 1, isRefresh: true });
+  }, [fetchHistory]);
+
+  const handleLoadMore = () => {
+    if (!historyLoading && !loadingMore && hasMore && history.length >= 10) {
+      fetchHistory({ pageNum: page + 1 });
+    }
+  };
 
   const renderHistoryItem = ({ item }) => {
     const isServed = item.status === "Served";
@@ -81,11 +170,14 @@ const AppointmentHistory = () => {
           },
         ]}
       >
-
         <View style={styles.cardHeader}>
           <View style={styles.profileRow}>
             <View style={[styles.avatarFrame, { backgroundColor: "#2C2C2E" }]}>
-              <Ionicons name="person" size={scale(16)} color={darkTheme.colors.textMuted} />
+              <Ionicons
+                name="person"
+                size={scale(16)}
+                color={darkTheme.colors.textMuted}
+              />
             </View>
             <View style={styles.metaData}>
               <Text style={[darkTheme.typography.cardTitle, styles.clientName]}>
@@ -94,14 +186,22 @@ const AppointmentHistory = () => {
               <Text style={[darkTheme.typography.bodyMuted, styles.barberText]}>
                 Stylist: {item.barberName}
               </Text>
-              <Text style={[darkTheme.typography.bodyMuted, styles.serviceText]}>
+              <Text
+                style={[darkTheme.typography.bodyMuted, styles.serviceText]}
+              >
                 {item.service}
               </Text>
             </View>
           </View>
 
           <View style={styles.priceDateBlock}>
-            <Text style={[darkTheme.typography.bodyMain, styles.priceText, { color: darkTheme.colors.accent }]}>
+            <Text
+              style={[
+                darkTheme.typography.bodyMain,
+                styles.priceText,
+                { color: darkTheme.colors.accent },
+              ]}
+            >
               {item.price}
             </Text>
             <Text style={[darkTheme.typography.bodyMuted, styles.dateText]}>
@@ -110,32 +210,48 @@ const AppointmentHistory = () => {
           </View>
         </View>
 
-        <View style={[styles.divider, { backgroundColor: darkTheme.colors.border }]} />
+        <View
+          style={[styles.divider, { backgroundColor: darkTheme.colors.border }]}
+        />
 
         <View style={styles.cardFooterRow}>
-          <Text style={[darkTheme.typography.bodyMuted, { fontSize: scale(11) }]}>
-            Status Profile
+          <Text
+            style={[darkTheme.typography.bodyMuted, { fontSize: scale(11) }]}
+          >
+            {item.timeSlots ? `Slot: ${item.timeSlots}` : "Status Profile"}
           </Text>
 
           <View
             style={[
               styles.statusBadge,
               {
-                backgroundColor: isServed ? "rgba(52, 199, 89, 0.1)" : "rgba(255, 59, 48, 0.1)",
-                borderRadius: darkTheme.layout.borderRadiusSmall
-              }
+                backgroundColor: isServed
+                  ? "rgba(52, 199, 89, 0.1)"
+                  : "rgba(255, 59, 48, 0.1)",
+                borderRadius: darkTheme.layout.borderRadiusSmall,
+              },
             ]}
           >
             <Ionicons
               name={isServed ? "checkmark-circle" : "close-circle"}
               size={scale(13)}
-              color={isServed ? darkTheme.status.success.text : darkTheme.status.error.text}
+              color={
+                isServed
+                  ? darkTheme.status.success.text
+                  : darkTheme.status.error.text
+              }
               style={{ marginRight: scale(4) }}
             />
             <Text
               style={[
                 darkTheme.typography.bodyMuted,
-                { color: isServed ? darkTheme.status.success.text : darkTheme.status.error.text, fontWeight: "600", fontSize: scale(11) }
+                {
+                  color: isServed
+                    ? darkTheme.status.success.text
+                    : darkTheme.status.error.text,
+                  fontWeight: "600",
+                  fontSize: scale(11),
+                },
               ]}
             >
               {item.status}
@@ -149,53 +265,121 @@ const AppointmentHistory = () => {
   return (
     <SafeAreaView
       edges={["top", "right", "left"]}
-      style={[styles.container, { backgroundColor: darkTheme.colors.background }]}
+      style={[
+        styles.container,
+        { backgroundColor: darkTheme.colors.background },
+      ]}
     >
-
-      <BarberHeader title="Appoinment History" subTitle="Log of past walk-in customers and arrivals" showBack={false} />
+      <BarberHeader
+        title="Appointment History"
+        subTitle="Log of past walk-in customers and arrivals"
+        showBack={false}
+      />
 
       <View style={styles.topContainer}>
         <View style={styles.filterActionRow}>
-
           <View style={styles.toolsLeftGroup}>
-            {/* <TouchableOpacity 
-              activeOpacity={0.7}
-              style={[styles.toolButton, { backgroundColor: darkTheme.colors.card, borderColor: darkTheme.colors.border }]}
-            >
-              <Ionicons name="refresh" size={scale(15)} color={darkTheme.colors.textMain} />
-            </TouchableOpacity> */}
-
             <TouchableOpacity
               activeOpacity={0.7}
-              style={[styles.toolButton, { backgroundColor: darkTheme.colors.card, borderColor: darkTheme.colors.border }]}
+              onPress={() => setCalendarVisible(true)}
+              style={[
+                styles.toolButton,
+                {
+                  backgroundColor:
+                    startDate || endDate
+                      ? "rgba(255, 149, 0, 0.12)"
+                      : darkTheme.colors.card,
+                  borderColor:
+                    startDate || endDate
+                      ? darkTheme.colors.accent
+                      : darkTheme.colors.border,
+                },
+              ]}
             >
-              <Feather name="calendar" size={scale(14)} color={darkTheme.colors.textMain} />
+              <Feather
+                name="calendar"
+                size={scale(14)}
+                color={
+                  startDate || endDate
+                    ? darkTheme.colors.accent
+                    : darkTheme.colors.textMain
+                }
+              />
             </TouchableOpacity>
 
             <TouchableOpacity
               activeOpacity={0.7}
-              style={[styles.toolButton, { backgroundColor: darkTheme.colors.card, borderColor: darkTheme.colors.border }]}
+              onPress={() => {
+                if (showSearch && searchQuery) {
+                  setSearchQuery("");
+                }
+                setShowSearch((prev) => !prev);
+              }}
+              style={[
+                styles.toolButton,
+                {
+                  backgroundColor: showSearch
+                    ? "rgba(255, 149, 0, 0.12)"
+                    : darkTheme.colors.card,
+                  borderColor: showSearch
+                    ? darkTheme.colors.accent
+                    : darkTheme.colors.border,
+                },
+              ]}
             >
-              <Ionicons name="search" size={scale(14)} color={darkTheme.colors.textMain} />
+              <Ionicons
+                name="search"
+                size={scale(14)}
+                color={
+                  showSearch
+                    ? darkTheme.colors.accent
+                    : darkTheme.colors.textMain
+                }
+              />
             </TouchableOpacity>
           </View>
-
-          {/* <TouchableOpacity 
-            activeOpacity={0.8}
-            style={[styles.filterLabelButton, { backgroundColor: "rgba(255, 149, 0, 0.1)", borderColor: darkTheme.colors.accent }]}
-          >
-            <MaterialIcons name="filter-list" size={scale(15)} color={darkTheme.colors.accent} style={styles.filterIcon} />
-            <Text style={[darkTheme.typography.bodyMain, styles.filterButtonText, { color: darkTheme.colors.accent }]}>
-              Filter
-            </Text>
-          </TouchableOpacity> */}
-
         </View>
+
+        {showSearch && (
+          <View
+            style={[
+              styles.searchBarContainer,
+              {
+                backgroundColor: darkTheme.colors.card,
+                borderColor: darkTheme.colors.border,
+              },
+            ]}
+          >
+            <Ionicons
+              name="search"
+              size={scale(15)}
+              color={darkTheme.colors.textMuted}
+              style={{ marginRight: scale(8) }}
+            />
+            <TextInput
+              style={[styles.searchInput, { color: darkTheme.colors.textMain }]}
+              placeholder="Search customer or service..."
+              placeholderTextColor={darkTheme.colors.textMuted}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoFocus
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery("")}>
+                <Ionicons
+                  name="close-circle"
+                  size={scale(16)}
+                  color={darkTheme.colors.textMuted}
+                />
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
       </View>
 
       <FlatList
         data={history}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item, idx) => `${item.id}-${idx}`}
         renderItem={renderHistoryItem}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
@@ -203,15 +387,53 @@ const AppointmentHistory = () => {
         windowSize={5}
         initialNumToRender={10}
         removeClippedSubviews={Platform.OS === "android"}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.4}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={darkTheme.colors.accent}
+            colors={[darkTheme.colors.accent]}
+            backgroundColor="transparent"
+          />
+        }
         ListEmptyComponent={
           historyLoading ? (
-            <ActivityIndicator color={darkTheme.colors.accent} style={{ marginTop: verticalScale(40) }} />
+            <ActivityIndicator
+              color={darkTheme.colors.accent}
+              style={{ marginTop: verticalScale(40) }}
+            />
           ) : (
-            <Text style={[darkTheme.typography.bodyMuted, { textAlign: "center", marginTop: verticalScale(40) }]}>
+            <Text
+              style={[
+                darkTheme.typography.bodyMuted,
+                { textAlign: "center", marginTop: verticalScale(40) },
+              ]}
+            >
               No appointment history found
             </Text>
           )
         }
+        ListFooterComponent={
+          loadingMore ? (
+            <ActivityIndicator
+              color={darkTheme.colors.accent}
+              style={{ marginVertical: verticalScale(16) }}
+            />
+          ) : null
+        }
+      />
+
+      <RangeCalendarModal
+        visible={calendarVisible}
+        onClose={() => setCalendarVisible(false)}
+        startDate={startDate}
+        endDate={endDate}
+        onSelectRange={({ startDate: newStart, endDate: newEnd }) => {
+          setStartDate(newStart);
+          setEndDate(newEnd);
+        }}
       />
     </SafeAreaView>
   );
@@ -226,6 +448,7 @@ const styles = StyleSheet.create({
   topContainer: {
     paddingHorizontal: darkTheme.layout.paddingHorizontal,
     marginBottom: verticalScale(16),
+    gap: verticalScale(10),
   },
   filterActionRow: {
     flexDirection: "row",
@@ -246,21 +469,19 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  filterLabelButton: {
+  searchBarContainer: {
     flexDirection: "row",
     alignItems: "center",
-    height: scale(36),
+    height: verticalScale(40),
     borderWidth: 1,
-    borderRadius: scale(18),
-    paddingHorizontal: scale(14),
+    borderRadius: scale(8),
+    paddingHorizontal: scale(12),
+    width: "100%",
   },
-  filterIcon: {
-    marginRight: scale(6),
-  },
-  filterButtonText: {
-    fontSize: scale(12),
-    fontWeight: "600",
-    letterSpacing: -0.1,
+  searchInput: {
+    flex: 1,
+    fontSize: scale(13),
+    paddingVertical: 0,
   },
   listContent: {
     paddingHorizontal: darkTheme.layout.paddingHorizontal,

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   Keyboard,
   Platform,
   StyleSheet,
@@ -10,21 +11,65 @@ import {
   View,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { scale, verticalScale } from "react-native-size-matters";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Toast } from "toastify-react-native";
 
 import { LeftArrowIcon } from "../../../constants/icons";
 import i18n from "../../src/localization/i18n";
 import { darkTheme } from "../../../constants/appTheme";
+import { useBarberAuth } from "../../../context/barber/AuthContext";
+import api from "../../../utils/api";
 
 const SignupOtp = () => {
   const baseContent = i18n.t("auth.barberauth.signupotp");
   const [otp, setOtp] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { email: paramEmail } = useLocalSearchParams();
+  const { authenticatedUser } = useBarberAuth();
   const router = useRouter();
 
-  const handleSignOtp = () => {
-    router.push("/accountDetails");
+  const targetEmail = paramEmail || authenticatedUser?.email || "";
+
+  const handleSignOtp = async () => {
+    if (!otp.trim()) {
+      Toast.warn("Please enter the verification code");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const { data } = await api.post("/barber/changeBarberEmailVerifiedStatus", {
+        email: targetEmail,
+        verificationCode: otp.trim(),
+      });
+      Toast.success(data?.message || "Email verified successfully");
+      router.push("/signin");
+    } catch (error) {
+      Toast.error(
+        error?.response?.data?.message || "Failed to verify OTP code",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (!targetEmail) return;
+    try {
+      const { data } = await api.post(
+        "/barber/sendVerificationCodeForBarberEmail",
+        {
+          email: targetEmail,
+        },
+      );
+      Toast.success(data?.message || "Verification code resent");
+    } catch (error) {
+      Toast.error(
+        error?.response?.data?.message || "Failed to resend verification code",
+      );
+    }
   };
 
   return (
@@ -86,7 +131,11 @@ const SignupOtp = () => {
           </View>
 
           {/* Verify Button */}
-          <TouchableOpacity onPress={handleSignOtp} activeOpacity={0.8}>
+          <TouchableOpacity
+            onPress={handleSignOtp}
+            activeOpacity={0.8}
+            disabled={loading}
+          >
             <LinearGradient
               colors={[
                 darkTheme.colors.accent,
@@ -100,14 +149,18 @@ const SignupOtp = () => {
                 },
               ]}
             >
-              <Text style={[darkTheme.typography.btnText, { color: "#000000" }]}>
-                {baseContent.verify}
-              </Text>
+              {loading ? (
+                <ActivityIndicator size="small" color="#000000" />
+              ) : (
+                <Text style={[darkTheme.typography.btnText, { color: "#000000" }]}>
+                  {baseContent.verify}
+                </Text>
+              )}
             </LinearGradient>
           </TouchableOpacity>
 
           {/* Resend */}
-          <TouchableOpacity activeOpacity={0.7}>
+          <TouchableOpacity onPress={handleResendOtp} activeOpacity={0.7}>
             <Text style={[darkTheme.typography.bodyMuted, styles.resendText]}>
               {baseContent.didntReceive || "Didn't receive the code?"}
               <Text style={{ color: darkTheme.colors.accent, fontWeight: "600" }}>

@@ -1,49 +1,88 @@
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { FlatList, Platform, StyleSheet, Text, View, TouchableOpacity } from "react-native";
+import {
+  FlatList,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { scale, verticalScale } from "react-native-size-matters";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-import BarberHeader from "../../../../components/Header/BarberHeader"; // Adjust path as needed
+import BarberHeader from "../../../../components/Header/BarberHeader";
 import { darkTheme } from "../../../../constants/appTheme";
-import { useRouter } from "expo-router";
 
 const REPORT_CATEGORIES = ["All", "Queue", "Appointment"];
 
 const REPORTS_DATA = [
   {
     id: "r1",
+    reportType: "appointmentPerformance",
     title: "Performance dashboard appointment",
     description: "Daily total payment received by each barber.",
     category: "Appointment",
   },
   {
     id: "r2",
+    reportType: "appointmentWorkingHours",
     title: "Working hours dashboard",
     description: "Amount of busy time per day (service time)",
     category: "Appointment",
   },
   {
     id: "r3",
-    title: "Queue serve",
-    description: "General overview of queue trends and patterns, including cancellations and no-shows.",
-    category: "Queue",
+    reportType: "appointmentServed",
+    title: "Appointment serve",
+    description: "Overview of served appointments and check-ins.",
+    category: "Appointment",
   },
   {
     id: "r4",
+    reportType: "appointmentCancelled",
+    title: "Appointment cancellations summary",
+    description: "Insight into appointment cancellations and no-shows.",
+    category: "Appointment",
+  },
+  {
+    id: "r5",
+    reportType: "queueServed",
+    title: "Queue serve",
+    description:
+      "General overview of queue trends and patterns, including cancellations and no-shows.",
+    category: "Queue",
+  },
+  {
+    id: "r6",
+    reportType: "queueCancelled",
     title: "Queue cancellations & no-show summary",
     description: "Insight into queue cancellations and no-shows.",
     category: "Queue",
-  }
+  },
+  {
+    id: "r7",
+    reportType: "queuePerformance",
+    title: "Performance dashboard queue",
+    description: "Revenue and performance breakdown from walk-in queue.",
+    category: "Queue",
+  },
+  {
+    id: "r8",
+    reportType: "queueWorkingHours",
+    title: "Queue working hours",
+    description: "Amount of active service time spent on queue customers.",
+    category: "Queue",
+  },
 ];
 
 const ReportsDashboard = () => {
   const [activeCategory, setActiveCategory] = useState("All");
-  const router = useRouter()
+  const router = useRouter();
 
-  // Filters items matching selected category tab state
   const filteredReports = REPORTS_DATA.filter(
-    (report) => activeCategory === "All" || report.category === activeCategory
+    (report) => activeCategory === "All" || report.category === activeCategory,
   );
 
   const renderReportCard = ({ item }) => (
@@ -58,25 +97,50 @@ const ReportsDashboard = () => {
         },
       ]}
       onPress={() => {
-        router.push("/charts")
+        router.push({
+          pathname: "/(barber)/(reports)/charts",
+          params: {
+            reportType: item.reportType,
+            title: item.title,
+            description: item.description,
+          },
+        });
       }}
     >
       <View style={styles.cardContentRow}>
-        {/* Re-styled Icon Box: White background removed, uses signature amber highlight */}
-        <View style={[styles.iconWrapperCircle, { backgroundColor: "rgba(255, 149, 0, 0.1)", borderColor: "rgba(255, 149, 0, 0.15)" }]}>
-          <MaterialCommunityIcons 
-            name="chart-bar" 
-            size={scale(15)} 
-            color={darkTheme.colors.accent} 
+        <View
+          style={[
+            styles.iconWrapperCircle,
+            {
+              backgroundColor: "rgba(255, 149, 0, 0.1)",
+              borderColor: "rgba(255, 149, 0, 0.15)",
+            },
+          ]}
+        >
+          <MaterialCommunityIcons
+            name="chart-bar"
+            size={scale(15)}
+            color={darkTheme.colors.accent}
           />
         </View>
 
-        {/* Core Description Text Block */}
         <View style={styles.textContainerColumn}>
-          <Text style={[darkTheme.typography.cardTitle, styles.reportTitleText, { color: darkTheme.colors.textMain }]}>
+          <Text
+            style={[
+              darkTheme.typography.cardTitle,
+              styles.reportTitleText,
+              { color: darkTheme.colors.textMain },
+            ]}
+          >
             {item.title}
           </Text>
-          <Text style={[darkTheme.typography.bodyMuted, styles.reportDescriptionText, { color: darkTheme.colors.textMuted }]}>
+          <Text
+            style={[
+              darkTheme.typography.bodyMuted,
+              styles.reportDescriptionText,
+              { color: darkTheme.colors.textMuted },
+            ]}
+          >
             {item.description}
           </Text>
         </View>
@@ -87,11 +151,17 @@ const ReportsDashboard = () => {
   return (
     <SafeAreaView
       edges={["top", "right", "left"]}
-      style={[styles.container, { backgroundColor: darkTheme.colors.background }]}
+      style={[
+        styles.container,
+        { backgroundColor: darkTheme.colors.background },
+      ]}
     >
-      <BarberHeader title="Reports" subTitle="Live store analytical reports" showBack={false} />
+      <BarberHeader
+        title="Reports"
+        subTitle="Live store analytical reports"
+        showBack={false}
+      />
 
-      {/* Styled text-based selector matching your brand's highlight color rules */}
       <View style={styles.tabBarMainRow}>
         {REPORT_CATEGORIES.map((category) => {
           const isSelected = activeCategory === category;
@@ -103,10 +173,14 @@ const ReportsDashboard = () => {
               style={[
                 styles.filterCategoryTab,
                 {
-                  backgroundColor: isSelected ? "rgba(255, 149, 0, 0.1)" : "transparent",
-                  borderColor: isSelected ? darkTheme.colors.accent : "transparent",
+                  backgroundColor: isSelected
+                    ? "rgba(255, 149, 0, 0.1)"
+                    : "transparent",
+                  borderColor: isSelected
+                    ? darkTheme.colors.accent
+                    : "transparent",
                   borderWidth: isSelected ? 1 : 0,
-                }
+                },
               ]}
             >
               <Text
@@ -114,9 +188,11 @@ const ReportsDashboard = () => {
                   darkTheme.typography.bodyMain,
                   styles.tabLabelText,
                   {
-                    color: isSelected ? darkTheme.colors.accent : darkTheme.colors.textMuted,
+                    color: isSelected
+                      ? darkTheme.colors.accent
+                      : darkTheme.colors.textMuted,
                     fontWeight: isSelected ? "700" : "500",
-                  }
+                  },
                 ]}
               >
                 {category}
@@ -126,7 +202,6 @@ const ReportsDashboard = () => {
         })}
       </View>
 
-      {/* Primary Analytics Feed Stack */}
       <FlatList
         data={filteredReports}
         keyExtractor={(item) => item.id}

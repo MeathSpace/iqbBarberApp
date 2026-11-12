@@ -1,155 +1,366 @@
-import React, { useState, memo } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import React, { memo, useCallback, useEffect, useState } from "react";
 import {
-  StyleSheet,
-  Text,
-  View,
-  TouchableOpacity,
+  ActivityIndicator,
   FlatList,
   Image,
   Platform,
+  RefreshControl,
+  StyleSheet,
+  Text,
   TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { scale, verticalScale } from "react-native-size-matters";
-import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { Toast } from "toastify-react-native";
 
 import { darkTheme } from "../../../../constants/appTheme";
+import { useBarberAuth } from "../../../../context/barber/AuthContext";
+import api from "../../../../utils/api";
 
-const INITIAL_SERVICES = [
-  {
-    id: "s1",
-    name: "Haircut",
-    description: "dfgfs",
-    category: "General",
-    type: "Regular",
-    price: "100",
-    time: "20",
-    isAdded: true,
-    iconUri: "https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=150",
-  },
-  {
-    id: "s2",
-    name: "Nail Art",
-    description: "asc",
-    category: "Nailart",
-    type: "VIP",
-    price: "40",
-    time: "45",
-    isAdded: false,
-    iconUri: "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=150",
-  },
-];
+const ServiceCardItem = memo(function ServiceCardItem({
+  item,
+  onToggleAction,
+  onUpdatePrice,
+  onUpdateTime,
+}) {
+    const isVIP = item.type === "VIP";
 
-const ServiceCardItem = memo(({ item, onToggleAction, onUpdatePrice, onUpdateTime }) => {
-  const isVIP = item.type === "VIP";
-
-  return (
-    <View style={[styles.salonOuterContainerDeckCard, { backgroundColor: darkTheme.colors.card, borderColor: darkTheme.colors.border }]}>
-      <View style={styles.salonParentHeaderContainerRow}>
-        <View style={styles.salonHeaderLeftBlockGroup}>
-          <View style={[styles.brandLogoCircleContainer, { borderColor: "rgba(255,255,255,0.04)" }]}>
-            <Image source={{ uri: item.iconUri }} style={styles.cardHeaderEmbeddedAvatar} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <View style={styles.cardHeaderTitleBadgeRow}>
-              <Text style={styles.salonNameHeadingTextContentNode}>{item.name}</Text>
-              {isVIP && (
-                <View style={styles.vipPillBadgeContainer}>
-                  <View style={styles.vipPulseDotIndicator} />
-                  <Text style={styles.vipBadgeLabelText}>VIP</Text>
+    return (
+      <View
+        style={[
+          styles.salonOuterContainerDeckCard,
+          {
+            backgroundColor: darkTheme.colors.card,
+            borderColor: darkTheme.colors.border,
+          },
+        ]}
+      >
+        <View style={styles.salonParentHeaderContainerRow}>
+          <View style={styles.salonHeaderLeftBlockGroup}>
+            <View
+              style={[
+                styles.brandLogoCircleContainer,
+                { borderColor: "rgba(255,255,255,0.04)" },
+              ]}
+            >
+              {item.iconUri ? (
+                <Image
+                  source={{ uri: item.iconUri }}
+                  style={styles.cardHeaderEmbeddedAvatar}
+                />
+              ) : (
+                <View
+                  style={[
+                    styles.cardHeaderEmbeddedAvatar,
+                    {
+                      justifyContent: "center",
+                      alignItems: "center",
+                      backgroundColor: "#2C2C2E",
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    name="cut-outline"
+                    size={scale(15)}
+                    color={darkTheme.colors.textMuted}
+                  />
                 </View>
               )}
             </View>
-            <Text style={styles.salonSubTagTextLabelDescription}>{item.description}</Text>
-            <Text style={styles.innerRowTypeLabelText}>{item.category} • {item.type}</Text>
-          </View>
-        </View>
-      </View>
-
-      <View style={styles.cardActionsHeaderTrackRow}>
-        <TouchableOpacity 
-          style={[
-            styles.innerRowActionTriggerCTAButtonBox, 
-            { 
-              backgroundColor: item.isAdded ? "rgba(255, 59, 48, 0.1)" : "rgba(52, 199, 89, 0.1)" 
-            }
-          ]}
-          activeOpacity={0.75}
-          onPress={() => onToggleAction(item.id)}
-        >
-          <Text style={[styles.innerRowActionButtonTextLabel, { color: item.isAdded ? "#FF3B30" : "#34C759" }]}>
-            {item.isAdded ? "Delete" : "Add"}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.innerSubscriptionRowItem}>
-        <View style={styles.innerItemLabelsStackColumn}>
-          <Text style={styles.innerItemNameHeadingTextText}>Price</Text>
-          <View style={styles.inlineInputFieldWrapper}>
-            <Text style={styles.currencyPrefixIndicatorLabel}>₹</Text>
-            <TextInput
-              style={styles.inlineEditableTextInputInstance}
-              value={item.price}
-              onChangeText={(text) => onUpdatePrice(item.id, text)}
-              keyboardType="numeric"
-              selectionColor={darkTheme.colors.accent}
-            />
+            <View style={{ flex: 1 }}>
+              <View style={styles.cardHeaderTitleBadgeRow}>
+                <Text style={styles.salonNameHeadingTextContentNode}>
+                  {item.name}
+                </Text>
+                {isVIP && (
+                  <View style={styles.vipPillBadgeContainer}>
+                    <View style={styles.vipPulseDotIndicator} />
+                    <Text style={styles.vipBadgeLabelText}>VIP</Text>
+                  </View>
+                )}
+              </View>
+              {Boolean(item.description) && (
+                <Text style={styles.salonSubTagTextLabelDescription}>
+                  {item.description}
+                </Text>
+              )}
+              <Text style={styles.innerRowTypeLabelText}>
+                {item.category} • {item.type}
+              </Text>
+            </View>
           </View>
         </View>
 
-        <View style={[styles.innerItemLabelsStackColumn, { alignItems: "flex-end" }]}>
-          <Text style={[styles.innerItemNameHeadingTextText, { marginRight: scale(4) }]}>Estimated Time</Text>
-          <View style={styles.inlineInputFieldWrapper}>
-            <TextInput
-              style={[styles.inlineEditableTextInputInstance, { textAlign: "right", paddingRight: scale(4) }]}
-              value={item.time}
-              onChangeText={(text) => onUpdateTime(item.id, text)}
-              keyboardType="numeric"
-              selectionColor={darkTheme.colors.accent}
-            />
+        <View style={styles.cardActionsHeaderTrackRow}>
+          <TouchableOpacity
+            style={[
+              styles.innerRowActionTriggerCTAButtonBox,
+              {
+                backgroundColor: item.isAdded
+                  ? "rgba(255, 59, 48, 0.1)"
+                  : "rgba(52, 199, 89, 0.1)",
+              },
+            ]}
+            activeOpacity={0.75}
+            onPress={() => onToggleAction(item.id)}
+          >
+            <Text
+              style={[
+                styles.innerRowActionButtonTextLabel,
+                { color: item.isAdded ? "#FF3B30" : "#34C759" },
+              ]}
+            >
+              {item.isAdded ? "Delete" : "Add"}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.innerSubscriptionRowItem}>
+          <View style={styles.innerItemLabelsStackColumn}>
+            <Text style={styles.innerItemNameHeadingTextText}>Price</Text>
+            <View style={styles.inlineInputFieldWrapper}>
+              <Text style={styles.currencyPrefixIndicatorLabel}>₹</Text>
+              <TextInput
+                style={styles.inlineEditableTextInputInstance}
+                value={item.price}
+                onChangeText={(text) => onUpdatePrice(item.id, text)}
+                keyboardType="numeric"
+                selectionColor={darkTheme.colors.accent}
+              />
+            </View>
+          </View>
+
+          <View
+            style={[
+              styles.innerItemLabelsStackColumn,
+              { alignItems: "flex-end" },
+            ]}
+          >
+            <Text
+              style={[
+                styles.innerItemNameHeadingTextText,
+                { marginRight: scale(4) },
+              ]}
+            >
+              Estimated Time (mins)
+            </Text>
+            <View style={styles.inlineInputFieldWrapper}>
+              <TextInput
+                style={[
+                  styles.inlineEditableTextInputInstance,
+                  { textAlign: "right", paddingRight: scale(4) },
+                ]}
+                value={item.time}
+                onChangeText={(text) => onUpdateTime(item.id, text)}
+                keyboardType="numeric"
+                selectionColor={darkTheme.colors.accent}
+              />
+            </View>
           </View>
         </View>
       </View>
-    </View>
-  );
-});
+    );
+  },
+);
 
 const EditServices = () => {
   const router = useRouter();
-  const [services, setServices] = useState(INITIAL_SERVICES);
+  const {
+    authenticatedUser,
+    setAuthenticatedUser,
+    fetchLoggedInBarber,
+  } = useBarberAuth();
+
+  const salonId = authenticatedUser?.salonId;
+  const barberId = authenticatedUser?.barberId;
+
+  const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const fetchServices = useCallback(
+    async (isRefresh = false) => {
+      if (!salonId) return;
+
+      try {
+        if (isRefresh) {
+          setRefreshing(true);
+        } else {
+          setLoading(true);
+        }
+
+        const [salonServicesRes, barberServicesRes] = await Promise.allSettled([
+          api.get(`/barber/getAllSalonServicesForBarber?salonId=${salonId}`),
+          barberId
+            ? api.get(`/barber/getBarberServicesByBarberId?barberId=${barberId}`)
+            : Promise.resolve({
+                data: { response: authenticatedUser?.barberServices || [] },
+              }),
+        ]);
+
+        let allSalonServices = [];
+        if (salonServicesRes.status === "fulfilled") {
+          const resData = salonServicesRes.value?.data?.response;
+          allSalonServices = Array.isArray(resData?.services)
+            ? resData.services
+            : Array.isArray(resData)
+              ? resData
+              : [];
+        }
+
+        let currentBarberServices = authenticatedUser?.barberServices || [];
+        if (
+          barberServicesRes.status === "fulfilled" &&
+          Array.isArray(barberServicesRes.value?.data?.response)
+        ) {
+          currentBarberServices = barberServicesRes.value.data.response;
+        }
+
+        const barberServiceMap = new Map();
+        currentBarberServices.forEach((bs) => {
+          barberServiceMap.set(Number(bs.serviceId), bs);
+        });
+
+        const merged = allSalonServices.map((s) => {
+          const matchedBarberService = barberServiceMap.get(
+            Number(s.serviceId),
+          );
+          const isAdded = Boolean(matchedBarberService);
+
+          return {
+            id: String(s.serviceId ?? s._id),
+            serviceId: s.serviceId,
+            serviceCode: s.serviceCode,
+            serviceIcon: s.serviceIcon,
+            name: s.serviceName || "Service",
+            description: s.serviceDesc || "",
+            category: s.serviceCategory || "General",
+            type: s.vipService ? "VIP" : "Regular",
+            price: String(
+              matchedBarberService?.servicePrice ?? s.servicePrice ?? 0,
+            ),
+            time: String(
+              matchedBarberService?.barberServiceEWT ??
+                matchedBarberService?.serviceEWT ??
+                s.serviceEWT ??
+                0,
+            ),
+            isAdded,
+            iconUri: s.serviceIcon?.url || "",
+          };
+        });
+
+        setServices(merged);
+      } catch (error) {
+        Toast.error(
+          error?.response?.data?.message || "Failed to load salon services",
+        );
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [salonId, barberId, authenticatedUser?.barberServices],
+  );
+
+  useEffect(() => {
+    fetchServices();
+  }, [fetchServices]);
 
   const handleToggleAction = (id) => {
-    setServices(prev =>
-      prev.map(item => item.id === id ? { ...item, isAdded: !item.isAdded } : item)
+    setServices((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, isAdded: !item.isAdded } : item,
+      ),
     );
   };
 
   const updateInlinePrice = (id, text) => {
-    setServices(prev => 
-      prev.map(item => item.id === id ? { ...item, price: text } : item)
+    setServices((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, price: text } : item)),
     );
   };
 
   const updateInlineTime = (id, text) => {
-    setServices(prev => 
-      prev.map(item => item.id === id ? { ...item, time: text } : item)
+    setServices((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, time: text } : item)),
     );
+  };
+
+  const handleSaveServices = async () => {
+    if (saving || !authenticatedUser) return;
+
+    const barberServicesPayload = services
+      .filter((s) => s.isAdded)
+      .map((s) => ({
+        serviceId: s.serviceId,
+        serviceCode: s.serviceCode,
+        serviceName: s.name,
+        serviceIcon: s.serviceIcon,
+        serviceDesc: s.description,
+        servicePrice: Number(s.price) || 0,
+        barberServiceEWT: Number(s.time) || 0,
+        serviceEWT: Number(s.time) || 0,
+        vipService: s.type === "VIP",
+      }));
+
+    try {
+      setSaving(true);
+      const payload = {
+        salonId: authenticatedUser?.salonId,
+        email: authenticatedUser?.email,
+        name: authenticatedUser?.name,
+        nickName: authenticatedUser?.nickName,
+        countryCode: authenticatedUser?.countryCode,
+        mobileNumber: authenticatedUser?.mobileNumber,
+        dateOfBirth: authenticatedUser?.dateOfBirth
+          ? String(authenticatedUser.dateOfBirth).split("T")[0]
+          : undefined,
+        gender: authenticatedUser?.gender,
+        barberServices: barberServicesPayload,
+      };
+
+      const { data } = await api.put(
+        "/barber/updateBarberAccountDetails",
+        payload,
+      );
+
+      if (data?.response) {
+        setAuthenticatedUser((prev) => ({
+          ...prev,
+          ...data.response,
+        }));
+      }
+      await fetchLoggedInBarber();
+      Toast.success(data?.message || "Barber services updated successfully");
+      router.back();
+    } catch (error) {
+      Toast.error(
+        error?.response?.data?.message || "Failed to update barber services",
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <SafeAreaView
       edges={["top", "right", "left"]}
-      style={[styles.container, { backgroundColor: darkTheme.colors.background }]}
+      style={[
+        styles.container,
+        { backgroundColor: darkTheme.colors.background },
+      ]}
     >
       <View style={styles.modalViewportFrame}>
-        
         <View style={styles.modalWorkspaceHeader}>
           <Text style={styles.modalTitleLabel}>Edit Services</Text>
-          {/* Fixed Active Back Navigation Interaction Hook */}
-          <TouchableOpacity 
-            activeOpacity={0.7} 
+          <TouchableOpacity
+            activeOpacity={0.7}
             style={styles.closeCrossIconButton}
             onPress={() => router.back()}
           >
@@ -165,6 +376,14 @@ const EditServices = () => {
           maxToRenderPerBatch={10}
           windowSize={5}
           removeClippedSubviews={Platform.OS === "android"}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => fetchServices(true)}
+              tintColor={darkTheme.colors.accent}
+              colors={[darkTheme.colors.accent]}
+            />
+          }
           renderItem={({ item }) => (
             <ServiceCardItem
               item={item}
@@ -173,18 +392,39 @@ const EditServices = () => {
               onUpdateTime={updateInlineTime}
             />
           )}
+          ListEmptyComponent={
+            loading ? (
+              <ActivityIndicator
+                color={darkTheme.colors.accent}
+                style={{ marginTop: verticalScale(40) }}
+              />
+            ) : (
+              <Text
+                style={[
+                  darkTheme.typography.bodyMuted,
+                  { textAlign: "center", marginTop: verticalScale(40) },
+                ]}
+              >
+                No salon services found
+              </Text>
+            )
+          }
         />
 
         <View style={styles.stickyFooterActionButtonContainer}>
           <TouchableOpacity
             activeOpacity={0.9}
             style={styles.luxuryMutedShadedButton}
-            onPress={() => router.back()}
+            onPress={handleSaveServices}
+            disabled={saving}
           >
-            <Text style={styles.luxuryMutedShadedButtonText}>Save</Text>
+            {saving ? (
+              <ActivityIndicator color={darkTheme.colors.accent} />
+            ) : (
+              <Text style={styles.luxuryMutedShadedButtonText}>Save</Text>
+            )}
           </TouchableOpacity>
         </View>
-
       </View>
     </SafeAreaView>
   );
@@ -354,8 +594,6 @@ const styles = StyleSheet.create({
     borderBottomColor: "rgba(255,255,255,0.15)",
     paddingBottom: verticalScale(4),
   },
-  
-  // Luxury Matte Dark Footer Layout Structure
   stickyFooterActionButtonContainer: {
     position: "absolute",
     bottom: 0,
@@ -364,7 +602,8 @@ const styles = StyleSheet.create({
     backgroundColor: darkTheme.colors.background,
     paddingHorizontal: scale(16),
     paddingTop: verticalScale(8),
-    paddingBottom: Platform.OS === "ios" ? verticalScale(20) : verticalScale(12),
+    paddingBottom:
+      Platform.OS === "ios" ? verticalScale(20) : verticalScale(12),
     borderTopWidth: 1,
     borderTopColor: "rgba(255,255,255,0.03)",
   },

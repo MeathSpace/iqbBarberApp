@@ -1,8 +1,8 @@
 import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import moment from "moment"; // Premium dynamic dates calculation layer
-import { useMemo, useState } from "react";
+import { useLocalSearchParams } from "expo-router";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  Modal,
+  ActivityIndicator,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,26 +13,25 @@ import { BarChart, LineChart } from "react-native-gifted-charts";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { scale, verticalScale } from "react-native-size-matters";
 
-import Header from "../../../../components/Header/Header"; // Adjust path as needed
+import BarberHeader from "../../../../components/Header/BarberHeader";
+import RangeCalendarModal from "../../../../components/RangeCalender";
 import { darkTheme } from "../../../../constants/appTheme";
+import { useBarberAuth } from "../../../../context/barber/AuthContext";
+import api from "../../../../utils/api";
 
 const TIME_FILTERS = ["Daily", "Weekly", "Monthly"];
-
-const LEGEND_DATA = [
-  { name: "John Doe", color: "#FF3B30" },
-  { name: "Bob", color: "#34C759" },
-  { name: "vivob", color: "#AF52DE" },
-];
 
 const ANALYTICS_FEED = [
   {
     id: "a1",
+    reportType: "appointmentServed",
     title: "Appointments serve",
     desc: "General analytics overview of customer check-ins.",
     icon: "chart-box-outline",
   },
   {
     id: "a2",
+    reportType: "appointmentCancelled",
     title: "Cancellations logs",
     desc: "Insight summary tracking real-time storefront no-shows.",
     icon: "alert-circle-outline",
@@ -40,126 +39,160 @@ const ANALYTICS_FEED = [
 ];
 
 const ChartsDetailScreen = () => {
-  const [activeTimeFilter, setActiveTimeFilter] = useState("Weekly");
+  const params = useLocalSearchParams();
+  const { authenticatedUser } = useBarberAuth();
+
+  const salonId = authenticatedUser?.salonId;
+  const barberId = authenticatedUser?.barberId;
+
+  const [currentReportType, setCurrentReportType] = useState(
+    params?.reportType || "appointmentPerformance",
+  );
+  const [headerTitle, setHeaderTitle] = useState(
+    params?.title || "Performance Dashboard",
+  );
+  const [headerSubTitle, setHeaderSubTitle] = useState(
+    params?.description || "Appointment breakdown summary",
+  );
+
+  const [activeTimeFilter, setActiveTimeFilter] = useState("Daily");
   const [chartType, setChartType] = useState("bar");
   const [calendarVisible, setCalendarVisible] = useState(false);
 
-  // Tracking baseline date context (defaults to current date context)
-  const [currentMonthMoment, setCurrentMonthMoment] = useState(
-    moment("2026-03-01"),
-  );
-  const [startDate, setStartDate] = useState(moment("2026-03-01"));
-  const [endDate, setEndDate] = useState(moment("2026-03-15"));
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
 
-  // Dynamic Calendar Grid Engine using Moment
-  const calendarGridData = useMemo(() => {
-    const startOfMonth = currentMonthMoment.clone().startOf("month");
-    const endOfMonth = currentMonthMoment.clone().endOf("month");
+  const [chartRawData, setChartRawData] = useState([]);
+  const [lineRawData, setLineRawData] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-    const totalDaysInMonth = currentMonthMoment.daysInMonth();
+  const fetchReportData = useCallback(async () => {
+    if (!salonId || !barberId) return;
 
-    // Finds the day of week index (0 = Sun, 1 = Mon...) to establish leading buffer alignment
-    const startDayOfWeek = startOfMonth.day();
+    try {
+      setLoading(true);
 
-    // Calculate greyed-out trailing days from previous month
-    const prevMonthMoment = currentMonthMoment.clone().subtract(1, "month");
-    const totalDaysInPrevMonth = prevMonthMoment.daysInMonth();
-    const prevPadding = [];
-    for (let i = startDayOfWeek - 1; i >= 0; i--) {
-      prevPadding.push({
-        dayNum: totalDaysInPrevMonth - i,
-        isCurrentMonth: false,
-        momentObj: prevMonthMoment.clone().date(totalDaysInPrevMonth - i),
+      const basePayload = {
+        salonId,
+        barberId,
+        reportType: currentReportType,
+        ...(startDate && endDate
+          ? {
+              startDate: startDate.format("DD-MM-YYYY"),
+              endDate: endDate.format("DD-MM-YYYY"),
+            }
+          : {
+              reportValue: activeTimeFilter.toLowerCase(),
+            }),
+      };
+
+      const [barRes, lineRes] = await Promise.allSettled([
+        api.post("/reports/getBarberChartReport", basePayload),
+        api.post("/reports/getBarberLineGraphReport", basePayload),
+      ]);
+
+      if (barRes.status === "fulfilled") {
+        const arr = Array.isArray(barRes.value?.data?.response)
+          ? barRes.value.data.response
+          : [];
+        setChartRawData(arr);
+      } else {
+        setChartRawData([]);
+      }
+
+      if (lineRes.status === "fulfilled") {
+        const lineArr = Array.isArray(lineRes.value?.data?.response?.data)
+          ? lineRes.value.data.response.data
+          : Array.isArray(lineRes.value?.data?.response)
+            ? lineRes.value.data.response
+            : [];
+        setLineRawData(lineArr);
+      } else {
+        setLineRawData([]);
+      }
+    } catch (error) {
+      console.log("Error fetching barber chart report:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [salonId, barberId, currentReportType, activeTimeFilter, startDate, endDate]);
+
+  useEffect(() => {
+    fetchReportData();
+  }, [fetchReportData]);
+
+  const barData = useMemo(() => {
+    if (!chartRawData || chartRawData.length === 0) {
+      return [
+        {
+          value: 0,
+          label: "No Data",
+          frontColor: darkTheme.colors.accent,
+          topLabelComponent: () => (
+            <Text style={styles.chartTopValueText}>0</Text>
+          ),
+        },
+      ];
+    }
+
+    return chartRawData.map((item) => {
+      const val = Number(item?.yaxis ?? 0);
+      const displayVal =
+        val >= 1000 ? `${(val / 1000).toFixed(1)}K` : String(val);
+      return {
+        value: val,
+        label: item?.xaxis || "",
+        frontColor: item?.fill || darkTheme.colors.accent,
+        topLabelComponent: () => (
+          <Text style={styles.chartTopValueText}>{displayVal}</Text>
+        ),
+      };
+    });
+  }, [chartRawData]);
+
+  const lineData = useMemo(() => {
+    if (lineRawData && lineRawData.length > 0) {
+      return lineRawData.map((item) => {
+        const val = Number(item?.[barberId] ?? item?.yaxis ?? 0);
+        return {
+          value: val,
+          label: item?.xaxis || "",
+          dataPointText:
+            val >= 1000 ? `${(val / 1000).toFixed(1)}k` : String(val),
+        };
       });
     }
 
-    // Build active current month day matrices
-    const currentDays = [];
-    for (let i = 1; i <= totalDaysInMonth; i++) {
-      currentDays.push({
-        dayNum: i,
-        isCurrentMonth: true,
-        momentObj: currentMonthMoment.clone().date(i),
-      });
-    }
+    return barData.map((item) => ({
+      value: item.value,
+      label: item.label,
+      dataPointText:
+        item.value >= 1000
+          ? `${(item.value / 1000).toFixed(1)}k`
+          : String(item.value),
+    }));
+  }, [lineRawData, barData, barberId]);
 
-    // Calculate dynamic leading padding days from future next month to balance 7-column matrix rows
-    const absoluteTotalCells = prevPadding.length + currentDays.length;
-    const missingGridCells =
-      absoluteTotalCells % 7 === 0 ? 0 : 7 - (absoluteTotalCells % 7);
-    const nextMonthMoment = currentMonthMoment.clone().add(1, "month");
-    const nextPadding = [];
-    for (let i = 1; i <= missingGridCells; i++) {
-      nextPadding.push({
-        dayNum: i,
-        isCurrentMonth: false,
-        momentObj: nextMonthMoment.clone().date(i),
-      });
-    }
+  const maxChartValue = useMemo(() => {
+    const values = [
+      ...barData.map((d) => d.value),
+      ...lineData.map((d) => d.value),
+    ];
+    const highest = Math.max(...values, 0);
+    return highest > 0 ? Math.ceil(highest * 1.25) : 10;
+  }, [barData, lineData]);
 
-    return [...prevPadding, ...currentDays, ...nextPadding];
-  }, [currentMonthMoment]);
-
-  const barData = [
-    {
-      value: 1450,
-      label: "01 Mar",
-      frontColor: "#FF3B30",
-      topLabelComponent: () => (
-        <Text style={styles.chartTopValueText}>1.45K</Text>
-      ),
-    },
-    {
-      value: 385,
-      frontColor: "#34C759",
-      topLabelComponent: () => (
-        <Text style={styles.chartTopValueText}>385</Text>
-      ),
-    },
-    {
-      value: 2100,
-      label: "08 Mar",
-      frontColor: "#FF3B30",
-      topLabelComponent: () => (
-        <Text style={styles.chartTopValueText}>2.1K</Text>
-      ),
-    },
-    {
-      value: 1200,
-      frontColor: "#AF52DE",
-      topLabelComponent: () => (
-        <Text style={styles.chartTopValueText}>1.2K</Text>
-      ),
-    },
-    {
-      value: 2800,
-      label: "15 Mar",
-      frontColor: "#34C759",
-      topLabelComponent: () => (
-        <Text style={styles.chartTopValueText}>2.8K</Text>
-      ),
-    },
-    {
-      value: 950,
-      frontColor: "#FF3B30",
-      topLabelComponent: () => (
-        <Text style={styles.chartTopValueText}>950</Text>
-      ),
-    },
-  ];
-
-  const lineData = barData.map((item) => ({
-    value: item.value,
-    label: item.label,
-    dataPointText:
-      item.value >= 1000
-        ? `₹${(item.value / 1000).toFixed(1)}k`
-        : `₹${item.value}`,
-  }));
+  const yAxisLabels = useMemo(() => {
+    const step = maxChartValue / 4;
+    return [4, 3, 2, 1, 0].map((mult) => {
+      const v = Math.round(step * mult);
+      return v >= 1000 ? `${(v / 1000).toFixed(1)}K` : String(v);
+    });
+  }, [maxChartValue]);
 
   const chartCommonConfig = {
     noOfSections: 4,
-    maxValue: 3000,
+    maxValue: maxChartValue,
     initialSpacing: scale(12),
     isAnimated: true,
     animationDuration: 400,
@@ -171,35 +204,15 @@ const ChartsDetailScreen = () => {
     xAxisLabelTextStyle: styles.xAxisLabelStyle,
     hideRules: false,
     hideYAxisText: true,
-    width: scale(barData.length * 44 + 32),
+    width: Math.max(scale(barData.length * 54 + 32), scale(240)),
   };
 
-  const handleDayPress = (dayObj) => {
-    const targetMoment = dayObj.momentObj;
-    if (!startDate || (startDate && endDate)) {
-      setStartDate(targetMoment);
-      setEndDate(null);
-    } else if (startDate && !endDate) {
-      if (targetMoment.isBefore(startDate, "day")) {
-        setStartDate(targetMoment);
-      } else {
-        setEndDate(targetMoment);
-      }
-    }
-  };
-
-  const handlePrevMonthToggle = () => {
-    setCurrentMonthMoment((prev) => prev.clone().subtract(1, "month"));
-  };
-
-  const handleNextMonthToggle = () => {
-    setCurrentMonthMoment((prev) => prev.clone().add(1, "month"));
-  };
-
-  const formatDateLabel = (dateObj) =>
-    dateObj ? dateObj.format("DD/MM/YYYY") : "--/--/----";
-  const formatBannerLabel = (dateObj) =>
-    dateObj ? dateObj.format("DD MMMM") : "Select End Date";
+  const legendItems = [
+    {
+      name: authenticatedUser?.name || "Barber",
+      color: chartRawData?.[0]?.fill || darkTheme.colors.accent,
+    },
+  ];
 
   return (
     <SafeAreaView
@@ -209,9 +222,9 @@ const ChartsDetailScreen = () => {
         { backgroundColor: darkTheme.colors.background },
       ]}
     >
-      <Header
-        title="Performance Dashboard"
-        subTitle="Appointment breakdown summary"
+      <BarberHeader
+        title={headerTitle}
+        subTitle={headerSubTitle}
         showBack={true}
       />
 
@@ -221,7 +234,10 @@ const ChartsDetailScreen = () => {
             styles.dateTextPillBadge,
             {
               backgroundColor: darkTheme.colors.card,
-              borderColor: darkTheme.colors.border,
+              borderColor:
+                startDate && endDate
+                  ? darkTheme.colors.accent
+                  : darkTheme.colors.border,
             },
           ]}
           activeOpacity={0.7}
@@ -280,6 +296,7 @@ const ChartsDetailScreen = () => {
               { borderColor: darkTheme.colors.border },
             ]}
             activeOpacity={0.7}
+            onPress={fetchReportData}
           >
             <Ionicons
               name="refresh"
@@ -310,11 +327,16 @@ const ChartsDetailScreen = () => {
             ]}
           >
             {TIME_FILTERS.map((filter) => {
-              const isSelected = activeTimeFilter === filter;
+              const isSelected =
+                !startDate && !endDate && activeTimeFilter === filter;
               return (
                 <TouchableOpacity
                   key={filter}
-                  onPress={() => setActiveTimeFilter(filter)}
+                  onPress={() => {
+                    setStartDate(null);
+                    setEndDate(null);
+                    setActiveTimeFilter(filter);
+                  }}
                   style={[
                     styles.segmentTabNode,
                     isSelected && { backgroundColor: "rgba(255, 149, 0, 0.1)" },
@@ -339,51 +361,60 @@ const ChartsDetailScreen = () => {
             })}
           </View>
 
-          <View style={styles.chartMasterLayoutFrame}>
-            <View style={styles.fixedYAxisLayoutColumn}>
-              {["₹3.00K", "₹2.25K", "₹1.50K", "₹750", "₹0"].map(
-                (yLabel, yIdx) => (
+          {loading ? (
+            <View
+              style={[
+                styles.chartMasterLayoutFrame,
+                { justifyContent: "center", alignItems: "center" },
+              ]}
+            >
+              <ActivityIndicator color={darkTheme.colors.accent} />
+            </View>
+          ) : (
+            <View style={styles.chartMasterLayoutFrame}>
+              <View style={styles.fixedYAxisLayoutColumn}>
+                {yAxisLabels.map((yLabel, yIdx) => (
                   <Text key={yIdx} style={styles.fixedYAxisTextLabel}>
                     {yLabel}
                   </Text>
-                ),
-              )}
-            </View>
+                ))}
+              </View>
 
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.chartHorizontalScrollContainer}
-            >
-              {chartType === "bar" ? (
-                <BarChart
-                  {...chartCommonConfig}
-                  data={barData}
-                  barWidth={scale(24)}
-                  spacing={scale(16)}
-                  roundedTop
-                />
-              ) : (
-                <LineChart
-                  {...chartCommonConfig}
-                  data={lineData}
-                  color={darkTheme.colors.accent}
-                  thickness={3}
-                  textFontSize={scale(9)}
-                  textColor="#FFFFFF"
-                  dataPointsColor="#FFFFFF"
-                  dataPointsRadius={4}
-                />
-              )}
-            </ScrollView>
-          </View>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.chartHorizontalScrollContainer}
+              >
+                {chartType === "bar" ? (
+                  <BarChart
+                    {...chartCommonConfig}
+                    data={barData}
+                    barWidth={scale(24)}
+                    spacing={scale(22)}
+                    roundedTop
+                  />
+                ) : (
+                  <LineChart
+                    {...chartCommonConfig}
+                    data={lineData}
+                    color={darkTheme.colors.accent}
+                    thickness={3}
+                    textFontSize={scale(9)}
+                    textColor="#FFFFFF"
+                    dataPointsColor="#FFFFFF"
+                    dataPointsRadius={4}
+                  />
+                )}
+              </ScrollView>
+            </View>
+          )}
 
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.legendsHorizontalScrollTrack}
           >
-            {LEGEND_DATA.map((legend, index) => (
+            {legendItems.map((legend, index) => (
               <View
                 key={index}
                 style={[
@@ -428,208 +459,84 @@ const ChartsDetailScreen = () => {
             styles.sectionSubtitleOverviewText,
           ]}
         >
-          Track performance insights across your salon
+          Track performance insights across your chair
         </Text>
 
         <View style={styles.asymmetricBalancedGridRow}>
-          {ANALYTICS_FEED.map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              activeOpacity={0.88}
-              style={[
-                styles.gridBalancedMetricBox,
-                {
-                  backgroundColor: darkTheme.colors.card,
-                  borderColor: darkTheme.colors.border,
-                },
-              ]}
-            >
-              <View
+          {ANALYTICS_FEED.map((item) => {
+            const isActiveCard = currentReportType === item.reportType;
+            return (
+              <TouchableOpacity
+                key={item.id}
+                activeOpacity={0.88}
+                onPress={() => {
+                  setCurrentReportType(item.reportType);
+                  setHeaderTitle(item.title);
+                  setHeaderSubTitle(item.desc);
+                }}
                 style={[
-                  styles.gridBoxIconMask,
-                  { backgroundColor: "rgba(255, 149, 0, 0.06)" },
+                  styles.gridBalancedMetricBox,
+                  {
+                    backgroundColor: darkTheme.colors.card,
+                    borderColor: isActiveCard
+                      ? darkTheme.colors.accent
+                      : darkTheme.colors.border,
+                  },
                 ]}
               >
-                <MaterialCommunityIcons
-                  name={item.icon}
-                  size={scale(16)}
-                  color={darkTheme.colors.accent}
-                />
-              </View>
-              <Text
-                style={[
-                  darkTheme.typography.cardTitle,
-                  styles.gridItemTitleText,
-                  { color: darkTheme.colors.textMain },
-                ]}
-              >
-                {item.title}
-              </Text>
-              <Text
-                style={[
-                  darkTheme.typography.bodyMuted,
-                  styles.gridItemDescText,
-                  { color: darkTheme.colors.textMuted },
-                ]}
-              >
-                {item.desc}
-              </Text>
-              <View style={styles.topCornerArrowLink}>
-                <Ionicons
-                  name="arrow-forward-sharp"
-                  size={scale(11)}
-                  color={darkTheme.colors.accent}
-                />
-              </View>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </ScrollView>
-
-      {/* Production Range Calendar Input Modal */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={calendarVisible}
-        onRequestClose={() => setCalendarVisible(false)}
-      >
-        <View style={styles.modalOverlayScrim}>
-          <View
-            style={[
-              styles.calendarModalContent,
-              {
-                backgroundColor: darkTheme.colors.card,
-                borderColor: darkTheme.colors.border,
-              },
-            ]}
-          >
-            <View style={styles.modalHeaderRow}>
-              <View>
+                <View
+                  style={[
+                    styles.gridBoxIconMask,
+                    { backgroundColor: "rgba(255, 149, 0, 0.06)" },
+                  ]}
+                >
+                  <MaterialCommunityIcons
+                    name={item.icon}
+                    size={scale(16)}
+                    color={darkTheme.colors.accent}
+                  />
+                </View>
                 <Text
                   style={[
                     darkTheme.typography.cardTitle,
-                    { fontWeight: "700" },
+                    styles.gridItemTitleText,
+                    { color: darkTheme.colors.textMain },
                   ]}
                 >
-                  Custom Range Picker
+                  {item.title}
                 </Text>
                 <Text
                   style={[
                     darkTheme.typography.bodyMuted,
-                    { fontSize: scale(11), marginTop: verticalScale(2) },
+                    styles.gridItemDescText,
+                    { color: darkTheme.colors.textMuted },
                   ]}
                 >
-                  {currentMonthMoment.format("MMMM YYYY")}
+                  {item.desc}
                 </Text>
-              </View>
-              <View style={styles.calendarPaginatorTrack}>
-                <TouchableOpacity
-                  onPress={handlePrevMonthToggle}
-                  style={[
-                    styles.arrowNavCircleButton,
-                    { borderColor: darkTheme.colors.border },
-                  ]}
-                  activeOpacity={0.7}
-                >
+                <View style={styles.topCornerArrowLink}>
                   <Ionicons
-                    name="chevron-back"
-                    size={scale(14)}
-                    color={darkTheme.colors.textMain}
+                    name="arrow-forward-sharp"
+                    size={scale(11)}
+                    color={darkTheme.colors.accent}
                   />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={handleNextMonthToggle}
-                  style={[
-                    styles.arrowNavCircleButton,
-                    { borderColor: darkTheme.colors.border },
-                  ]}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons
-                    name="chevron-forward"
-                    size={scale(14)}
-                    color={darkTheme.colors.textMain}
-                  />
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            <View style={styles.selectionTrackPreviewBanner}>
-              <Text style={styles.previewBannerText}>
-                {formatBannerLabel(startDate)} — {formatBannerLabel(endDate)}
-              </Text>
-            </View>
-
-            <View style={styles.calendarDaysGrid}>
-              {calendarGridData.map((cell, idx) => {
-                const isCurrent = cell.isCurrentMonth;
-                const cellMoment = cell.momentObj;
-
-                const isStart =
-                  startDate && cellMoment.isSame(startDate, "day") && isCurrent;
-                const isEnd =
-                  endDate && cellMoment.isSame(endDate, "day") && isCurrent;
-                const isInRange =
-                  startDate &&
-                  endDate &&
-                  cellMoment.isBetween(startDate, endDate, "day") &&
-                  isCurrent;
-                const isSelected = isStart || isEnd;
-
-                return (
-                  <TouchableOpacity
-                    key={`cell-${idx}`}
-                    disabled={!isCurrent}
-                    activeOpacity={0.6}
-                    onPress={() => handleDayPress(cell)}
-                    style={[
-                      styles.dayGridCellNode,
-                      !isCurrent && styles.greyedOutBufferCell,
-                      isInRange && {
-                        backgroundColor: "rgba(255, 149, 0, 0.12)",
-                      },
-                      isStart && styles.startDayCellBorderRadius,
-                      isEnd && styles.endDayCellBorderRadius,
-                      isSelected && {
-                        backgroundColor: darkTheme.colors.accent,
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.calendarCellDayNumberText,
-                        {
-                          color: !isCurrent
-                            ? "rgba(255,255,255,0.2)"
-                            : isSelected
-                              ? "#000000"
-                              : darkTheme.colors.textMain,
-                        },
-                        isSelected && { fontWeight: "700" },
-                      ]}
-                    >
-                      {cell.dayNum}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-
-            <TouchableOpacity
-              style={[
-                styles.confirmSelectionActionButton,
-                { backgroundColor: darkTheme.colors.accent },
-              ]}
-              activeOpacity={0.8}
-              onPress={() => setCalendarVisible(false)}
-            >
-              <Text style={styles.confirmButtonTextLabel}>
-                Apply Range Matrix
-              </Text>
-            </TouchableOpacity>
-          </View>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
         </View>
-      </Modal>
+      </ScrollView>
+
+      <RangeCalendarModal
+        visible={calendarVisible}
+        onClose={() => setCalendarVisible(false)}
+        startDate={startDate}
+        endDate={endDate}
+        onSelectRange={({ startDate: newStart, endDate: newEnd }) => {
+          setStartDate(newStart);
+          setEndDate(newEnd);
+        }}
+      />
     </SafeAreaView>
   );
 };
@@ -726,14 +633,14 @@ const styles = StyleSheet.create({
     fontSize: scale(9),
     fontWeight: "700",
     color: "#FFFFFF",
-    width: scale(32),
+    width: scale(36),
     textAlign: "center",
-    marginBottom: verticalScale(50),
+    marginBottom: verticalScale(6),
   },
   xAxisLabelStyle: {
     color: "rgba(255,255,255,0.4)",
     fontSize: scale(9),
-    width: scale(70),
+    width: scale(64),
     textAlign: "center",
     marginTop: verticalScale(6),
   },
@@ -809,92 +716,5 @@ const styles = StyleSheet.create({
     right: scale(14),
     top: scale(14),
     opacity: 0.5,
-  },
-  modalOverlayScrim: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.75)",
-    justifyContent: "flex-end",
-  },
-  calendarModalContent: {
-    width: "100%",
-    borderTopLeftRadius: scale(16),
-    borderTopRightRadius: scale(16),
-    borderTopWidth: 1,
-    padding: scale(20),
-    paddingBottom: verticalScale(36),
-  },
-  modalHeaderRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: verticalScale(16),
-  },
-  calendarPaginatorTrack: {
-    flexDirection: "row",
-    gap: scale(6),
-  },
-  arrowNavCircleButton: {
-    width: scale(28),
-    height: scale(28),
-    borderRadius: scale(14),
-    borderWidth: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.02)",
-  },
-  selectionTrackPreviewBanner: {
-    width: "100%",
-    paddingVertical: verticalScale(10),
-    backgroundColor: "rgba(255, 149, 0, 0.06)",
-    borderRadius: scale(8),
-    alignItems: "center",
-    marginBottom: verticalScale(16),
-  },
-  previewBannerText: {
-    color: darkTheme.colors.accent,
-    fontSize: scale(13),
-    fontWeight: "700",
-  },
-  calendarDaysGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    width: "100%",
-    gap: scale(4),
-    marginBottom: verticalScale(20),
-  },
-  dayGridCellNode: {
-    width: `${100 / 7 - 1.2}%`,
-    height: scale(34),
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: verticalScale(2),
-  },
-  greyedOutBufferCell: {
-    backgroundColor: "transparent",
-  },
-  startDayCellBorderRadius: {
-    borderTopLeftRadius: scale(8),
-    borderBottomLeftRadius: scale(8),
-  },
-  endDayCellBorderRadius: {
-    borderTopRightRadius: scale(8),
-    borderBottomRightRadius: scale(8),
-  },
-  calendarCellDayNumberText: {
-    fontSize: scale(12),
-    fontWeight: "500",
-  },
-  confirmSelectionActionButton: {
-    width: "100%",
-    height: scale(44),
-    borderRadius: scale(10),
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: verticalScale(4),
-  },
-  confirmButtonTextLabel: {
-    color: "#000000",
-    fontWeight: "700",
-    fontSize: scale(13),
   },
 });

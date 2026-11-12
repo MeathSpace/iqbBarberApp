@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   Keyboard,
   Platform,
   StyleSheet,
@@ -13,23 +14,46 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { scale, verticalScale } from "react-native-size-matters";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Toast } from "toastify-react-native";
 
 import { EyeIcon, EyeOffIcon, LeftArrowIcon } from "../../../constants/icons";
 import i18n from "../../src/localization/i18n";
 import { darkTheme } from "../../../constants/appTheme";
+import api from "../../../utils/api";
 
 const SignUp = () => {
   const baseContent = i18n.t("auth.barberauth.signup");
   const router = useRouter();
 
-  const [email, setEmail] = useState("demo@email.com");
-  const [password, setPassword] = useState("123456");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSignUp = () => {
-    console.log("Email:", email);
-    console.log("Password:", password);
-    router.push("/accountDetails");
+  const handleSignUp = async () => {
+    if (!email.trim() || !password.trim()) {
+      Toast.warn("Please enter email and password");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const { data } = await api.post("/barber/register", {
+        email: email.trim(),
+        password,
+      });
+      Toast.success(data?.message || "Barber registered successfully");
+      router.push({
+        pathname: "/accountDetails",
+        params: { email: data?.newUser?.email || email.trim() },
+      });
+    } catch (error) {
+      Toast.error(
+        error?.response?.data?.message || "Failed to register barber",
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -128,7 +152,11 @@ const SignUp = () => {
           </View>
 
           {/* Action Trigger Submit Button */}
-          <TouchableOpacity onPress={handleSignUp} activeOpacity={0.8}>
+          <TouchableOpacity
+            onPress={handleSignUp}
+            activeOpacity={0.8}
+            disabled={loading}
+          >
             <LinearGradient
               colors={[
                 darkTheme.colors.accent, 
@@ -142,9 +170,13 @@ const SignUp = () => {
                 },
               ]}
             >
-              <Text style={[darkTheme.typography.btnText, { color: "#000000" }]}>
-                {baseContent.signUp}
-              </Text>
+              {loading ? (
+                <ActivityIndicator size="small" color="#000000" />
+              ) : (
+                <Text style={[darkTheme.typography.btnText, { color: "#000000" }]}>
+                  {baseContent.signUp}
+                </Text>
+              )}
             </LinearGradient>
           </TouchableOpacity>
 

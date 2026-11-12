@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   Keyboard,
   Platform,
   StyleSheet,
@@ -10,25 +11,58 @@ import {
   View,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { scale, verticalScale } from "react-native-size-matters";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Toast } from "toastify-react-native";
 
 import { EyeIcon, EyeOffIcon, LeftArrowIcon } from "../../../constants/icons";
 import { darkTheme } from "../../../constants/appTheme";
+import api from "../../../utils/api";
 
 const ResetPassword = () => {
   const router = useRouter();
+  const { resetToken: paramToken } = useLocalSearchParams();
+  const resetToken = paramToken || "";
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const handleResetPassword = () => {
-    // handle validation + API
-    router.push("/signin");
+  const handleResetPassword = async () => {
+    if (!password || !confirmPassword) {
+      Toast.warn("Please enter and confirm your new password");
+      return;
+    }
+    if (password !== confirmPassword) {
+      Toast.warn("Passwords do not match");
+      return;
+    }
+    if (!resetToken.trim()) {
+      Toast.warn("Missing reset token");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const { data } = await api.post(
+        `/barber/reset-password/${resetToken.trim()}`,
+        {
+          password,
+        },
+      );
+      Toast.success(data?.message || "Password reset successfully");
+      router.push("/signin");
+    } catch (error) {
+      Toast.error(
+        error?.response?.data?.message || "Failed to reset password",
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -56,7 +90,7 @@ const ResetPassword = () => {
           {/* Header */}
           <View style={{ gap: verticalScale(10) }}>
             <Text style={[darkTheme.typography.headerTitle, styles.title]}>
-              Reset Password Admin
+              Reset Password Barber
             </Text> 
             <Text style={[darkTheme.typography.headerSubtitle, styles.subtitle]}>
               Enter your new password and confirm it below
@@ -144,7 +178,11 @@ const ResetPassword = () => {
           </View>
 
           {/* Reset Button */}
-          <TouchableOpacity onPress={handleResetPassword} activeOpacity={0.8}>
+          <TouchableOpacity
+            onPress={handleResetPassword}
+            activeOpacity={0.8}
+            disabled={loading}
+          >
             <LinearGradient
               colors={[
                 darkTheme.colors.accent,
@@ -158,9 +196,13 @@ const ResetPassword = () => {
                 },
               ]}
             >
-              <Text style={[darkTheme.typography.btnText, { color: "#000000" }]}>
-                Reset Password
-              </Text>
+              {loading ? (
+                <ActivityIndicator size="small" color="#000000" />
+              ) : (
+                <Text style={[darkTheme.typography.btnText, { color: "#000000" }]}>
+                  Reset Password
+                </Text>
+              )}
             </LinearGradient>
           </TouchableOpacity>
         </View>

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   Keyboard,
   Platform,
   StyleSheet,
@@ -13,16 +14,43 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { scale, verticalScale } from "react-native-size-matters";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Toast } from "toastify-react-native";
 
 import { LeftArrowIcon } from "../../../constants/icons";
 import { darkTheme } from "../../../constants/appTheme";
+import api from "../../../utils/api";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handleSendOtp = () => {
-    router.push("/resetPassword");
+  const handleSendOtp = async () => {
+    if (!email.trim()) {
+      Toast.warn("Please enter your email address");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const { data } = await api.post("/barber/forget-password", {
+        email: email.trim(),
+      });
+      Toast.success(data?.message || "Password reset link sent to your email");
+      router.push({
+        pathname: "/resetPassword",
+        params: {
+          resetToken: data?.payload?.resetToken || "",
+          email: email.trim(),
+        },
+      });
+    } catch (error) {
+      Toast.error(
+        error?.response?.data?.message || "Failed to send reset link",
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -53,7 +81,7 @@ const ForgotPassword = () => {
               Forgot Password Barber
             </Text>
             <Text style={[darkTheme.typography.headerSubtitle, styles.subtitle]}>
-              Enter your email and we'll send you a verification code
+              Enter your email and we&apos;ll send you a verification code
             </Text>
           </View>
 
@@ -84,7 +112,11 @@ const ForgotPassword = () => {
           </View>
 
           {/* Action Trigger Button */}
-          <TouchableOpacity onPress={handleSendOtp} activeOpacity={0.8}>
+          <TouchableOpacity
+            onPress={handleSendOtp}
+            activeOpacity={0.8}
+            disabled={loading}
+          >
             <LinearGradient
               colors={[
                 darkTheme.colors.accent,
@@ -98,9 +130,13 @@ const ForgotPassword = () => {
                 },
               ]}
             >
-              <Text style={[darkTheme.typography.btnText, { color: "#000000" }]}>
-                Verify Email
-              </Text>
+              {loading ? (
+                <ActivityIndicator size="small" color="#000000" />
+              ) : (
+                <Text style={[darkTheme.typography.btnText, { color: "#000000" }]}>
+                  Verify Email
+                </Text>
+              )}
             </LinearGradient>
           </TouchableOpacity>
         </View>
