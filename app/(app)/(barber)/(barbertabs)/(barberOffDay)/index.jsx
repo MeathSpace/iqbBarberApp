@@ -479,6 +479,9 @@ const BarberScheduleManager = () => {
       return;
     }
 
+    // Snapshot current state so we can revert locally on error (no re-fetch needed)
+    const previousDays = days;
+
     const nextActive = !dayItem.active;
     const updatedDays = days.map((d) =>
       d.id === dayItem.id
@@ -489,6 +492,7 @@ const BarberScheduleManager = () => {
           }
         : d,
     );
+    // Optimistic update — apply immediately in UI
     setDays(updatedDays);
 
     const appointmentDaysPayload = updatedDays
@@ -520,7 +524,15 @@ const BarberScheduleManager = () => {
       Toast.error(
         error?.response?.data?.message || "Failed to update appointment days",
       );
-      fetchAvailabilityData();
+      console.log(
+        "[toggleDayActive] error:",
+        JSON.stringify(error?.response?.data || error?.message),
+        "payload:",
+        JSON.stringify({ salonId, barberId, appointmentDays: appointmentDaysPayload }),
+      );
+      // Revert to previous local state instead of re-fetching from server
+      // (re-fetching would show stale/wiped data if the backend had a partial failure)
+      setDays(previousDays);
     }
   };
 
@@ -532,6 +544,9 @@ const BarberScheduleManager = () => {
 
   const handleApplyDaySchedule = async (dayItem) => {
     if (!salonId || !barberId) return;
+
+    // Snapshot for local revert on error
+    const previousDays = days;
 
     try {
       setSavingDayId(dayItem.id);
@@ -549,19 +564,34 @@ const BarberScheduleManager = () => {
         appointmentDays: updatedActiveDays,
       });
 
+      // Build the full appointment times payload:
+      // Keep ALL other active days' existing timings + updated timing for this day.
+      // This prevents the backend replace from wiping other days when only one is saved.
+      const otherDaysTimes = days
+        .filter((d) => d.active && d.id !== dayItem.id && d.hours !== "-")
+        .map((d) => ({
+          day: d.name,
+          startTime: d.start,
+          endTime: d.end,
+          barberIntervalTime: Number(d.interval) || 20,
+        }));
+
+      const allAppointmentTimes = [
+        ...otherDaysTimes,
+        {
+          day: dayItem.name,
+          startTime: dayItem.start,
+          endTime: dayItem.end,
+          barberIntervalTime: Number(dayItem.interval) || 20,
+        },
+      ];
+
       const { data } = await api.post(
         "/barberAppointmentTimes/addBarberAppointmentTime",
         {
           salonId,
           barberId,
-          appointmentTimes: [
-            {
-              day: dayItem.name,
-              startTime: dayItem.start,
-              endTime: dayItem.end,
-              barberIntervalTime: Number(dayItem.interval) || 20,
-            },
-          ],
+          appointmentTimes: allAppointmentTimes,
         },
       );
 
@@ -579,9 +609,19 @@ const BarberScheduleManager = () => {
       Toast.success(data?.message || "Appointment times updated");
       setExpandedDayId(null);
     } catch (error) {
-      Toast.error(
-        error?.response?.data?.message || "Failed to save appointment times",
+      const errMsg =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to save appointment times";
+      console.log(
+        "[handleApplyDaySchedule] error:",
+        JSON.stringify(error?.response?.data || error?.message),
+        "payload sent:",
+        JSON.stringify({ salonId, barberId, appointmentTimes: allAppointmentTimes }),
       );
+      Toast.error(errMsg);
+      // Revert local state to what it was before the failed save
+      setDays(previousDays);
     } finally {
       setSavingDayId(null);
     }
