@@ -2,7 +2,7 @@ import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router";
 import moment from "moment";
 import { useCallback, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, FlatList, Modal, Platform, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, FlatList, Modal, Platform, Pressable, RefreshControl, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { scale, verticalScale } from "react-native-size-matters";
 
@@ -32,7 +32,9 @@ const AppointmentsDashboard = () => {
   const [selectedDay, setSelectedDay] = useState(dateTimeline[0]);
   const [searchQuery, setSearchQuery] = useState("");
   const [appointments, setAppointments] = useState([]);
+  const [bookedDatesSet, setBookedDatesSet] = useState(new Set());
   const [appointmentsLoading, setAppointmentsLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [appointmentActionLoading, setAppointmentActionLoading] = useState(false);
 
   // Modal Sheet Interaction States
@@ -41,10 +43,40 @@ const AppointmentsDashboard = () => {
 
   // Filters timeline segments by sliding window week index
   const visibleDays = useMemo(() => {
-    return dateTimeline.filter((day) => day.weekIndex === currentWeek);
-  }, [currentWeek, dateTimeline]);
+    return dateTimeline
+      .filter((day) => day.weekIndex === currentWeek)
+      .map((day) => ({
+        ...day,
+        hasAppointments: bookedDatesSet.has(day.fullDate),
+      }));
+  }, [currentWeek, dateTimeline, bookedDatesSet]);
 
-  const loadAppointments = useCallback(async () => {
+  const loadAllBarberAppointmentDates = useCallback(async () => {
+    const salonId = authenticatedUser?.salonId;
+    const barberId = authenticatedUser?.barberId;
+    if (!salonId || !barberId) return;
+    try {
+      const { data } = await api.post(
+        "/appointments/getAllAppointmentsByBarberId",
+        { salonId, barberId },
+      );
+      const list = Array.isArray(data?.response) ? data.response : [];
+      const dates = new Set(
+        list
+          .map((item) =>
+            item?.appointmentDate
+              ? moment(item.appointmentDate).format("YYYY-MM-DD")
+              : null,
+          )
+          .filter(Boolean),
+      );
+      setBookedDatesSet(dates);
+    } catch (_error) {
+      // ignore indicator error
+    }
+  }, [authenticatedUser]);
+
+  const loadAppointments = useCallback(async (isRefresh = false) => {
     const salonId = authenticatedUser?.salonId;
     const barberId = authenticatedUser?.barberId;
     if (!salonId || !barberId || !selectedDay?.fullDate) {
@@ -52,7 +84,11 @@ const AppointmentsDashboard = () => {
       return;
     }
 
-    setAppointmentsLoading(true);
+    if (isRefresh) {
+      setRefreshing(true);
+    } else {
+      setAppointmentsLoading(true);
+    }
     try {
       const { data } = await api.post(
         "/appointments/getAppointmentListByBarberIdAppointmentDate",
@@ -80,13 +116,15 @@ const AppointmentsDashboard = () => {
       setAppointments([]);
     } finally {
       setAppointmentsLoading(false);
+      setRefreshing(false);
     }
   }, [authenticatedUser, selectedDay?.fullDate]);
 
   useFocusEffect(
     useCallback(() => {
-      loadAppointments();
-    }, [loadAppointments]),
+      loadAppointments(false);
+      loadAllBarberAppointmentDates();
+    }, [loadAppointments, loadAllBarberAppointmentDates]),
   );
 
   // Interactive Chevron State Shifter Actions
@@ -341,6 +379,17 @@ const AppointmentsDashboard = () => {
         renderItem={renderAppointmentCard}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => {
+              loadAppointments(true);
+              loadAllBarberAppointmentDates();
+            }}
+            tintColor={darkTheme.colors.accent}
+            colors={[darkTheme.colors.accent]}
+          />
+        }
         maxToRenderPerBatch={10}
         windowSize={5}
         initialNumToRender={10}

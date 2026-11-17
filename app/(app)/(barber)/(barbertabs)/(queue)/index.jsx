@@ -7,6 +7,7 @@ import {
   FlatList,
   Modal,
   Platform,
+  RefreshControl,
   StyleSheet,
   Text,
   TextInput,
@@ -25,12 +26,13 @@ const QueueList = () => {
   const { authenticatedUser } = useBarberAuth();
   const [queue, setQueue] = useState([]);
   const [queueLoading, setQueueLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedQueueItem, setSelectedQueueItem] = useState(null);
   const [queueActionLoading, setQueueActionLoading] = useState(false);
 
-  useFocusEffect(
-    useCallback(() => {
+  const loadQueue = useCallback(
+    async (isRefresh = false) => {
       const salonId = authenticatedUser?.salonId;
       const barberId = authenticatedUser?.barberId;
       if (!salonId || !barberId) {
@@ -38,40 +40,47 @@ const QueueList = () => {
         return;
       }
 
-      let isCurrent = true;
-      const fetchQueue = async () => {
+      if (isRefresh) {
+        setRefreshing(true);
+      } else {
         setQueueLoading(true);
-        try {
-          const { data } = await api.get("/queue/getQlistByBarberId", {
-            params: { salonId, barberId, page: 1, search: searchQuery },
-          });
-          const items = Array.isArray(data?.response) ? data.response : [];
-          if (isCurrent) {
-            setQueue(items.map((item) => ({
-              ...item,
-              id: item._id,
-              clientName: item.customerName || "Customer",
-              barberName: item.barberName || authenticatedUser?.name || "Assigned barber",
-              status: Number(item.qPosition) === 1 ? "Next" : "Waiting",
-              position: String(item.qPosition ?? "-"),
-              ewt: item.customerEWT == null ? "" : `${item.customerEWT} mins`,
-            })));
-          }
-        } catch (error) {
-          if (isCurrent) {
-            console.error("Failed to fetch barber queue:", error?.response?.data || error.message);
-            setQueue([]);
-          }
-        } finally {
-          if (isCurrent) setQueueLoading(false);
-        }
-      };
+      }
 
-      fetchQueue();
-      return () => {
-        isCurrent = false;
-      };
-    }, [authenticatedUser, searchQuery]),
+      try {
+        const { data } = await api.get("/queue/getQlistByBarberId", {
+          params: { salonId, barberId, page: 1, search: searchQuery },
+        });
+        const items = Array.isArray(data?.response) ? data.response : [];
+        setQueue(
+          items.map((item) => ({
+            ...item,
+            id: item._id,
+            clientName: item.customerName || "Customer",
+            barberName:
+              item.barberName || authenticatedUser?.name || "Assigned barber",
+            status: Number(item.qPosition) === 1 ? "Next" : "Waiting",
+            position: String(item.qPosition ?? "-"),
+            ewt: item.customerEWT == null ? "" : `${item.customerEWT} mins`,
+          })),
+        );
+      } catch (error) {
+        console.error(
+          "Failed to fetch barber queue:",
+          error?.response?.data || error.message,
+        );
+        setQueue([]);
+      } finally {
+        setQueueLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [authenticatedUser, searchQuery],
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      loadQueue(false);
+    }, [loadQueue]),
   );
 
   const filteredQueue = queue.filter(
@@ -85,7 +94,7 @@ const QueueList = () => {
   };
 
   const getQueueActionPayload = (item) => ({
-    adminEmail: authenticatedUser?.email,
+    barberEmail: item?.barberEmail || authenticatedUser?.email,
     barberId: item?.barberId || authenticatedUser?.barberId,
     salonId: authenticatedUser?.salonId,
     services: item?.services || [],
@@ -105,8 +114,8 @@ const QueueList = () => {
               ...getQueueActionPayload(selectedQueueItem),
               servedByEmail: authenticatedUser?.email,
             });
-            setQueue((items) => items.filter((item) => item._id !== selectedQueueItem._id));
             setSelectedQueueItem(null);
+            await loadQueue(false);
           } catch (error) {
             Alert.alert("Could not serve customer", error?.response?.data?.message || "Please try again.");
           } finally {
@@ -128,8 +137,8 @@ const QueueList = () => {
           setQueueActionLoading(true);
           try {
             await api.post("/queue/cancelQ", getQueueActionPayload(selectedQueueItem));
-            setQueue((items) => items.filter((item) => item._id !== selectedQueueItem._id));
             setSelectedQueueItem(null);
+            await loadQueue(false);
           } catch (error) {
             Alert.alert("Could not cancel queue entry", error?.response?.data?.message || "Please try again.");
           } finally {
@@ -298,6 +307,14 @@ const QueueList = () => {
         renderItem={renderQueueItem}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => loadQueue(true)}
+            tintColor={darkTheme.colors.accent}
+            colors={[darkTheme.colors.accent]}
+          />
+        }
         maxToRenderPerBatch={10}
         windowSize={5}
         initialNumToRender={10}
@@ -353,10 +370,15 @@ const QueueList = () => {
                 style={[styles.modalActionButton, { backgroundColor: darkTheme.colors.accent, borderRadius: darkTheme.layout.borderRadiusMedium }]}
                 onPress={handleServeClient}
                 activeOpacity={0.8}
+                disabled={queueActionLoading}
               >
-                <Text style={[darkTheme.typography.btnText, { color: "#000000", fontWeight: "700" }]}>
-                  Serve Customer
-                </Text>
+                {queueActionLoading ? (
+                  <ActivityIndicator size="small" color="#000000" />
+                ) : (
+                  <Text style={[darkTheme.typography.btnText, { color: "#000000", fontWeight: "700" }]}>
+                    Serve Customer
+                  </Text>
+                )}
               </TouchableOpacity>
 
               {/* Dismiss / Cancel Action Button */}

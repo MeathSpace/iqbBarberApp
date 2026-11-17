@@ -1,4 +1,3 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -85,9 +84,15 @@ const SignIn = () => {
       const payload = { email, password };
 
       const { data } = await api.post("/barber/login", payload);
-  
-      await SecureStore.setItemAsync("barberRefreshToken", data.accessToken);
-      await SecureStore.setItemAsync("barberEmail", data?.foundBarber?.email);
+      const userObj = data?.foundUser || data?.foundBarber;
+
+      if (data?.accessToken) {
+        await SecureStore.setItemAsync("barberRefreshToken", String(data.accessToken));
+      }
+      await SecureStore.setItemAsync(
+        "barberEmail",
+        String(userObj?.email || email),
+      );
 
       if (rememberMe) {
         await SecureStore.setItemAsync("barber_remember_me_email", email);
@@ -96,8 +101,39 @@ const SignIn = () => {
       }
       router.push("/(barber)/(barbertabs)/(home)");
     } catch (error) {
-      console.log(error)
-      Toast.error(error?.response?.data?.message);
+      console.log(error);
+      Toast.error(error?.response?.data?.message || "Failed to sign in");
+    } finally {
+      setSigninLoader(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    if (!email || !isValidEmail(email)) {
+      Toast.warn("Please enter a valid email address for Google Sign In");
+      return;
+    }
+    try {
+      setSigninLoader(true);
+      const { data } = await api.post("/barber/googleBarberLogin", {
+        email: email.trim(),
+      });
+      const userObj = data?.foundUser || data?.foundBarber || data?.user;
+      if (data?.accessToken) {
+        await SecureStore.setItemAsync(
+          "barberRefreshToken",
+          String(data.accessToken),
+        );
+      }
+      await SecureStore.setItemAsync(
+        "barberEmail",
+        String(userObj?.email || email.trim()),
+      );
+      router.push("/(barber)/(barbertabs)/(home)");
+    } catch (error) {
+      Toast.error(
+        error?.response?.data?.message || "Failed to sign in with Google",
+      );
     } finally {
       setSigninLoader(false);
     }
@@ -318,6 +354,8 @@ const SignIn = () => {
 
           {/* Alternate Provider Login */}
           <TouchableOpacity
+            onPress={handleGoogleSignIn}
+            disabled={signinLoader}
             style={[
               styles.googleBtn,
               {

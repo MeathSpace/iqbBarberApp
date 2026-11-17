@@ -56,6 +56,31 @@ const SignUp = () => {
     }
   };
 
+  const handleGoogleSignUp = async () => {
+    if (!email.trim()) {
+      Toast.warn("Please enter your email address for Google Sign Up");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const { data } = await api.post("/barber/googleBarberSignUp", {
+        email: email.trim(),
+      });
+      Toast.success(data?.message || "Google sign up successful");
+      router.push({
+        pathname: "/accountDetails",
+        params: { email: data?.newUser?.email || email.trim() },
+      });
+    } catch (error) {
+      Toast.error(
+        error?.response?.data?.message || "Failed to sign up with Google",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <SafeAreaView style={[styles.container, { backgroundColor: darkTheme.colors.background }]}>
@@ -191,6 +216,8 @@ const SignUp = () => {
 
           {/* Alternate Provider Signup */}
           <TouchableOpacity
+            onPress={handleGoogleSignUp}
+            disabled={loading}
             style={[
               styles.googleBtn,
               {

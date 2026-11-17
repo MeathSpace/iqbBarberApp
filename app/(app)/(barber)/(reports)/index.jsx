@@ -75,6 +75,13 @@ const REPORTS_DATA = [
     description: "Amount of active service time spent on queue customers.",
     category: "Queue",
   },
+  {
+    id: "r9",
+    reportType: "onlinePresence",
+    title: "Online presence summary",
+    description: "Daily online availability and clocked-in presence trends.",
+    category: "Queue",
+  },
 ];
 
 const ReportsDashboard = () => {

@@ -17,6 +17,7 @@ import { scale, verticalScale } from "react-native-size-matters";
 import { Toast } from "toastify-react-native";
 
 import BarberHeader from "../../../../../components/Header/BarberHeader";
+import RangeCalendarModal from "../../../../../components/RangeCalender";
 import { darkTheme } from "../../../../../constants/appTheme";
 import { useBarberAuth } from "../../../../../context/barber/AuthContext";
 import api from "../../../../../utils/api";
@@ -83,6 +84,36 @@ const BarberScheduleManager = () => {
     useState(DEFAULT_TIME_OPTIONS);
   const [breakLoading, setBreakLoading] = useState(false);
 
+  // Service Timings states
+  const [serviceTimings, setServiceTimings] = useState([]);
+  const [selectedServiceId, setSelectedServiceId] = useState(null);
+  const [serviceStart, setServiceStart] = useState("10:00");
+  const [serviceEnd, setServiceEnd] = useState("11:00");
+  const [serviceTimingLoading, setServiceTimingLoading] = useState(false);
+
+  // Barber Reservation & Attendance states
+  const [attendanceList, setAttendanceList] = useState([]);
+  const [loadingAttendance, setLoadingAttendance] = useState(false);
+  const [attStartDate, setAttStartDate] = useState(
+    moment().subtract(30, "days"),
+  );
+  const [attEndDate, setAttEndDate] = useState(moment());
+  const [attCalendarVisible, setAttCalendarVisible] = useState(false);
+  const [resDate, setResDate] = useState(moment().format("YYYY-MM-DD"));
+  const [resStart, setResStart] = useState("12:00");
+  const [resEnd, setResEnd] = useState("13:00");
+  const [resLoading, setResLoading] = useState(false);
+
+  const barberServiceOptions = useMemo(() => {
+    const svcs = Array.isArray(authenticatedUser?.barberServices)
+      ? authenticatedUser.barberServices
+      : [];
+    return svcs.map((s) => ({
+      label: s.serviceName || `Service #${s.serviceId}`,
+      value: s.serviceId,
+    }));
+  }, [authenticatedUser?.barberServices]);
+
   // Off Days states
   const [currentMonth, setCurrentMonth] = useState(moment());
   const [initialOffDates, setInitialOffDates] = useState([]);
@@ -116,7 +147,7 @@ const BarberScheduleManager = () => {
           setLoadingAvailability(true);
         }
 
-        const [apptDaysRes, apptTimesRes, salonSettingsRes] =
+        const [apptDaysRes, apptTimesRes, salonSettingsRes, svcTimingsRes] =
           await Promise.allSettled([
             api.post("/barberAppointmentDays/getBarberAppointmentDays", {
               salonId,
@@ -129,7 +160,18 @@ const BarberScheduleManager = () => {
             api.post("/salonSettings/getSalonSettingsForBarber", {
               salonId,
             }),
+            api.post("/barberServiceTimings/getBarberServiceTime", {
+              salonId,
+              barberId,
+            }),
           ]);
+
+        if (svcTimingsRes.status === "fulfilled") {
+          const list = Array.isArray(svcTimingsRes.value?.data?.response)
+            ? svcTimingsRes.value.data.response
+            : [];
+          setServiceTimings(list);
+        }
 
         let activeDaysList = [];
         let hoursMap = new Map();
@@ -258,10 +300,114 @@ const BarberScheduleManager = () => {
     [salonId, barberId],
   );
 
+  const fetchAttendance = useCallback(
+    async (isRefresh = false) => {
+      if (!salonId || !barberId) return;
+      try {
+        if (isRefresh) {
+          setRefreshing(true);
+        } else {
+          setLoadingAttendance(true);
+        }
+        const { data } = await api.post("/barber/getAttendenceByBarberId", {
+          salonId,
+          barberId,
+          startDate: attStartDate.format("DD-MM-YYYY"),
+          endDate: attEndDate.format("DD-MM-YYYY"),
+        });
+        const list = Array.isArray(data?.response?.attendance)
+          ? data.response.attendance
+          : Array.isArray(data?.response)
+            ? data.response
+            : [];
+        setAttendanceList(list);
+      } catch (error) {
+        console.log("Error fetching attendance:", error);
+        setAttendanceList([]);
+      } finally {
+        setLoadingAttendance(false);
+        setRefreshing(false);
+      }
+    },
+    [salonId, barberId, attStartDate, attEndDate],
+  );
+
+  const handleAddServiceTiming = async (dayItem) => {
+    if (!salonId || !barberId || !selectedServiceId) {
+      Toast.warn("Please select a service first");
+      return;
+    }
+    try {
+      setServiceTimingLoading(true);
+      const existingForDay = serviceTimings
+        .filter((st) => st.day === dayItem.name)
+        .map((st) => ({
+          day: st.day,
+          startTime: st.startTime,
+          endTime: st.endTime,
+          services: Array.isArray(st.services) ? st.services : [],
+        }));
+      const payloadTimings = [
+        ...existingForDay,
+        {
+          day: dayItem.name,
+          startTime: serviceStart,
+          endTime: serviceEnd,
+          services: [Number(selectedServiceId)],
+        },
+      ];
+      const { data } = await api.post(
+        "/barberServiceTimings/addBarberServiceTime",
+        {
+          salonId,
+          barberId,
+          serviceTimings: payloadTimings,
+        },
+      );
+      if (Array.isArray(data?.response)) {
+        setServiceTimings(data.response);
+      } else {
+        await fetchAvailabilityData();
+      }
+      Toast.success(data?.message || "Service timing added");
+    } catch (error) {
+      Toast.error(
+        error?.response?.data?.message || "Failed to add service timing",
+      );
+    } finally {
+      setServiceTimingLoading(false);
+    }
+  };
+
+  const handleAddReservation = async () => {
+    if (!salonId || !barberId || resLoading) return;
+    try {
+      setResLoading(true);
+      const { data } = await api.post(
+        "/barberReservations/addBarberReservations",
+        {
+          salonId,
+          barberId,
+          date: resDate,
+          startTime: resStart,
+          endTime: resEnd,
+        },
+      );
+      Toast.success(data?.message || "Reservation added successfully");
+    } catch (error) {
+      Toast.error(
+        error?.response?.data?.message || "Failed to add reservation",
+      );
+    } finally {
+      setResLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchAvailabilityData();
     fetchOffDays();
-  }, [fetchAvailabilityData, fetchOffDays]);
+    fetchAttendance();
+  }, [fetchAvailabilityData, fetchOffDays, fetchAttendance]);
 
   const fetchDayBreaks = useCallback(
     async (dayName) => {
@@ -824,6 +970,94 @@ const BarberScheduleManager = () => {
               </View>
             )}
 
+            {/* Service Timings Section */}
+            {barberServiceOptions.length > 0 && (
+              <>
+                <Text style={styles.matrixLabel}>SERVICE TIMINGS</Text>
+                <Dropdown
+                  style={[
+                    styles.customDropdownSelector,
+                    { width: "100%", marginBottom: verticalScale(8) },
+                  ]}
+                  placeholderStyle={styles.pickerValText}
+                  selectedTextStyle={styles.pickerValText}
+                  containerStyle={styles.dropdownMenuContainer}
+                  itemTextStyle={styles.pickerValText}
+                  activeColor="rgba(255, 149, 0, 0.12)"
+                  data={barberServiceOptions}
+                  maxHeight={180}
+                  labelField="label"
+                  valueField="value"
+                  placeholder="Select Service"
+                  value={selectedServiceId}
+                  onChange={(opt) => setSelectedServiceId(opt.value)}
+                />
+                <View style={styles.breakItemEntityRow}>
+                  <Dropdown
+                    style={styles.customDropdownSelector}
+                    placeholderStyle={styles.pickerValText}
+                    selectedTextStyle={styles.pickerValText}
+                    containerStyle={styles.dropdownMenuContainer}
+                    itemTextStyle={styles.pickerValText}
+                    activeColor="rgba(255, 149, 0, 0.12)"
+                    data={DEFAULT_TIME_OPTIONS}
+                    maxHeight={180}
+                    labelField="label"
+                    valueField="value"
+                    value={serviceStart}
+                    onChange={(opt) => setServiceStart(opt.value)}
+                  />
+                  <Dropdown
+                    style={styles.customDropdownSelector}
+                    placeholderStyle={styles.pickerValText}
+                    selectedTextStyle={styles.pickerValText}
+                    containerStyle={styles.dropdownMenuContainer}
+                    itemTextStyle={styles.pickerValText}
+                    activeColor="rgba(255, 149, 0, 0.12)"
+                    data={DEFAULT_TIME_OPTIONS}
+                    maxHeight={180}
+                    labelField="label"
+                    valueField="value"
+                    value={serviceEnd}
+                    onChange={(opt) => setServiceEnd(opt.value)}
+                  />
+                  <TouchableOpacity
+                    style={[
+                      styles.addActionPillBadge,
+                      { backgroundColor: darkTheme.colors.accent },
+                    ]}
+                    onPress={() => handleAddServiceTiming(item)}
+                    disabled={serviceTimingLoading}
+                  >
+                    {serviceTimingLoading ? (
+                      <ActivityIndicator size="small" color="#000000" />
+                    ) : (
+                      <Text style={styles.addActionText}>Add</Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+
+                {serviceTimings.filter((st) => st.day === item.name).length >
+                  0 && (
+                  <View style={styles.breaksListContainer}>
+                    {serviceTimings
+                      .filter((st) => st.day === item.name)
+                      .map((st, sIdx) => (
+                        <View
+                          key={st._id || `${st.startTime}-${sIdx}`}
+                          style={styles.breakSavedPill}
+                        >
+                          <Text style={styles.breakSavedText}>
+                            Service #{ (st.services || []).join(", ") }:{" "}
+                            {st.startTime} - {st.endTime}
+                          </Text>
+                        </View>
+                      ))}
+                  </View>
+                )}
+              </>
+            )}
+
             {/* Action Row */}
             <View style={styles.modalActionGroupRow}>
               <TouchableOpacity
@@ -916,7 +1150,33 @@ const BarberScheduleManager = () => {
               },
             ]}
           >
-            Barber Off Days
+            Off Days
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => setActiveTab("attendance")}
+          style={[
+            styles.tabSelectorNode,
+            activeTab === "attendance" && {
+              backgroundColor: darkTheme.colors.card,
+              borderColor: "rgba(255,255,255,0.05)",
+            },
+          ]}
+        >
+          <Text
+            style={[
+              styles.tabSelectorText,
+              {
+                color:
+                  activeTab === "attendance"
+                    ? darkTheme.colors.textMain
+                    : darkTheme.colors.textMuted,
+              },
+            ]}
+          >
+            Attendance
           </Text>
         </TouchableOpacity>
       </View>
@@ -949,7 +1209,7 @@ const BarberScheduleManager = () => {
             }
           />
         )
-      ) : (
+      ) : activeTab === "offdays" ? (
         <View style={styles.offDaysFlexFrame}>
           <View style={styles.monthHeaderSubstrip}>
             <TouchableOpacity
@@ -1054,7 +1314,182 @@ const BarberScheduleManager = () => {
             </TouchableOpacity>
           </View>
         </View>
-      )}
+      ) : activeTab === "attendance" ? (
+        <View style={styles.offDaysFlexFrame}>
+          {/* Quick Slot Reservation Card */}
+          <View
+            style={[
+              styles.premiumLuxuryCard,
+              {
+                backgroundColor: darkTheme.colors.card,
+                borderColor: darkTheme.colors.border,
+                marginHorizontal: darkTheme.layout.paddingHorizontal,
+                marginBottom: verticalScale(12),
+              },
+            ]}
+          >
+            <Text style={styles.matrixLabel}>RESERVE TIME SLOT ({resDate})</Text>
+            <View style={[styles.breakItemEntityRow, { marginBottom: 0 }]}>
+              <Dropdown
+                style={styles.customDropdownSelector}
+                placeholderStyle={styles.pickerValText}
+                selectedTextStyle={styles.pickerValText}
+                containerStyle={styles.dropdownMenuContainer}
+                itemTextStyle={styles.pickerValText}
+                activeColor="rgba(255, 149, 0, 0.12)"
+                data={DEFAULT_TIME_OPTIONS}
+                maxHeight={180}
+                labelField="label"
+                valueField="value"
+                value={resStart}
+                onChange={(opt) => setResStart(opt.value)}
+              />
+              <Dropdown
+                style={styles.customDropdownSelector}
+                placeholderStyle={styles.pickerValText}
+                selectedTextStyle={styles.pickerValText}
+                containerStyle={styles.dropdownMenuContainer}
+                itemTextStyle={styles.pickerValText}
+                activeColor="rgba(255, 149, 0, 0.12)"
+                data={DEFAULT_TIME_OPTIONS}
+                maxHeight={180}
+                labelField="label"
+                valueField="value"
+                value={resEnd}
+                onChange={(opt) => setResEnd(opt.value)}
+              />
+              <TouchableOpacity
+                style={[
+                  styles.addActionPillBadge,
+                  { backgroundColor: darkTheme.colors.accent },
+                ]}
+                onPress={handleAddReservation}
+                disabled={resLoading}
+              >
+                {resLoading ? (
+                  <ActivityIndicator size="small" color="#000000" />
+                ) : (
+                  <Text style={styles.addActionText}>Reserve</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              paddingHorizontal: darkTheme.layout.paddingHorizontal,
+              marginBottom: verticalScale(10),
+            }}
+          >
+            <TouchableOpacity
+              onPress={() => setAttCalendarVisible(true)}
+              style={[
+                styles.monthHeaderSubstrip,
+                { marginHorizontal: 0, marginBottom: 0 },
+              ]}
+            >
+              <Feather
+                name="calendar"
+                size={scale(12)}
+                color={darkTheme.colors.accent}
+              />
+              <Text style={styles.monthSubstripLabel}>
+                {attStartDate.format("DD MMM YY")} -{" "}
+                {attEndDate.format("DD MMM YY")}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {loadingAttendance ? (
+            <ActivityIndicator
+              color={darkTheme.colors.accent}
+              style={{ marginTop: verticalScale(40) }}
+            />
+          ) : (
+            <FlatList
+              data={attendanceList}
+              keyExtractor={(item, idx) => item._id || String(idx)}
+              contentContainerStyle={styles.offDaysListContainer}
+              showsVerticalScrollIndicator={false}
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={() => fetchAttendance(true)}
+                  tintColor={darkTheme.colors.accent}
+                  colors={[darkTheme.colors.accent]}
+                />
+              }
+              ListEmptyComponent={
+                <Text
+                  style={{
+                    color: darkTheme.colors.textMuted,
+                    textAlign: "center",
+                    marginTop: verticalScale(30),
+                    fontSize: scale(12),
+                  }}
+                >
+                  No attendance logs found for selected range
+                </Text>
+              }
+              renderItem={({ item }) => (
+                <View
+                  style={[
+                    styles.offDayRecordItemCard,
+                    {
+                      backgroundColor: darkTheme.colors.card,
+                      borderColor: darkTheme.colors.border,
+                      justifyContent: "space-between",
+                    },
+                  ]}
+                >
+                  <View>
+                    <Text style={styles.offDayRecordLabelText}>
+                      {item.date || item.day}
+                    </Text>
+                    <Text
+                      style={{
+                        color: darkTheme.colors.textMuted,
+                        fontSize: scale(10),
+                      }}
+                    >
+                      {item.day}
+                    </Text>
+                  </View>
+                  <Text
+                    style={{
+                      color:
+                        item.signInTime || item.signOutTime
+                          ? darkTheme.colors.accent
+                          : darkTheme.colors.textMuted,
+                      fontSize: scale(11),
+                      fontWeight: "600",
+                    }}
+                  >
+                    {item.signInTime || "--:--"} → {item.signOutTime || "--:--"}
+                  </Text>
+                </View>
+              )}
+            />
+          )}
+
+          <RangeCalendarModal
+            visible={attCalendarVisible}
+            onClose={() => setAttCalendarVisible(false)}
+            startDate={attStartDate}
+            endDate={attEndDate}
+            onSelectRange={({ startDate: s, endDate: e }) => {
+              if (s) {
+                setAttStartDate(s);
+                setResDate(s.format("YYYY-MM-DD"));
+              }
+              if (e) setAttEndDate(e);
+            }}
+          />
+        </View>
+      ) : null}
     </SafeAreaView>
   );
 };

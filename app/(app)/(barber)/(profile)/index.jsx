@@ -197,20 +197,41 @@ const EditProfileScreen = () => {
         name: fileName,
         type: fileType,
       });
-      formData.append("email", authenticatedUser?.email);
+
+      const existingProfilePic = authenticatedUser?.profile?.[0];
 
       try {
         setProfilePicUploadLoader(true);
+        let data;
 
-        const { data } = await api.post(
-          "/barber/uploadBarberProfilePicture",
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
+        if (existingProfilePic?.public_id && authenticatedUser?._id) {
+          formData.append("id", String(authenticatedUser._id));
+          formData.append("public_imgid", String(existingProfilePic.public_id));
+          formData.append("salonId", String(authenticatedUser?.salonId ?? 0));
+
+          const res = await api.put(
+            "/barber/updateBarberProfilePicture",
+            formData,
+            {
+              headers: {
+                "Content-Type": "multipart/form-data",
+              },
             },
-          },
-        );
+          );
+          data = res.data;
+        } else {
+          formData.append("email", authenticatedUser?.email);
+          const res = await api.post(
+            "/barber/uploadBarberProfilePicture",
+            formData,
+            {
+              headers: {
+                "Content-Type": "multipart/form-data",
+              },
+            },
+          );
+          data = res.data;
+        }
 
         const uploadedUrl =
           data?.barberImage?.profile?.[0]?.url ||
@@ -228,6 +249,30 @@ const EditProfileScreen = () => {
       } finally {
         setProfilePicUploadLoader(false);
       }
+    }
+  };
+
+  const handleDeleteProfilePicture = async () => {
+    const existingProfilePic = authenticatedUser?.profile?.[0];
+    if (!existingProfilePic?.public_id || profilePicUploadLoader) return;
+
+    try {
+      setProfilePicUploadLoader(true);
+      const { data } = await api.delete("/barber/deleteBarberProfilePicture", {
+        data: {
+          public_id: existingProfilePic.public_id,
+          img_id: existingProfilePic._id || authenticatedUser?._id,
+        },
+      });
+      setProfileImage(null);
+      await fetchLoggedInBarber();
+      Toast.success(data?.message || "Profile picture deleted");
+    } catch (error) {
+      Toast.error(
+        error?.response?.data?.message || "Failed to delete profile picture",
+      );
+    } finally {
+      setProfilePicUploadLoader(false);
     }
   };
 
@@ -619,6 +664,31 @@ const EditProfileScreen = () => {
             >
               {name || "Barber"}
             </Text>
+
+            {authenticatedUser?.profile?.[0]?.public_id && profileImage && (
+              <TouchableOpacity
+                onPress={handleDeleteProfilePicture}
+                disabled={profilePicUploadLoader}
+                style={{
+                  marginTop: verticalScale(4),
+                  marginBottom: verticalScale(4),
+                  paddingHorizontal: scale(10),
+                  paddingVertical: verticalScale(3),
+                  borderRadius: scale(10),
+                  backgroundColor: "rgba(255, 59, 48, 0.1)",
+                }}
+              >
+                <Text
+                  style={{
+                    color: "#FF3B30",
+                    fontSize: scale(10),
+                    fontWeight: "600",
+                  }}
+                >
+                  Remove Photo
+                </Text>
+              </TouchableOpacity>
+            )}
             <Text style={styles.userRoleTagLabel}>
               {authenticatedUser?.role || "Barber"}
             </Text>

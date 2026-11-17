@@ -1,6 +1,6 @@
 import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter, useSegments } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
@@ -10,6 +10,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
@@ -23,14 +24,6 @@ import api from "../../utils/api";
 
 const { width, height } = Dimensions.get("window");
 const DRAWER_WIDTH = width * 0.72;
-
-// Mock list matching your platform salon catalog index profiles
-const MOCK_SALONS = [
-  { id: "s1", name: "Modern Unisex Salon" },
-  { id: "s2", name: "Salon 2" },
-  { id: "s3", name: "Salon 3" },
-  { id: "s4", name: "salon 4" },
-];
 
 const MENU_ITEMS = [
   {
@@ -107,11 +100,18 @@ const MENU_ITEMS = [
     iconName: "edit-2",
     route: "/(barber)/(editServices)",
   },
+  {
+    key: "connect-salon",
+    label: "Choose Salon",
+    iconFamily: "Feather",
+    iconName: "link",
+    isActionTrigger: true,
+  },
 ];
 
 const BarberHeader = ({ title, subTitle, showBack = false }) => {
   const {
-    logout,
+    userLogut,
     authenticatedUser,
     setAuthenticatedUser,
     fetchLoggedInBarber,
@@ -120,7 +120,14 @@ const BarberHeader = ({ title, subTitle, showBack = false }) => {
   const segments = useSegments();
   const [menuVisible, setMenuVisible] = useState(false);
   const [salonModalVisible, setSalonModalVisible] = useState(false);
-  const [selectedSalonId, setSelectedSalonId] = useState("s1");
+  const [selectedSalonId, setSelectedSalonId] = useState(
+    authenticatedUser?.salonId || null,
+  );
+  const [salonsList, setSalonsList] = useState([]);
+  const [salonSearch, setSalonSearch] = useState("");
+  const [salonsLoading, setSalonsLoading] = useState(false);
+  const [salonServices, setSalonServices] = useState([]);
+  const [connectLoading, setConnectLoading] = useState(false);
   const [expandedSections, setExpandedSections] = useState({});
 
   // Status Switch States
@@ -137,8 +144,104 @@ const BarberHeader = ({ title, subTitle, showBack = false }) => {
     if (authenticatedUser) {
       setIsClockedIn(Boolean(authenticatedUser?.isClockedIn));
       setIsOnline(Boolean(authenticatedUser?.isOnline));
+      if (authenticatedUser?.salonId) {
+        setSelectedSalonId(authenticatedUser.salonId);
+      }
     }
   }, [authenticatedUser]);
+
+  const fetchSalons = useCallback(async (search = "") => {
+    try {
+      setSalonsLoading(true);
+      const { data } = await api.get("/barber/getAllSalons", {
+        params: { search },
+      });
+      const list = Array.isArray(data?.response)
+        ? data.response
+        : Array.isArray(data?.salons)
+          ? data.salons
+          : [];
+      setSalonsList(list);
+    } catch (_error) {
+      setSalonsList([]);
+    } finally {
+      setSalonsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (salonModalVisible) {
+      fetchSalons(salonSearch);
+    }
+  }, [salonModalVisible, salonSearch, fetchSalons]);
+
+  useEffect(() => {
+    if (!salonModalVisible || !selectedSalonId) {
+      setSalonServices([]);
+      return;
+    }
+    let active = true;
+    const loadSalonServices = async () => {
+      try {
+        const { data } = await api.get("/barber/getAllSalonServicesForBarber", {
+          params: { salonId: selectedSalonId },
+        });
+        const svcs = Array.isArray(data?.response?.services)
+          ? data.response.services
+          : Array.isArray(data?.response)
+            ? data.response
+            : [];
+        if (active) {
+          setSalonServices(
+            svcs.map((s) => ({
+              serviceId: s.serviceId,
+              serviceCode: s.serviceCode,
+              serviceName: s.serviceName,
+              servicePrice: Number(s.servicePrice ?? 0),
+              barberServiceEWT: Number(s.serviceEWT ?? s.barberServiceEWT ?? 15),
+              serviceDesc: s.serviceDesc,
+              serviceIcon: s.serviceIcon,
+              vipService: Boolean(s.vipService),
+            })),
+          );
+        }
+      } catch (_error) {
+        if (active) setSalonServices([]);
+      }
+    };
+    loadSalonServices();
+    return () => {
+      active = false;
+    };
+  }, [salonModalVisible, selectedSalonId]);
+
+  const handleConnectSalon = async () => {
+    if (!selectedSalonId || !authenticatedUser?.email || connectLoading) return;
+    try {
+      setConnectLoading(true);
+      const { data } = await api.post("/barber/connectBarberToSalon", {
+        email: authenticatedUser.email,
+        salonId: Number(selectedSalonId),
+        barberServices:
+          salonServices.length > 0
+            ? salonServices
+            : authenticatedUser?.barberServices || [],
+      });
+      if (data?.success === false) {
+        Toast.warn(data?.message || "Your approval is pending. Please wait");
+      } else {
+        Toast.success(data?.message || "Barber connected to salon");
+        fetchLoggedInBarber();
+      }
+      closeSalonModal();
+    } catch (error) {
+      Toast.error(
+        error?.response?.data?.message || "Failed to connect to salon",
+      );
+    } finally {
+      setConnectLoading(false);
+    }
+  };
 
   const handleToggleClockedIn = async () => {
     if (clockLoading || !authenticatedUser?.barberId) return;
@@ -263,9 +366,7 @@ const BarberHeader = ({ title, subTitle, showBack = false }) => {
   };
 
   const logoutPressed = () => {
-    closeMenu(() => {
-      logout();
-    });
+    userLogut();
   };
 
   const handleNavigation = (route) => {
@@ -807,10 +908,13 @@ const BarberHeader = ({ title, subTitle, showBack = false }) => {
                 color={darkTheme.colors.accent}
                 style={{ marginRight: scale(10) }}
               />
-              <Text style={styles.activeSalonLabelText}>
-                {MOCK_SALONS.find((s) => s.id === selectedSalonId)?.name ||
-                  "Select Profile Workspace"}
-              </Text>
+              <TextInput
+                placeholder="Search salon by name..."
+                placeholderTextColor="rgba(255,255,255,0.35)"
+                value={salonSearch}
+                onChangeText={setSalonSearch}
+                style={[styles.activeSalonLabelText, { flex: 1, paddingVertical: 0 }]}
+              />
             </View>
 
             {/* Iterated roster selection list parameters container track */}
@@ -821,42 +925,56 @@ const BarberHeader = ({ title, subTitle, showBack = false }) => {
               ]}
             >
               <ScrollView showsVerticalScrollIndicator={false}>
-                {MOCK_SALONS.map((salon) => {
-                  const isCurrentSelection = selectedSalonId === salon.id;
-                  return (
-                    <TouchableOpacity
-                      key={salon.id}
-                      activeOpacity={0.8}
-                      onPress={() => setSelectedSalonId(salon.id)}
-                      style={[
-                        styles.salonSelectionItemRowUnit,
-                        isCurrentSelection && {
-                          backgroundColor: "rgba(255, 149, 0, 0.04)",
-                        },
-                      ]}
-                    >
-                      <Text
+                {salonsLoading ? (
+                  <View style={{ paddingVertical: verticalScale(20), alignItems: "center" }}>
+                    <ActivityIndicator size="small" color={darkTheme.colors.accent} />
+                  </View>
+                ) : salonsList.length === 0 ? (
+                  <View style={{ paddingVertical: verticalScale(20), alignItems: "center" }}>
+                    <Text style={{ color: "rgba(255,255,255,0.4)", fontSize: scale(12) }}>
+                      No salons found
+                    </Text>
+                  </View>
+                ) : (
+                  salonsList.map((salon) => {
+                    const sId = salon.salonId ?? salon.id ?? salon._id;
+                    const sName = salon.salonName || salon.name || `Salon #${sId}`;
+                    const isCurrentSelection = String(selectedSalonId) === String(sId);
+                    return (
+                      <TouchableOpacity
+                        key={String(sId)}
+                        activeOpacity={0.8}
+                        onPress={() => setSelectedSalonId(sId)}
                         style={[
-                          styles.salonSelectionItemLabelText,
-                          {
-                            color: isCurrentSelection
-                              ? darkTheme.colors.accent
-                              : "rgba(255,255,255,0.5)",
+                          styles.salonSelectionItemRowUnit,
+                          isCurrentSelection && {
+                            backgroundColor: "rgba(255, 149, 0, 0.04)",
                           },
                         ]}
                       >
-                        {salon.name}
-                      </Text>
-                      {isCurrentSelection && (
-                        <Ionicons
-                          name="checkmark-circle"
-                          size={scale(14)}
-                          color={darkTheme.colors.accent}
-                        />
-                      )}
-                    </TouchableOpacity>
-                  );
-                })}
+                        <Text
+                          style={[
+                            styles.salonSelectionItemLabelText,
+                            {
+                              color: isCurrentSelection
+                                ? darkTheme.colors.accent
+                                : "rgba(255,255,255,0.5)",
+                            },
+                          ]}
+                        >
+                          {sName}
+                        </Text>
+                        {isCurrentSelection && (
+                          <Ionicons
+                            name="checkmark-circle"
+                            size={scale(14)}
+                            color={darkTheme.colors.accent}
+                          />
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })
+                )}
               </ScrollView>
             </View>
 
@@ -867,19 +985,18 @@ const BarberHeader = ({ title, subTitle, showBack = false }) => {
                 { backgroundColor: darkTheme.colors.accent },
               ]}
               activeOpacity={0.85}
-              onPress={() => {
-                console.log(
-                  "Context profile altered successfully to target ID instance reference:",
-                  selectedSalonId,
-                );
-                closeSalonModal();
-              }}
+              disabled={connectLoading}
+              onPress={handleConnectSalon}
             >
-              <Text
-                style={[styles.sheetSubmitActionBtnText, { color: "#000000" }]}
-              >
-                Apply
-              </Text>
+              {connectLoading ? (
+                <ActivityIndicator size="small" color="#000000" />
+              ) : (
+                <Text
+                  style={[styles.sheetSubmitActionBtnText, { color: "#000000" }]}
+                >
+                  Apply
+                </Text>
+              )}
             </TouchableOpacity>
           </Animated.View>
         </View>
